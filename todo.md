@@ -80,3 +80,9 @@
 - [x] Reposicionar “PRÉ-VENDA ABERTA” no topo central do hero em desktop e mobile.
 - [x] Aplicar tipografia branca, mais grossa e com maior impacto ao selo de pré-venda.
 - [x] Validar o novo posicionamento e salvar checkpoint.
+
+## Simplificação do hero
+
+- [x] Remover a logo superior esquerda do cabeçalho sobre o hero.
+- [x] Ampliar discretamente o selo central “PRÉ-VENDA ABERTA” em desktop e mobile.
+- [x] Validar o novo equilíbrio visual e salvar checkpoint.

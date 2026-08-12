@@ -9,3 +9,5 @@ O modo de inspeção `?intro=1` foi capturado em desktop e mobile. As capturas m
 No refinamento final, a reprodução foi configurada na velocidade nativa do arquivo e a transição para a arte estática foi ligada ao evento de término do vídeo. O fade usa 2,8 segundos para revelar gradualmente o Doutor Destino. Capturas em desktop e mobile confirmaram o novo selo “PRÉ-VENDA · ABERTA AGORA” com contraste e hierarquia acima da logo durante a sequência em vídeo.
 
 No ajuste de posicionamento, o selo foi movido para o topo central do hero e refeito em duas linhas: “PRÉ-VENDA” e “ABERTA”. As capturas em desktop e mobile confirmaram a tipografia branca, mais pesada, a centralização e a separação segura em relação ao logotipo do cabeçalho e à logo principal do filme.
+
+Na simplificação seguinte, a logo superior esquerda foi removida. As capturas em desktop e mobile confirmaram que a composição ficou menos repetitiva e que o selo central, ligeiramente ampliado, permanece como o principal elemento de chamada à pré-venda sem competir com a logo do filme.

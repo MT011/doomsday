@@ -419,10 +419,7 @@ export default function Home() {
 
   return (
     <main className="presale-shell">
-      <header className="site-header">
-        <button className="brand-lockup brand-lockup-logo" onClick={resetFlow} aria-label="Voltar para o início">
-          <img src={LOGO_URL} alt="Avengers Doomsday" />
-        </button>
+      <header className="site-header site-header-minimal">
         <nav className="header-nav" aria-label="Navegação principal">
           <button onClick={() => document.getElementById("about")?.scrollIntoView({ behavior: "smooth" })}>O filme</button>
           <button onClick={() => document.getElementById("purchase-flow")?.scrollIntoView({ behavior: "smooth" })}>Comprar ingressos</button>

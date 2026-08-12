@@ -69,6 +69,7 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px s
 .presale-shell { min-height: 100vh; overflow-x: hidden; background: radial-gradient(circle at 78% 18%, rgba(31, 85, 72, .16), transparent 26%), #0c1118; }
 
 .site-header { position: absolute; z-index: 20; inset: 0 0 auto; height: 82px; display: flex; align-items: center; justify-content: space-between; padding: 0 42px; background: linear-gradient(180deg, rgba(5,8,12,.88), transparent); }
+.site-header-minimal { justify-content: flex-end; }
 .brand-lockup { display: inline-flex; align-items: center; gap: 11px; color: #f2f1e9; background: transparent; cursor: pointer; text-align: left; }
 .brand-lockup-logo { width: 170px; }
 .brand-lockup-logo img { display: block; width: 100%; filter: drop-shadow(0 5px 13px rgba(0,0,0,.38)); }
@@ -91,12 +92,12 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px s
 .hero-overlay { position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, #0b1118 0%, rgba(11,17,24,.92) 24%, rgba(11,17,24,.34) 62%, rgba(11,17,24,.56) 100%), linear-gradient(0deg, #0c1118 0%, transparent 32%, rgba(8,12,16,.32) 100%); }
 .hero-content { display: flex; align-items: center; min-height: 710px; padding-top: 86px; }
 .hero-copy { max-width: 610px; padding: 58px 0 72px; }
-.presale-flag { position: absolute; z-index: 3; top: 104px; left: 50%; display: flex; align-items: center; flex-direction: column; min-width: 156px; padding: 8px 18px 10px; transform: translateX(-50%); border-top: 1px solid rgba(255,255,255,.5); border-bottom: 1px solid rgba(255,255,255,.5); background: linear-gradient(90deg, transparent, rgba(7,13,18,.72), transparent); color: #fff; text-align: center; text-shadow: 0 3px 18px rgba(0,0,0,.9); text-transform: uppercase; }
+.presale-flag { position: absolute; z-index: 3; top: 98px; left: 50%; display: flex; align-items: center; flex-direction: column; min-width: 178px; padding: 9px 21px 12px; transform: translateX(-50%); border-top: 1px solid rgba(255,255,255,.5); border-bottom: 1px solid rgba(255,255,255,.5); background: linear-gradient(90deg, transparent, rgba(7,13,18,.72), transparent); color: #fff; text-align: center; text-shadow: 0 3px 18px rgba(0,0,0,.9); text-transform: uppercase; }
 .presale-flag::before, .presale-flag::after { position: absolute; top: -2px; width: 28px; height: 3px; background: #a5e9af; content: ''; box-shadow: 0 0 14px rgba(165,233,175,.56); }
 .presale-flag::before { left: 0; }
 .presale-flag::after { right: 0; }
-.presale-flag span { color: #fff; font: 900 15px/.9 'Barlow Condensed', sans-serif; letter-spacing: .2em; }
-.presale-flag strong { display: block; margin-top: 3px; color: #fff; font: 900 40px/.78 'Barlow Condensed', sans-serif; letter-spacing: .045em; }
+.presale-flag span { color: #fff; font: 900 17px/.9 'Barlow Condensed', sans-serif; letter-spacing: .2em; }
+.presale-flag strong { display: block; margin-top: 4px; color: #fff; font: 900 46px/.78 'Barlow Condensed', sans-serif; letter-spacing: .045em; }
 .eyebrow { display: inline-flex; align-items: center; gap: 8px; color: #a5e9af; font: 500 10px 'DM Mono', monospace; letter-spacing: .15em; text-transform: uppercase; }
 .movie-logo { display: block; width: min(510px, 100%); margin: 22px 0 26px; filter: drop-shadow(0 16px 25px rgba(0,0,0,.35)); }
 .hero-lede { max-width: 470px; margin: 0; color: #ccd3cd; font-size: 16px; line-height: 1.7; }
@@ -334,9 +335,9 @@ em { color: #a5e9af; font-style: normal; }
   .hero-overlay { background: linear-gradient(180deg, rgba(8,13,18,.1) 0%, rgba(8,13,18,.13) 36%, #0c1118 92%), linear-gradient(90deg, rgba(8,13,18,.72), transparent 50%, rgba(8,13,18,.45)); }
   .hero-content { align-items: flex-end; padding-top: 70px; }
   .hero-copy { width: 100%; padding-bottom: 48px; text-align: center; }
-  .presale-flag { top: 82px; min-width: 142px; padding: 7px 15px 9px; }
-  .presale-flag span { font-size: 13px; }
-  .presale-flag strong { font-size: 34px; }
+  .presale-flag { top: 78px; min-width: 156px; padding: 8px 17px 10px; }
+  .presale-flag span { font-size: 14px; }
+  .presale-flag strong { font-size: 38px; }
   .movie-logo { max-width: 330px; margin: 17px auto 24px; }
   .hero-lede { font-size: 14px; }
   .hero-actions, .hero-meta { justify-content: center; }
