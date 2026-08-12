@@ -87,3 +87,9 @@
 - [x] Ampliar discretamente o selo central “PRÉ-VENDA ABERTA” em desktop e mobile.
 - [x] Validar o novo equilíbrio visual e salvar checkpoint.
 - [x] Subir levemente o selo central “PRÉ-VENDA ABERTA” no desktop e no mobile e salvar checkpoint.
+
+## Unificação tipográfica do hero
+
+- [x] Aplicar a fonte temática de “PRÉ-VENDA ABERTA” aos botões “Comprar ingressos” e “Conheça o filme”.
+- [x] Aplicar a mesma linguagem tipográfica à navegação “O filme”/“Comprar ingressos” e ao status “PRÉ-VENDA AO VIVO”.
+- [x] Validar legibilidade e consistência em desktop e mobile e salvar checkpoint.

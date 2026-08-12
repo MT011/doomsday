@@ -13,3 +13,5 @@ No ajuste de posicionamento, o selo foi movido para o topo central do hero e ref
 Na simplificação seguinte, a logo superior esquerda foi removida. As capturas em desktop e mobile confirmaram que a composição ficou menos repetitiva e que o selo central, ligeiramente ampliado, permanece como o principal elemento de chamada à pré-venda sem competir com a logo do filme.
 
 O selo “PRÉ-VENDA ABERTA” foi deslocado 14 px para cima no desktop e no mobile. As capturas finais confirmaram a centralização, o contraste branco e a distância segura da logo principal do filme em ambas as larguras.
+
+A tipografia dos botões “COMPRAR INGRESSOS” e “CONHEÇA O FILME”, da navegação “O FILME”/“COMPRAR INGRESSOS” e do status “PRÉ-VENDA AO VIVO” foi alinhada à Barlow Condensed pesada usada no selo. As capturas desktop/mobile confirmaram consistência visual e leitura adequada.

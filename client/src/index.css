@@ -77,10 +77,10 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px s
 .brand-lockup small { display: block; margin-top: 5px; color: #9aa7a6; font: 500 8px/1 'DM Mono', monospace; letter-spacing: .13em; }
 .brand-mark { display: grid; place-items: center; width: 28px; height: 28px; color: #0b1216; border: 2px solid #9ce8a7; transform: skew(-12deg); font: 900 21px/1 'Barlow Condensed', sans-serif; }
 .brand-mark.small { width: 21px; height: 21px; font-size: 15px; }
-.header-nav { display: flex; align-items: center; gap: 30px; color: #bbc4c2; font: 600 11px 'DM Mono', monospace; letter-spacing: .07em; text-transform: uppercase; }
+.header-nav { display: flex; align-items: center; gap: 30px; color: #bbc4c2; font: 800 15px/.9 'Barlow Condensed', sans-serif; letter-spacing: .12em; text-transform: uppercase; }
 .header-nav button { padding: 8px 0; color: inherit; background: transparent; cursor: pointer; transition: color .18s ease; }
 .header-nav button:hover { color: #a7efb0; }
-.header-status { display: inline-flex; align-items: center; gap: 8px; color: #9ce8a7; font-size: 10px; }
+.header-status { display: inline-flex; align-items: center; gap: 8px; color: #9ce8a7; font: 900 14px/.9 'Barlow Condensed', sans-serif; letter-spacing: .12em; }
 .pulse-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #9ce8a7; box-shadow: 0 0 0 4px rgba(156,232,167,.12); }
 
 .hero-section { position: relative; min-height: 710px; isolation: isolate; }
@@ -102,7 +102,7 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px s
 .movie-logo { display: block; width: min(510px, 100%); margin: 22px 0 26px; filter: drop-shadow(0 16px 25px rgba(0,0,0,.35)); }
 .hero-lede { max-width: 470px; margin: 0; color: #ccd3cd; font-size: 16px; line-height: 1.7; }
 .hero-actions { display: flex; align-items: center; gap: 14px; margin-top: 34px; }
-.button { display: inline-flex; align-items: center; justify-content: center; gap: 9px; min-height: 46px; padding: 0 18px; color: #e9eee9; border-radius: 3px; background: #1c2730; font: 700 11px 'DM Mono', monospace; letter-spacing: .03em; cursor: pointer; transition: transform .18s ease, background .18s ease, color .18s ease; }
+.button { display: inline-flex; align-items: center; justify-content: center; gap: 9px; min-height: 46px; padding: 0 18px; color: #e9eee9; border-radius: 3px; background: #1c2730; font: 800 15px/.9 'Barlow Condensed', sans-serif; letter-spacing: .08em; text-transform: uppercase; cursor: pointer; transition: transform .18s ease, background .18s ease, color .18s ease; }
 .button:hover { transform: translateY(-2px); }
 .button:active { transform: scale(.98); }
 .button-primary { color: #0c1512; background: #a5e9af; box-shadow: 0 10px 30px rgba(95,198,118,.18); }
