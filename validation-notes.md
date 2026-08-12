@@ -37,3 +37,9 @@ A navegação foi validada visualmente em `/?screen=sessions`, `/?screen=seats`,
 ## QA reproduzível do botão Voltar
 
 Foi executado um teste automatizado com cliques reais no botão Voltar em todas as etapas. Os quatro cenários passaram: sessões → tela inicial, assentos → sessões, checkout → assentos e confirmação → checkout. A preservação também passou: um assento selecionado permaneceu no resumo ao retornar a sessões; dois assentos permaneceram selecionados ao voltar de checkout para assentos; e a confirmação retornou ao checkout com os dois itens do pedido preservados.
+
+## Primeiro passe do redesenho editorial
+
+O desktop apresentou boa hierarquia entre a narrativa do evento, a jornada de pré-venda e o radar de disponibilidade. No primeiro passe mobile, as novas grades mantiveram colunas desktop e comprimiram o texto em excesso. A próxima etapa corrige as seções para uma coluna, aumenta a área útil de leitura e reorganiza os módulos de informação para viewport estreita.
+
+Após o refinamento, a validação mobile confirmou uma coluna de leitura para a narrativa, painel de lançamento, cards da jornada e radar de disponibilidade. Os CTAs ocupam a largura disponível e os blocos preservam espaçamento e contraste. A nova captura desktop confirmou que a hierarquia em duas colunas, a arte de fundo e a jornada de conversão permanecem intactas.

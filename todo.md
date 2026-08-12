@@ -121,3 +121,12 @@
 - [x] Validar as rotas de retorno em desktop/mobile e salvar checkpoint.
 - [x] Executar QA reproduzível das rotas de retorno: sessões → início, assentos → sessões, checkout → assentos e confirmação → checkout, registrando preservação de estado.
 - [x] Salvar novo checkpoint após validar a navegação de retorno e registrar o ID correspondente.
+
+## Redesenho cinematográfico após o hero
+
+- [x] Substituir a seção “O evento” por narrativa visual de alto impacto com informações oficiais configuráveis do filme.
+- [x] Adicionar fundos e imagens cinematográficas autorizadas para diferenciar as novas seções sem modificar o hero atual.
+- [x] Criar blocos claros para formatos, experiência em sala, estreia e urgência da pré-venda.
+- [x] Redesenhar a descoberta de cinemas como módulo de conversão com disponibilidade, alcance nacional e CTA direto.
+- [x] Priorizar a organização mobile e validar o novo conteúdo em desktop e mobile.
+- [x] Executar testes/build e salvar checkpoint do redesenho.

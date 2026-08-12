@@ -28,3 +28,7 @@ A página pública da Disney Movies foi acessada para validação cruzada da exi
 ## Decisões de produto
 
 O protótipo será original, com visual escuro, verde-doom, vermelho de ação e textura cinematográfica, sem copiar literalmente a interface do Ingresso.com. Os dados de cinema extraídos anteriormente serão usados como referência para a cascata de localização, enquanto sessões, preços, ocupação e pagamento serão claramente marcados como demonstração até receberem fonte oficial e autorização de integração.
+
+## Assets preparados para o redesenho
+
+Foram preparados dois assets públicos do CDN oficial da Marvel para uso no protótipo autorizado: uma arte panorâmica com o Doutor Destino em composição central, apropriada para a narrativa do evento, e um divisor escuro panorâmico para transições entre blocos. A arte principal mantém área escura à esquerda, permitindo texto funcional com contraste sobre a imagem; a integração seguirá o layout responsivo com sobreposições de leitura no mobile.

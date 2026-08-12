@@ -87,6 +87,8 @@ type Order = {
 const HERO_URL = "/manus-storage/avengers-doomsday-hero_13158c4a.webp";
 const LOGO_URL = "/manus-storage/avengers-doomsday-logo_28159119.webp";
 const HERO_TRANSITION_URL = "/manus-storage/doomsday-opening-transition_258aaec4.mp4";
+const EVENT_ART_URL = "/manus-storage/doomsday-event-art_c0607a2c.webp";
+const DIVIDER_ART_URL = "/manus-storage/doomsday-divider-art_f3e0250e.webp";
 const WHOLE_PRICE = 39.9;
 const HALF_PRICE = 19.95;
 
@@ -460,23 +462,53 @@ export default function Home() {
             <div className="hero-side-note">MARVEL STUDIOS <span>•</span> EVENTO GLOBAL</div>
           </section>
 
-          <section id="about" className="about-section container">
-            <div className="section-kicker"><span>01</span><span>O EVENTO</span></div>
-            <div className="about-grid">
-              <div>
-                <h1>{filmConfig.aboutHeadline.split(" ").slice(0, 5).join(" ")}<br /><em>{filmConfig.aboutHeadline.split(" ").slice(5).join(" ")}</em></h1>
+          <section id="about" className="event-chapter">
+            <div className="event-art" aria-hidden="true" style={{ backgroundImage: `url(${EVENT_ART_URL})` }} />
+            <div className="event-art-overlay" aria-hidden="true" />
+            <div className="container event-chapter-content">
+              <div className="event-story">
+                <div className="section-kicker event-kicker"><span>01</span><span>O EVENTO</span></div>
+                <span className="event-overline">UM ENCONTRO QUE MUDA TUDO</span>
+                <h1>Três universos.<br /><em>Uma última escolha.</em></h1>
+                <p className="event-intro">{filmConfig.synopsis}</p>
+                <p className="event-detail">Prepare-se para ver heróis de mundos distintos frente a frente em uma experiência criada para a tela grande. Escolha seu cinema, garanta seu lugar e viva o primeiro dia desse evento nos cinemas.</p>
+                <div className="event-actions">
+                  <button className="button button-primary" onClick={startSessions}><MapPin size={17} /> Conferir disponibilidade <ArrowRight size={17} /></button>
+                  <span><CalendarDays size={15} /> Estreia em {filmConfig.releaseDateLabel}</span>
+                </div>
               </div>
-              <div className="about-copy">
-                <p>{filmConfig.synopsis}</p>
-                <div className="info-ribbon"><div><span>ESTREIA</span><strong>{filmConfig.releaseDate.replaceAll("-", ".")}</strong></div><div><span>DIREÇÃO</span><strong>RUSSO BROTHERS</strong></div><div><span>FORMATO</span><strong>2D / 3D / IMAX</strong></div></div>
-              </div>
+
+              <aside className="event-brief" aria-label="Informações do lançamento">
+                <div className="event-brief-top"><span>ARQUIVO DE LANÇAMENTO</span><span className="event-live-dot"><i /> PRÉ-VENDA AO VIVO</span></div>
+                <div className="event-date"><span>ESTREIA NOS CINEMAS</span><strong>{filmConfig.releaseDate.replaceAll("-", ".")}</strong><small>Uma data. Todos os universos.</small></div>
+                <div className="event-facts">
+                  <div><span>DIREÇÃO</span><strong>RUSSO BROTHERS</strong></div>
+                  <div><span>EXPERIÊNCIA</span><strong>EXCLUSIVA PARA CINEMA</strong></div>
+                </div>
+                <div className="format-stack"><span>ESCOLHA SUA TELA</span><div><b>2D</b><b>3D</b><b>IMAX</b></div><small>Os formatos variam conforme a sessão e o cinema selecionado.</small></div>
+              </aside>
             </div>
           </section>
 
-          <section className="location-cta container">
-            <div className="location-card">
-              <div className="location-card-copy"><span className="eyebrow"><MapPin size={14} /> ESCOLHA O SEU DESTINO</span><h2>Onde você vai viver<br />o <em>dia do juízo?</em></h2><p>Selecione sua localização para encontrar sessões disponíveis e escolher seu assento.</p></div>
-              <div className="location-preview"><span>PRÉ-VENDA NACIONAL</span><strong>441 cinemas</strong><small>em todo o Brasil</small><button className="button button-primary" onClick={startSessions}>Encontrar sessões <ArrowRight size={17} /></button></div>
+          <section className="presale-journey container" aria-labelledby="journey-title">
+            <div className="journey-heading"><div><span className="section-number">02</span><span className="eyebrow">SEU CAMINHO ATÉ A ESTREIA</span></div><h2 id="journey-title">A pré-venda começa<br /><em>com a sua escolha.</em></h2><p>Você escolhe onde assistir, encontra a sessão certa e reserva seus assentos em poucos passos.</p></div>
+            <div className="journey-grid">
+              <article className="journey-card"><span className="journey-index">01</span><MapPin size={25} /><h3>Encontre seu cinema</h3><p>Confira a disponibilidade por estado, cidade e rede de exibição.</p><button onClick={startSessions}>Ver cinemas <ArrowRight size={16} /></button></article>
+              <article className="journey-card"><span className="journey-index">02</span><Clock3 size={25} /><h3>Escolha a melhor sessão</h3><p>Compare horários, idiomas e formatos para viver o evento do seu jeito.</p><span className="journey-caption">2D · 3D · IMAX</span></article>
+              <article className="journey-card journey-card-featured"><span className="journey-index">03</span><Ticket size={25} /><h3>Garanta seu lugar</h3><p>Veja o mapa da sala, selecione seus assentos e avance para o pedido.</p><span className="journey-caption">ASSENTOS POR CINEMA</span></article>
+            </div>
+          </section>
+
+          <section className="availability-spotlight" style={{ "--divider-art": `url(${DIVIDER_ART_URL})` } as React.CSSProperties}>
+            <div className="availability-texture" aria-hidden="true" />
+            <div className="container availability-layout">
+              <div className="availability-copy"><span className="eyebrow"><Globe2 size={14} /> PRÉ-VENDA NACIONAL</span><h2>Seu lugar no <em>dia do juízo</em><br />começa aqui.</h2><p>Descubra onde <strong>Avengers: Doomsday</strong> estará em cartaz e encontre a sessão ideal antes que a estreia chegue.</p><button className="button button-primary" onClick={startSessions}><Ticket size={17} /> Comprar ingressos <ArrowRight size={17} /></button><small><Info size={14} /> Sessões e disponibilidade podem variar por cinema.</small></div>
+              <div className="availability-console">
+                <div className="console-heading"><span>RADAR DE DISPONIBILIDADE</span><i><span className="pulse-dot" /> ATUALIZANDO</i></div>
+                <div className="availability-metrics"><div><strong>{cinemaCatalog.length}</strong><span>cinemas no catálogo</span></div><div><strong>{stateOptions.length}</strong><span>estados disponíveis</span></div></div>
+                <div className="availability-location"><div><MapPin size={19} /><span>LOCALIZAÇÃO SELECIONADA</span></div><strong>{selectedCity}, {selectedState}</strong><small>{selectedCinema.name}</small></div>
+                <button className="console-action" onClick={startSessions}>Conferir sessões nesta região <ArrowRight size={16} /></button>
+              </div>
             </div>
           </section>
         </>
