@@ -74,3 +74,9 @@
 - [x] Aplicar um fade lento no final do vídeo, revelando gradualmente a imagem do Doutor Destino.
 - [x] Evidenciar a pré-venda na abertura com um elemento visual de alta hierarquia.
 - [x] Validar a sequência e a hierarquia em desktop e mobile e salvar checkpoint.
+
+## Refinamento do selo de pré-venda
+
+- [x] Reposicionar “PRÉ-VENDA ABERTA” no topo central do hero em desktop e mobile.
+- [x] Aplicar tipografia branca, mais grossa e com maior impacto ao selo de pré-venda.
+- [x] Validar o novo posicionamento e salvar checkpoint.

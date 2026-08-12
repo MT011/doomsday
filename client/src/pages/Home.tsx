@@ -438,12 +438,12 @@ export default function Home() {
               <video ref={heroVideoRef} src={HERO_TRANSITION_URL} autoPlay muted playsInline preload="auto" loop={isHeroIntroPreview} onEnded={() => setIsHeroVideoVisible(false)} onError={() => setIsHeroVideoVisible(false)} />
             </div>
             <div className="hero-overlay" />
+            <div className="presale-flag" aria-label="Pré-venda aberta">
+              <span>PRÉ-VENDA</span>
+              <strong>ABERTA</strong>
+            </div>
             <div className="hero-content container">
               <div className="hero-copy">
-                <div className="presale-flag" aria-label="Pré-venda aberta agora">
-                  <span>PRÉ-VENDA</span>
-                  <strong>ABERTA AGORA</strong>
-                </div>
                 <img className="movie-logo" src={LOGO_URL} alt="Avengers Doomsday" />
                 <p className="hero-lede">{filmConfig.heroLede}</p>
                 <div className="hero-actions">
