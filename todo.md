@@ -100,3 +100,4 @@
 - [x] Reforçar as linhas laterais e os detalhes quadrados verdes nas extremidades do selo.
 - [x] Alterar o botão “COMPRAR INGRESSOS” para branco, preservando contraste e legibilidade.
 - [x] Validar as cores em desktop e mobile e salvar checkpoint.
+- [x] Aplicar o gradiente verde Doomsday ao botão “COMPRAR INGRESSOS” e deixar texto/ícone brancos; validar e salvar checkpoint.

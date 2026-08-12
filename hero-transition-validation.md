@@ -17,3 +17,5 @@ O selo “PRÉ-VENDA ABERTA” foi deslocado 14 px para cima no desktop e no mob
 A tipografia dos botões “COMPRAR INGRESSOS” e “CONHEÇA O FILME”, da navegação “O FILME”/“COMPRAR INGRESSOS” e do status “PRÉ-VENDA AO VIVO” foi alinhada à Barlow Condensed pesada usada no selo. As capturas desktop/mobile confirmaram consistência visual e leitura adequada.
 
 O selo recebeu gradiente verde mais intenso, brilho verde e dois detalhes quadrados nas extremidades da linha superior. O CTA “COMPRAR INGRESSOS” foi convertido para branco com hover levemente esverdeado. As capturas desktop/mobile confirmaram contraste, leitura e coerência com a identidade Doomsday.
+
+O botão “COMPRAR INGRESSOS” foi revertido visualmente para o gradiente verde Doomsday, agora com texto e ícone brancos. As capturas desktop/mobile confirmaram o contraste e a coerência com o selo “PRÉ-VENDA ABERTA”.

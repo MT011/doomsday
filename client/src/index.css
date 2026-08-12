@@ -105,8 +105,8 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px s
 .button { display: inline-flex; align-items: center; justify-content: center; gap: 9px; min-height: 46px; padding: 0 18px; color: #e9eee9; border-radius: 3px; background: #1c2730; font: 800 15px/.9 'Barlow Condensed', sans-serif; letter-spacing: .08em; text-transform: uppercase; cursor: pointer; transition: transform .18s ease, background .18s ease, color .18s ease; }
 .button:hover { transform: translateY(-2px); }
 .button:active { transform: scale(.98); }
-.button-primary { color: #0c1512; background: #fff; box-shadow: 0 10px 30px rgba(207,255,217,.18); }
-.button-primary:hover { color: #0c1512; background: #effff1; box-shadow: 0 12px 32px rgba(207,255,217,.24); }
+.button-primary { color: #fff; background: linear-gradient(135deg, #0e6f31 0%, #21c955 48%, #8dff9e 100%); border: 1px solid rgba(177,255,190,.7); box-shadow: 0 10px 30px rgba(36,211,83,.24), inset 0 0 0 1px rgba(255,255,255,.12); text-shadow: 0 2px 8px rgba(0,55,19,.55); }
+.button-primary:hover { color: #fff; background: linear-gradient(135deg, #168842 0%, #39e968 48%, #c0ffca 100%); box-shadow: 0 12px 34px rgba(36,211,83,.34), inset 0 0 0 1px rgba(255,255,255,.2); }
 .button-secondary { background: #25323d; }
 .button-ghost { color: #ced5d0; border: 1px solid rgba(205,217,211,.24); background: rgba(17,25,31,.45); }
 .button-ghost:hover { border-color: #a5e9af; color: #a5e9af; }
