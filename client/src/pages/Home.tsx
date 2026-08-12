@@ -25,7 +25,6 @@ import {
   QrCode,
   ScanLine,
   ShoppingBag,
-  Sparkles,
   Ticket,
   Trash2,
   UserRound,
@@ -87,6 +86,7 @@ type Order = {
 
 const HERO_URL = "/manus-storage/avengers-doomsday-hero_13158c4a.webp";
 const LOGO_URL = "/manus-storage/avengers-doomsday-logo_28159119.webp";
+const HERO_TRANSITION_URL = "/manus-storage/doomsday-opening-transition_258aaec4.mp4";
 const WHOLE_PRICE = 39.9;
 const HALF_PRICE = 19.95;
 
@@ -213,6 +213,8 @@ export default function Home() {
   }, []);
 
   const [screen, setScreen] = useState<Screen>(() => getRequestedScreen());
+  const [isHeroVideoVisible, setIsHeroVideoVisible] = useState(true);
+  const [isHeroIntroPreview] = useState(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("intro") === "1");
   const [isDemoPreview] = useState(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).has("screen"));
   const [isEmptyPreview] = useState(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("empty") === "1");
   const [isEmailErrorPreview] = useState(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("emailError") === "1");
@@ -233,6 +235,7 @@ export default function Home() {
   const sendDemoEmail = trpc.presale.sendDemoConfirmationEmail.useMutation();
   const [order, setOrder] = useState<Order | null>(null);
   const mapRef = useRef<HTMLDivElement | null>(null);
+  const heroVideoRef = useRef<HTMLVideoElement | null>(null);
 
   const citiesForState = useMemo(() => {
     const unique = new Map<string, string>();
@@ -291,6 +294,24 @@ export default function Home() {
   useEffect(() => {
     if (screen !== "seats") setIsDragging(false);
   }, [screen]);
+
+  useEffect(() => {
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reducedMotion) {
+      setIsHeroVideoVisible(false);
+      return;
+    }
+
+    const video = heroVideoRef.current;
+    if (video) {
+      video.playbackRate = 1.8;
+      video.play().catch(() => setIsHeroVideoVisible(false));
+    }
+
+    if (isHeroIntroPreview) return;
+    const revealTimer = window.setTimeout(() => setIsHeroVideoVisible(false), window.innerWidth <= 760 ? 2200 : 3000);
+    return () => window.clearTimeout(revealTimer);
+  }, [isHeroIntroPreview]);
 
   useEffect(() => {
     if (!isDemoPreview || isEmptyPreview || screen === "discover" || !seats.length || seatSelections.length) return;
@@ -403,12 +424,8 @@ export default function Home() {
   return (
     <main className="presale-shell">
       <header className="site-header">
-        <button className="brand-lockup" onClick={resetFlow} aria-label="Voltar para o início">
-          <span className="brand-mark">A</span>
-          <span>
-            <strong>AVENGERS</strong>
-            <small>DOOMSDAY / PRÉ-VENDA</small>
-          </span>
+        <button className="brand-lockup brand-lockup-logo" onClick={resetFlow} aria-label="Voltar para o início">
+          <img src={LOGO_URL} alt="Avengers Doomsday" />
         </button>
         <nav className="header-nav" aria-label="Navegação principal">
           <button onClick={() => document.getElementById("about")?.scrollIntoView({ behavior: "smooth" })}>O filme</button>
@@ -419,11 +436,14 @@ export default function Home() {
 
       {screen === "discover" ? (
         <>
-          <section className="hero-section" style={{ backgroundImage: `url(${HERO_URL})` }}>
+          <section className="hero-section">
+            <div className="hero-art" style={{ backgroundImage: `url(${HERO_URL})` }} />
+            <div className={`hero-transition ${isHeroVideoVisible ? "" : "is-hidden"}`} aria-hidden={!isHeroVideoVisible}>
+              <video ref={heroVideoRef} src={HERO_TRANSITION_URL} autoPlay muted playsInline preload="auto" onError={() => setIsHeroVideoVisible(false)} />
+            </div>
             <div className="hero-overlay" />
             <div className="hero-content container">
               <div className="hero-copy">
-                <span className="eyebrow"><Sparkles size={14} /> {filmConfig.heroEyebrow}</span>
                 <img className="movie-logo" src={LOGO_URL} alt="Avengers Doomsday" />
                 <p className="hero-lede">{filmConfig.heroLede}</p>
                 <div className="hero-actions">

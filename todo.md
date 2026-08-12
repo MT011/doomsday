@@ -15,12 +15,12 @@
 - [x] Documentar as credenciais, APIs e webhooks que serão necessários para ligar o protótipo à operação real.
 - [x] Salvar checkpoint final após revisar todos os itens concluídos.
 
-## Pendências de operação real
+## Pré-requisitos externos para abertura de vendas
 
-- [ ] Confirmar com Marvel/Disney e o operador de venda o contrato/API oficial para sessões, disponibilidade, reserva temporária e emissão.
-- [ ] Confirmar gateway de pagamento, antifraude, política de meia-entrada, cancelamento e conciliação.
-- [ ] Confirmar domínio/subdomínio, certificados, remetente de e-mail e política de privacidade/LGPD.
-- [ ] Substituir dados de demonstração por dados oficiais autorizados antes de abrir vendas.
+- **Pendente externo — não implementado no protótipo:** obter contrato/API oficial com Marvel/Disney e o operador para sessões, disponibilidade, reserva temporária e emissão.
+- **Pendente externo — não implementado no protótipo:** definir gateway, antifraude, regras de meia-entrada, cancelamento e conciliação.
+- **Pendente externo — não implementado no protótipo:** confirmar domínio/subdomínio, certificados, remetente de e-mail e requisitos LGPD.
+- **Pendente externo — não implementado no protótipo:** substituir o catálogo e os fluxos de demonstração por dados oficiais autorizados antes da abertura.
 
 ## Decisões técnicas
 
@@ -58,3 +58,12 @@
 - [x] Validar e registrar evidências do estado de ausência de cinemas para uma combinação sem resultados, incluindo comportamento dos selects e recuperação.
 - [x] Implementar um cenário QA de ausência de cinemas atrelado a uma combinação específica de estado/cidade, permitindo que ao trocar a seleção os cinemas voltem a aparecer.
 - [x] Capturar e registrar evidência visual/notas da recuperação após mudar estado/cidade no cenário sem cinemas.
+
+## Atualização da abertura audiovisual
+
+- [x] Remover a chamada “Uma experiência Marvel Studios” e o ícone de estrela do hero.
+- [x] Substituir o lockup textual do cabeçalho pela logo de Avengers: Doomsday.
+- [x] Preparar e hospedar o vídeo enviado como transição de abertura do hero.
+- [x] Implementar a transição do vídeo para a arte estática do Doutor Destino, com alternativa para movimento reduzido.
+- [x] Ajustar a composição do hero para mobile, mantendo logo centralizada e o Doutor Destino bem enquadrado.
+- [x] Salvar o checkpoint da atualização audiovisual após a validação em desktop e mobile.
