@@ -29,3 +29,11 @@ A captura `/?screen=sessions&noCinemas=1` mostrou o select “Nenhum cinema disp
 Foi identificado um ponto de consistência: no estado sem cinemas, o resumo lateral ainda usava o primeiro cinema global como fallback, embora a localização selecionada fosse São Paulo. Esse fallback deve ser ajustado para não exibir um cinema de outra cidade durante o estado vazio.
 
 Após a correção, a captura sem cinemas passou a exibir “Nenhum cinema disponível” também no resumo e “Nenhum cinema disponível · São Paulo, SP” no cabeçalho da sessão, sem misturar dados de Rio Branco. A captura recuperada continua exibindo Acre, Rio Branco e Cine Araújo Rio Branco com sessões. O comportamento atende ao cenário de ausência e recuperação.
+
+## Navegação de retorno
+
+A navegação foi validada visualmente em `/?screen=sessions`, `/?screen=seats`, `/?screen=checkout` e `/?screen=confirmation`, em desktop e mobile. O botão Voltar aparece no topo do fluxo e mantém posição, contraste e leitura adequados. As regras implementadas são: sessões → tela inicial; assentos → sessões; checkout → assentos; confirmação → checkout. O estado de localização, sessão, assentos, tipos de ingresso e comprador permanece preservado ao retornar.
+
+## QA reproduzível do botão Voltar
+
+Foi executado um teste automatizado com cliques reais no botão Voltar em todas as etapas. Os quatro cenários passaram: sessões → tela inicial, assentos → sessões, checkout → assentos e confirmação → checkout. A preservação também passou: um assento selecionado permaneceu no resumo ao retornar a sessões; dois assentos permaneceram selecionados ao voltar de checkout para assentos; e a confirmação retornou ao checkout com os dois itens do pedido preservados.

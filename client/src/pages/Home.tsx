@@ -417,6 +417,13 @@ export default function Home() {
     window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 20);
   };
 
+  const goBack = () => {
+    if (screen === "sessions") resetFlow();
+    else if (screen === "seats") setScreen("sessions");
+    else if (screen === "checkout") setScreen("seats");
+    else if (screen === "confirmation") setScreen("checkout");
+  };
+
   return (
     <main className="presale-shell">
       <header className="site-header site-header-minimal">
@@ -477,7 +484,18 @@ export default function Home() {
 
       {screen !== "discover" ? (
         <section id="purchase-flow" className="purchase-stage container">
-          <div className="flow-heading"><div><span className="eyebrow"><Ticket size={14} /> FLUXO DE PRÉ-VENDA</span><h1>{screen === "confirmation" ? "Seu ingresso está garantido." : "Reserve seu lugar no evento."}</h1></div><StepIndicator current={screen} /></div>
+          <div className="flow-heading">
+            <div className="flow-heading-copy">
+              <button type="button" className="flow-back" onClick={goBack} aria-label="Voltar para a etapa anterior">
+                <ArrowLeft size={15} /> Voltar
+              </button>
+              <div>
+                <span className="eyebrow"><Ticket size={14} /> FLUXO DE PRÉ-VENDA</span>
+                <h1>{screen === "confirmation" ? "Seu ingresso está garantido." : "Reserve seu lugar no evento."}</h1>
+              </div>
+            </div>
+            <StepIndicator current={screen} />
+          </div>
 
           {screen === "sessions" ? (
             <div className="flow-grid">

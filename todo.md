@@ -111,3 +111,13 @@
 - [x] Aumentar a distinção visual entre assento disponível e selecionado (brilho/borda) e garantir contraste do texto no estado selecionado.
 - [x] Validar visualmente as telas de checkout e confirmação com a nova paleta Doomsday em desktop e mobile.
 - [x] Salvar checkpoint final da unificação da paleta.
+
+## Navegação de retorno do fluxo
+
+- [x] Fazer o botão Voltar da seleção de sessões retornar à tela inicial.
+- [x] Fazer o botão Voltar de assentos retornar à seleção de sessões, preservando localização e sessão.
+- [x] Fazer o botão Voltar do checkout retornar ao mapa de assentos, preservando assentos e tipos de ingresso.
+- [x] Fazer o botão Voltar da confirmação retornar ao checkout quando acionado, preservando os dados do pedido.
+- [x] Validar as rotas de retorno em desktop/mobile e salvar checkpoint.
+- [x] Executar QA reproduzível das rotas de retorno: sessões → início, assentos → sessões, checkout → assentos e confirmação → checkout, registrando preservação de estado.
+- [x] Salvar novo checkpoint após validar a navegação de retorno e registrar o ID correspondente.
