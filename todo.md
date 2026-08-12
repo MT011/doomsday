@@ -101,3 +101,13 @@
 - [x] Alterar o botão “COMPRAR INGRESSOS” para branco, preservando contraste e legibilidade.
 - [x] Validar as cores em desktop e mobile e salvar checkpoint.
 - [x] Aplicar o gradiente verde Doomsday ao botão “COMPRAR INGRESSOS” e deixar texto/ícone brancos; validar e salvar checkpoint.
+
+## Unificação da paleta Doomsday
+
+- [x] Escurecer o verde de destaques editoriais como “O começo do impossível”.
+- [x] Ajustar os elementos verdes claros das páginas de localização, sessões, checkout e confirmação.
+- [x] Ajustar assentos selecionados e demais estados interativos para verde Doomsday escuro, preservando legibilidade.
+- [x] Validar contraste e estados em desktop/mobile e salvar checkpoint.
+- [x] Aumentar a distinção visual entre assento disponível e selecionado (brilho/borda) e garantir contraste do texto no estado selecionado.
+- [x] Validar visualmente as telas de checkout e confirmação com a nova paleta Doomsday em desktop e mobile.
+- [x] Salvar checkpoint final da unificação da paleta.

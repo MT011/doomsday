@@ -19,3 +19,9 @@ A tipografia dos botões “COMPRAR INGRESSOS” e “CONHEÇA O FILME”, da na
 O selo recebeu gradiente verde mais intenso, brilho verde e dois detalhes quadrados nas extremidades da linha superior. O CTA “COMPRAR INGRESSOS” foi convertido para branco com hover levemente esverdeado. As capturas desktop/mobile confirmaram contraste, leitura e coerência com a identidade Doomsday.
 
 O botão “COMPRAR INGRESSOS” foi revertido visualmente para o gradiente verde Doomsday, agora com texto e ícone brancos. As capturas desktop/mobile confirmaram o contraste e a coerência com o selo “PRÉ-VENDA ABERTA”.
+
+A validação desktop de `/?screen=sessions` e `/?screen=seats` confirmou a aplicação do verde Doomsday escuro nos indicadores de fluxo, ícones, resumo lateral, sessão ativa e estados dos assentos. Assentos disponíveis passaram a usar verde profundo; assentos selecionados usam um tom verde ligeiramente mais destacado, mantendo diferenciação visual.
+
+A validação mobile das páginas de sessões e assentos confirmou que os indicadores ativos, ícones, campos e assentos usam o verde Doomsday escuro sem prejudicar a leitura. O mapa continua navegável em viewport estreita e o estado selecionado permanece distinguível do disponível.
+
+A QA ampliada em desktop e mobile cobriu `/?screen=sessions`, `/?screen=seats`, `/?screen=checkout` e `/?screen=confirmation`. A nova paleta escura permanece consistente nas telas de localização e pagamento; a confirmação mantém contraste; e o mapa diferencia assento disponível de selecionado por gradiente, borda clara, texto branco e brilho controlado.
