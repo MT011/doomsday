@@ -93,3 +93,10 @@
 - [x] Aplicar a fonte temática de “PRÉ-VENDA ABERTA” aos botões “Comprar ingressos” e “Conheça o filme”.
 - [x] Aplicar a mesma linguagem tipográfica à navegação “O filme”/“Comprar ingressos” e ao status “PRÉ-VENDA AO VIVO”.
 - [x] Validar legibilidade e consistência em desktop e mobile e salvar checkpoint.
+
+## Refinamento de cores Doomsday
+
+- [x] Aplicar um gradiente verde mais marcante no selo “PRÉ-VENDA ABERTA”.
+- [x] Reforçar as linhas laterais e os detalhes quadrados verdes nas extremidades do selo.
+- [x] Alterar o botão “COMPRAR INGRESSOS” para branco, preservando contraste e legibilidade.
+- [x] Validar as cores em desktop e mobile e salvar checkpoint.
