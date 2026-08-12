@@ -86,3 +86,4 @@
 - [x] Remover a logo superior esquerda do cabeçalho sobre o hero.
 - [x] Ampliar discretamente o selo central “PRÉ-VENDA ABERTA” em desktop e mobile.
 - [x] Validar o novo equilíbrio visual e salvar checkpoint.
+- [x] Subir levemente o selo central “PRÉ-VENDA ABERTA” no desktop e no mobile e salvar checkpoint.

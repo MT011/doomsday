@@ -11,3 +11,5 @@ No refinamento final, a reprodução foi configurada na velocidade nativa do arq
 No ajuste de posicionamento, o selo foi movido para o topo central do hero e refeito em duas linhas: “PRÉ-VENDA” e “ABERTA”. As capturas em desktop e mobile confirmaram a tipografia branca, mais pesada, a centralização e a separação segura em relação ao logotipo do cabeçalho e à logo principal do filme.
 
 Na simplificação seguinte, a logo superior esquerda foi removida. As capturas em desktop e mobile confirmaram que a composição ficou menos repetitiva e que o selo central, ligeiramente ampliado, permanece como o principal elemento de chamada à pré-venda sem competir com a logo do filme.
+
+O selo “PRÉ-VENDA ABERTA” foi deslocado 14 px para cima no desktop e no mobile. As capturas finais confirmaram a centralização, o contraste branco e a distância segura da logo principal do filme em ambas as larguras.

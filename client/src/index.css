@@ -92,7 +92,7 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px s
 .hero-overlay { position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, #0b1118 0%, rgba(11,17,24,.92) 24%, rgba(11,17,24,.34) 62%, rgba(11,17,24,.56) 100%), linear-gradient(0deg, #0c1118 0%, transparent 32%, rgba(8,12,16,.32) 100%); }
 .hero-content { display: flex; align-items: center; min-height: 710px; padding-top: 86px; }
 .hero-copy { max-width: 610px; padding: 58px 0 72px; }
-.presale-flag { position: absolute; z-index: 3; top: 98px; left: 50%; display: flex; align-items: center; flex-direction: column; min-width: 178px; padding: 9px 21px 12px; transform: translateX(-50%); border-top: 1px solid rgba(255,255,255,.5); border-bottom: 1px solid rgba(255,255,255,.5); background: linear-gradient(90deg, transparent, rgba(7,13,18,.72), transparent); color: #fff; text-align: center; text-shadow: 0 3px 18px rgba(0,0,0,.9); text-transform: uppercase; }
+.presale-flag { position: absolute; z-index: 3; top: 84px; left: 50%; display: flex; align-items: center; flex-direction: column; min-width: 178px; padding: 9px 21px 12px; transform: translateX(-50%); border-top: 1px solid rgba(255,255,255,.5); border-bottom: 1px solid rgba(255,255,255,.5); background: linear-gradient(90deg, transparent, rgba(7,13,18,.72), transparent); color: #fff; text-align: center; text-shadow: 0 3px 18px rgba(0,0,0,.9); text-transform: uppercase; }
 .presale-flag::before, .presale-flag::after { position: absolute; top: -2px; width: 28px; height: 3px; background: #a5e9af; content: ''; box-shadow: 0 0 14px rgba(165,233,175,.56); }
 .presale-flag::before { left: 0; }
 .presale-flag::after { right: 0; }
@@ -335,7 +335,7 @@ em { color: #a5e9af; font-style: normal; }
   .hero-overlay { background: linear-gradient(180deg, rgba(8,13,18,.1) 0%, rgba(8,13,18,.13) 36%, #0c1118 92%), linear-gradient(90deg, rgba(8,13,18,.72), transparent 50%, rgba(8,13,18,.45)); }
   .hero-content { align-items: flex-end; padding-top: 70px; }
   .hero-copy { width: 100%; padding-bottom: 48px; text-align: center; }
-  .presale-flag { top: 78px; min-width: 156px; padding: 8px 17px 10px; }
+  .presale-flag { top: 64px; min-width: 156px; padding: 8px 17px 10px; }
   .presale-flag span { font-size: 14px; }
   .presale-flag strong { font-size: 38px; }
   .movie-logo { max-width: 330px; margin: 17px auto 24px; }
