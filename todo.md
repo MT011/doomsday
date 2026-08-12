@@ -67,3 +67,10 @@
 - [x] Implementar a transição do vídeo para a arte estática do Doutor Destino, com alternativa para movimento reduzido.
 - [x] Ajustar a composição do hero para mobile, mantendo logo centralizada e o Doutor Destino bem enquadrado.
 - [x] Salvar o checkpoint da atualização audiovisual após a validação em desktop e mobile.
+
+## Refinamento de duração e pré-venda
+
+- [x] Permitir que o vídeo de abertura seja reproduzido integralmente antes da transição para a arte estática.
+- [x] Aplicar um fade lento no final do vídeo, revelando gradualmente a imagem do Doutor Destino.
+- [x] Evidenciar a pré-venda na abertura com um elemento visual de alta hierarquia.
+- [x] Validar a sequência e a hierarquia em desktop e mobile e salvar checkpoint.

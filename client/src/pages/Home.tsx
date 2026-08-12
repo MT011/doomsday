@@ -304,13 +304,9 @@ export default function Home() {
 
     const video = heroVideoRef.current;
     if (video) {
-      video.playbackRate = 1.8;
+      video.playbackRate = 1;
       video.play().catch(() => setIsHeroVideoVisible(false));
     }
-
-    if (isHeroIntroPreview) return;
-    const revealTimer = window.setTimeout(() => setIsHeroVideoVisible(false), window.innerWidth <= 760 ? 2200 : 3000);
-    return () => window.clearTimeout(revealTimer);
   }, [isHeroIntroPreview]);
 
   useEffect(() => {
@@ -439,11 +435,15 @@ export default function Home() {
           <section className="hero-section">
             <div className="hero-art" style={{ backgroundImage: `url(${HERO_URL})` }} />
             <div className={`hero-transition ${isHeroVideoVisible ? "" : "is-hidden"}`} aria-hidden={!isHeroVideoVisible}>
-              <video ref={heroVideoRef} src={HERO_TRANSITION_URL} autoPlay muted playsInline preload="auto" onError={() => setIsHeroVideoVisible(false)} />
+              <video ref={heroVideoRef} src={HERO_TRANSITION_URL} autoPlay muted playsInline preload="auto" loop={isHeroIntroPreview} onEnded={() => setIsHeroVideoVisible(false)} onError={() => setIsHeroVideoVisible(false)} />
             </div>
             <div className="hero-overlay" />
             <div className="hero-content container">
               <div className="hero-copy">
+                <div className="presale-flag" aria-label="Pré-venda aberta agora">
+                  <span>PRÉ-VENDA</span>
+                  <strong>ABERTA AGORA</strong>
+                </div>
                 <img className="movie-logo" src={LOGO_URL} alt="Avengers Doomsday" />
                 <p className="hero-lede">{filmConfig.heroLede}</p>
                 <div className="hero-actions">
