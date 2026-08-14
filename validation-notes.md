@@ -47,3 +47,7 @@ Após o refinamento, a validação mobile confirmou uma coluna de leitura para a
 ## Verificação pós-restauração comercial
 
 Em 14 de agosto de 2026, o código local, os testes e o build confirmaram a restauração de R$ 51,28 para inteira e R$ 25,64 para meia-entrada. Contudo, duas cargas do checkout no domínio público ainda exibiram R$ 5,00/R$ 2,50 após o checkpoint `dd3024e8`. A publicação precisa ser inspecionada antes de considerar a restauração comercial concluída; nenhuma cobrança nova deve ser criada enquanto o domínio público não refletir os valores comerciais.
+
+## Máscaras de dados do checkout
+
+Em 14 de agosto de 2026, a entrada controlada do checkout foi validada com valores sintéticos. O CPF foi apresentado como `123.456.789-01` e o celular como `(12) 34567-8910`, com teclados numérico e telefônico indicados para dispositivos móveis. A normalização de dígitos no servidor permanece ativa antes do envio à AmploPay.

@@ -209,3 +209,9 @@
 
 - [x] Centralizar o enquadramento inicial do mapa de assentos em mobile sem alterar o zoom definido.
 - [x] Validar visualmente o mapa centralizado, pan e controles antes de publicar.
+
+## Máscaras de CPF e celular no checkout
+
+- [x] Formatar CPF progressivamente como 000.000.000-00 durante a digitação.
+- [x] Formatar celular com DDD progressivamente como (12) 34567-8910 durante a digitação.
+- [x] Validar a normalização enviada ao PIX, responsividade, tipos, testes e build antes de publicar.

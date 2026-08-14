@@ -39,6 +39,7 @@ import { toast } from "sonner";
 import { cinemaCatalog } from "@/data/cinemas";
 import { trpc } from "@/lib/trpc";
 import { filmConfig } from "@shared/film-config";
+import { formatCpfInput, formatPhoneInput } from "@shared/input-masks";
 
 type Screen = "discover" | "sessions" | "seats" | "checkout" | "confirmation";
 type TicketType = "inteira" | "meia";
@@ -221,11 +222,11 @@ function StepIndicator({ current }: { current: Screen }) {
   );
 }
 
-function Field({ label, value, onChange, placeholder, type = "text" }: { label: string; value: string; onChange: (value: string) => void; placeholder?: string; type?: string }) {
+function Field({ label, value, onChange, placeholder, type = "text", inputMode, autoComplete }: { label: string; value: string; onChange: (value: string) => void; placeholder?: string; type?: string; inputMode?: "text" | "email" | "numeric" | "tel"; autoComplete?: string }) {
   return (
     <label className="field">
       <span>{label}</span>
-      <input type={type} value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} />
+      <input type={type} value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} inputMode={inputMode} autoComplete={autoComplete} />
     </label>
   );
 }
@@ -673,7 +674,7 @@ export default function Home() {
               <div className="flow-main">
                 <form className="panel checkout-panel" onSubmit={submitOrder}>
                   <div className="panel-heading"><div><span className="panel-index">04</span><h2>Finalize sua compra</h2><p>Preencha seus dados para receber o ingresso digital.</p></div><WalletCards size={22} /></div>
-                  <div className="checkout-section"><div className="subheading"><UserRound size={17} /><div><strong>Dados do comprador</strong><span>Usados para identificação e envio do ingresso.</span></div></div><div className="form-grid"><Field label="Nome completo" value={buyer.name} onChange={(value) => setBuyer((current) => ({ ...current, name: value }))} placeholder="Digite seu nome" /><Field label="E-mail" type="email" value={buyer.email} onChange={(value) => setBuyer((current) => ({ ...current, email: value }))} placeholder="voce@email.com" /><Field label="CPF" value={buyer.document} onChange={(value) => setBuyer((current) => ({ ...current, document: value }))} placeholder="000.000.000-00" /><Field label="Celular com DDD" value={buyer.phone} onChange={(value) => setBuyer((current) => ({ ...current, phone: value }))} placeholder="(11) 99999-9999" /></div></div>
+                  <div className="checkout-section"><div className="subheading"><UserRound size={17} /><div><strong>Dados do comprador</strong><span>Usados para identificação e envio do ingresso.</span></div></div><div className="form-grid"><Field label="Nome completo" value={buyer.name} onChange={(value) => setBuyer((current) => ({ ...current, name: value }))} placeholder="Digite seu nome" autoComplete="name" /><Field label="E-mail" type="email" value={buyer.email} onChange={(value) => setBuyer((current) => ({ ...current, email: value }))} placeholder="voce@email.com" inputMode="email" autoComplete="email" /><Field label="CPF" value={buyer.document} onChange={(value) => setBuyer((current) => ({ ...current, document: formatCpfInput(value) }))} placeholder="000.000.000-00" inputMode="numeric" autoComplete="off" /><Field label="Celular com DDD" value={buyer.phone} onChange={(value) => setBuyer((current) => ({ ...current, phone: formatPhoneInput(value) }))} placeholder="(11) 99999-9999" inputMode="tel" autoComplete="tel" /></div></div>
                   <div className="checkout-section"><div className="subheading"><WalletCards size={17} /><div><strong>Forma de pagamento</strong><span>PIX via AmploPay — confirmação automática e segura.</span></div></div><div className="payment-options"><div className="payment-option is-selected"><span className="payment-icon pix-icon">◆</span><span><strong>Pix</strong><small>QR Code e código copia e cola</small></span><Check size={17} /></div></div></div>
                   {pixPayment ? <div className="pix-payment-panel"><div className="pix-payment-heading"><div><span className="panel-index">PAGAMENTO PIX</span><h3>Aguardando confirmação</h3><p>Use o QR Code ou copie o código para pagar no aplicativo do seu banco.</p></div><span>{currency(pixPayment.amount)}</span></div><div className="pix-payment-content">{pixPayment.pixImageUrl ? <img src={pixPayment.pixImageUrl} alt="QR Code para pagamento PIX" className="pix-payment-qr" /> : <QRCodeCanvas value={pixPayment.pixCode} size={150} bgColor="#f4f0e6" fgColor="#10141b" includeMargin />}<div className="pix-payment-code"><span>CÓDIGO COPIA E COLA</span><code>{pixPayment.pixCode}</code><button type="button" className="button button-secondary" onClick={() => { navigator.clipboard.writeText(pixPayment.pixCode).then(() => toast.success("Código PIX copiado."), () => toast.error("Não foi possível copiar o código PIX.")); }}><Copy size={16} /> Copiar código</button></div></div><div className="pix-payment-actions"><span><span className="pulse-dot" /> {pixPaymentStatus.data?.status === "PAID" ? "Pagamento confirmado" : "Aguardando pagamento"}</span><button type="button" className="text-button" onClick={verifyPixPayment} disabled={pixPaymentStatus.isFetching}><RefreshCw size={15} /> {pixPaymentStatus.isFetching ? "Verificando..." : "Já paguei"}</button></div></div> : null}
                   <div className="demo-warning"><Info size={17} /><span>O valor e os dados da cobrança são calculados no servidor. A confirmação acontece por notificação segura da AmploPay.</span></div>{isEmptyPreview ? <div className="demo-validation-hint"><Info size={16} /> Validação QA: o botão de geração PIX deve rejeitar dados incompletos e assentos ausentes.</div> : null}
