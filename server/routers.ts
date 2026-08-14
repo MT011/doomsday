@@ -40,15 +40,31 @@ const pixOrderSchema = demoOrderSchema.omit({ payment: true });
 const WHOLE_TICKET_PRICE = 51.28;
 const HALF_TICKET_PRICE = 25.64;
 
-function getPublicOrigin(req: { protocol: string; get(name: string): string | undefined; headers: { origin?: string | string[]; "x-forwarded-proto"?: string | string[] } }) {
-  const host = req.get("host");
-  if (!host || /[\s/\\]/.test(host)) throw new Error("Não foi possível determinar a URL pública do site para receber a confirmação PIX.");
-  const forwardedProtocol = req.headers["x-forwarded-proto"];
-  const protocol = typeof forwardedProtocol === "string" ? forwardedProtocol.split(",")[0] : req.protocol;
-  const normalizedProtocol = protocol === "https" ? "https" : "http";
-  const calculatedOrigin = `${normalizedProtocol}://${host}`;
-  if (typeof req.headers.origin === "string" && req.headers.origin !== calculatedOrigin) throw new Error("A origem do checkout não corresponde ao domínio público configurado.");
-  return calculatedOrigin;
+export function getPublicOrigin(req: { headers: { origin?: string | string[] } }) {
+  const configuredOrigin = process.env.AMPLOPAY_CALLBACK_ORIGIN;
+  if (!configuredOrigin) throw new Error("A origem HTTPS pública do callback PIX não está configurada.");
+
+  let configuredUrl: URL;
+  try {
+    configuredUrl = new URL(configuredOrigin);
+  } catch {
+    throw new Error("A origem pública configurada para o callback PIX é inválida.");
+  }
+  if (configuredUrl.protocol !== "https:" || configuredUrl.pathname !== "/" || configuredUrl.search || configuredUrl.hash) {
+    throw new Error("A origem pública configurada para o callback PIX deve ser uma origem HTTPS simples.");
+  }
+
+  if (typeof req.headers.origin === "string") {
+    try {
+      if (new URL(req.headers.origin).origin !== configuredUrl.origin) {
+        throw new Error("A origem do checkout não corresponde ao domínio público configurado.");
+      }
+    } catch (error) {
+      if (error instanceof Error && error.message.includes("não corresponde")) throw error;
+      throw new Error("A origem do checkout é inválida.");
+    }
+  }
+  return configuredUrl.origin;
 }
 
 function calculateOrderAmount(seats: Array<{ ticketType: "inteira" | "meia" }>) {

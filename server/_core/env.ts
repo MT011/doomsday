@@ -9,4 +9,5 @@ export const ENV = {
   forgeApiKey: process.env.BUILT_IN_FORGE_API_KEY ?? "",
   amplopayPublicKey: process.env.AMPLOPAY_PUBLIC_KEY ?? "",
   amplopaySecretKey: process.env.AMPLOPAY_SECRET_KEY ?? "",
+  amplopayCallbackOrigin: process.env.AMPLOPAY_CALLBACK_ORIGIN ?? "",
 };

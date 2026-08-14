@@ -174,3 +174,8 @@
 - [x] Habilitar a chave de ativação do PIX real no ambiente de produção e revalidar as credenciais AmploPay.
 - [ ] Validar a rota pública HTTPS de webhook com uma cobrança real, comprovando que token inválido é rejeitado sem alterar o pagamento.
 - [ ] Aguardar a primeira cobrança PIX gerada pelo usuário no site para validar o QR Code, a persistência e o webhook real.
+
+## Correção de origem do checkout PIX
+
+- [x] Corrigir a validação de origem para aceitar com segurança o domínio HTTPS publicado atrás do proxy.
+- [ ] Validar o checkout publicado e solicitar novo teste de geração de PIX sem criar cobrança em nome do usuário.
