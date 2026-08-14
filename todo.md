@@ -204,3 +204,8 @@
 - [x] Confirmar com o usuário a geração do PIX, o recebimento no gateway e a conclusão do fluxo de teste.
 - [x] Restaurar a inteira para R$ 51,28 e a meia-entrada para R$ 25,64 após o teste aprovado.
 - [x] Validar os cálculos comerciais restaurados, publicar e registrar o PIX como operacional.
+
+## Centralização do mapa de assentos no mobile
+
+- [x] Centralizar o enquadramento inicial do mapa de assentos em mobile sem alterar o zoom definido.
+- [x] Validar visualmente o mapa centralizado, pan e controles antes de publicar.
