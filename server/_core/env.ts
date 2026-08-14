@@ -7,4 +7,6 @@ export const ENV = {
   isProduction: process.env.NODE_ENV === "production",
   forgeApiUrl: process.env.BUILT_IN_FORGE_API_URL ?? "",
   forgeApiKey: process.env.BUILT_IN_FORGE_API_KEY ?? "",
+  amplopayPublicKey: process.env.AMPLOPAY_PUBLIC_KEY ?? "",
+  amplopaySecretKey: process.env.AMPLOPAY_SECRET_KEY ?? "",
 };

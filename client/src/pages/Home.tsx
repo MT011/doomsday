@@ -8,6 +8,7 @@ import {
   Check,
   ChevronDown,
   Clock3,
+  Copy,
   Download,
   Film,
   Globe2,
@@ -23,6 +24,7 @@ import {
   Move,
   Plus,
   QrCode,
+  RefreshCw,
   ScanLine,
   ShoppingBag,
   Ticket,
@@ -83,6 +85,14 @@ type Order = {
   seats: OrderSeat[];
   total: number;
   payment: string;
+};
+
+type PixPayment = {
+  orderCode: string;
+  status: string;
+  amount: number;
+  pixCode: string;
+  pixImageUrl: string | null;
 };
 
 const HERO_URL = "/manus-storage/avengers-doomsday-hero_13158c4a.webp";
@@ -252,10 +262,11 @@ export default function Home() {
   const [isDragging, setIsDragging] = useState(false);
   const [dragOrigin, setDragOrigin] = useState({ x: 0, y: 0 });
   const [buyer, setBuyer] = useState({ name: "", email: "", document: "" });
-  const [payment, setPayment] = useState<"pix" | "card">("pix");
-  const createDemoOrder = trpc.presale.createDemoOrder.useMutation();
+  const [payment] = useState<"pix">("pix");
+  const createPixPayment = trpc.presale.createPixPayment.useMutation();
   const sendDemoEmail = trpc.presale.sendDemoConfirmationEmail.useMutation();
   const [order, setOrder] = useState<Order | null>(null);
+  const [pixPayment, setPixPayment] = useState<PixPayment | null>(null);
   const mapRef = useRef<HTMLDivElement | null>(null);
   const heroVideoRef = useRef<HTMLVideoElement | null>(null);
 
@@ -303,6 +314,8 @@ export default function Home() {
   const ticketQuantity = plannedTicketTypes.length;
   const plannedTotal = Number((ticketQuantities.inteira * selectedSession.price + ticketQuantities.meia * HALF_PRICE).toFixed(2));
   const total = seatSelections.reduce((sum, seat) => sum + (seat.ticketType === "meia" ? HALF_PRICE : selectedSession.price), 0);
+  const pixStatusInput = useMemo(() => ({ orderCode: pixPayment?.orderCode ?? "PENDING" }), [pixPayment?.orderCode]);
+  const pixPaymentStatus = trpc.presale.getPixPaymentStatus.useQuery(pixStatusInput, { enabled: Boolean(pixPayment), retry: false });
 
   useEffect(() => {
     if (!selectedCinemaName || !cinemasForCity.some((cinema) => cinema.name === selectedCinemaName)) {
@@ -440,23 +453,41 @@ export default function Home() {
       toast.error(ticketQuantity ? `Preencha seus dados e selecione os ${ticketQuantity} assentos solicitados.` : "Selecione sua sessão e a quantidade de ingressos.");
       return;
     }
-    createDemoOrder.mutate(
+    createPixPayment.mutate(
       {
         buyer,
-        payment,
         cinema: selectedCinema,
         session: selectedSession,
         seats: seatSelections.map(({ id, row, number, ticketType }) => ({ id, row, number, ticketType })),
       },
       {
-        onSuccess: (createdOrder) => {
-          setOrder(createdOrder as Order);
-          setScreen("confirmation");
-          window.setTimeout(() => document.getElementById("purchase-flow")?.scrollIntoView({ behavior: "smooth" }), 20);
+        onSuccess: (createdPayment) => {
+          setPixPayment(createdPayment as PixPayment);
+          toast.success("Código PIX gerado. Conclua o pagamento para garantir seus assentos.");
         },
-        onError: (error) => toast.error(error.message || "Não foi possível criar o pedido."),
+        onError: (error) => toast.error(error.message || "Não foi possível gerar a cobrança PIX."),
       },
     );
+  };
+
+  const verifyPixPayment = async () => {
+    const result = await pixPaymentStatus.refetch();
+    if (result.data?.status !== "PAID" || !pixPayment) {
+      toast.message("Pagamento ainda pendente. Assim que a AmploPay confirmar, seus assentos serão liberados.");
+      return;
+    }
+    setOrder({
+      code: pixPayment.orderCode,
+      createdAt: new Date().toISOString(),
+      buyer,
+      payment: "pix",
+      session: selectedSession,
+      cinema: selectedCinema,
+      seats: seatSelections.map(({ id, row, number, ticketType }) => ({ id, row, number, ticketType })),
+      total: pixPayment.amount,
+    });
+    setScreen("confirmation");
+    window.setTimeout(() => document.getElementById("purchase-flow")?.scrollIntoView({ behavior: "smooth" }), 20);
   };
 
   const handlePointerDown = (event: PointerEvent<HTMLDivElement>) => {
@@ -478,6 +509,7 @@ export default function Home() {
   const resetFlow = () => {
     setScreen("discover");
     setOrder(null);
+    setPixPayment(null);
     setSelectedDate(filmConfig.releaseDate);
     setSelectedSessionId("");
     setTicketQuantities(EMPTY_TICKET_QUANTITIES);
@@ -639,9 +671,10 @@ export default function Home() {
                 <form className="panel checkout-panel" onSubmit={submitOrder}>
                   <div className="panel-heading"><div><span className="panel-index">04</span><h2>Finalize sua compra</h2><p>Preencha seus dados para receber o ingresso digital.</p></div><WalletCards size={22} /></div>
                   <div className="checkout-section"><div className="subheading"><UserRound size={17} /><div><strong>Dados do comprador</strong><span>Usados para identificação e envio do ingresso.</span></div></div><div className="form-grid"><Field label="Nome completo" value={buyer.name} onChange={(value) => setBuyer((current) => ({ ...current, name: value }))} placeholder="Digite seu nome" /><Field label="E-mail" type="email" value={buyer.email} onChange={(value) => setBuyer((current) => ({ ...current, email: value }))} placeholder="voce@email.com" /><Field label="CPF" value={buyer.document} onChange={(value) => setBuyer((current) => ({ ...current, document: value }))} placeholder="000.000.000-00" /></div></div>
-                  <div className="checkout-section"><div className="subheading"><WalletCards size={17} /><div><strong>Forma de pagamento</strong><span>Modo demonstração — nenhum pagamento será processado.</span></div></div><div className="payment-options"><button type="button" className={`payment-option ${payment === "pix" ? "is-selected" : ""}`} onClick={() => setPayment("pix")}><span className="payment-icon pix-icon">◆</span><span><strong>Pix</strong><small>Aprovação imediata</small></span>{payment === "pix" ? <Check size={17} /> : null}</button><button type="button" className={`payment-option ${payment === "card" ? "is-selected" : ""}`} onClick={() => setPayment("card")}><span className="payment-icon"><WalletCards size={18} /></span><span><strong>Cartão de crédito</strong><small>Até 3x sem juros</small></span>{payment === "card" ? <Check size={17} /> : null}</button></div></div>
-                  <div className="demo-warning"><Info size={17} /><span>{filmConfig.demoModeNotice}</span></div>{isEmptyPreview ? <div className="demo-validation-hint"><Info size={16} /> Validação QA: o botão de confirmação deve rejeitar dados incompletos e assentos ausentes.</div> : null}
-                  <button className="button button-primary wide-button" type="submit" disabled={createDemoOrder.isPending}>{createDemoOrder.isPending ? "Gerando confirmação..." : "Confirmar pedido de demonstração"} {!createDemoOrder.isPending ? <ArrowRight size={17} /> : null}</button>
+                  <div className="checkout-section"><div className="subheading"><WalletCards size={17} /><div><strong>Forma de pagamento</strong><span>PIX via AmploPay — confirmação automática e segura.</span></div></div><div className="payment-options"><div className="payment-option is-selected"><span className="payment-icon pix-icon">◆</span><span><strong>Pix</strong><small>QR Code e código copia e cola</small></span><Check size={17} /></div></div></div>
+                  {pixPayment ? <div className="pix-payment-panel"><div className="pix-payment-heading"><div><span className="panel-index">PAGAMENTO PIX</span><h3>Aguardando confirmação</h3><p>Use o QR Code ou copie o código para pagar no aplicativo do seu banco.</p></div><span>{currency(pixPayment.amount)}</span></div><div className="pix-payment-content">{pixPayment.pixImageUrl ? <img src={pixPayment.pixImageUrl} alt="QR Code para pagamento PIX" className="pix-payment-qr" /> : <QRCodeCanvas value={pixPayment.pixCode} size={150} bgColor="#f4f0e6" fgColor="#10141b" includeMargin />}<div className="pix-payment-code"><span>CÓDIGO COPIA E COLA</span><code>{pixPayment.pixCode}</code><button type="button" className="button button-secondary" onClick={() => { navigator.clipboard.writeText(pixPayment.pixCode).then(() => toast.success("Código PIX copiado."), () => toast.error("Não foi possível copiar o código PIX.")); }}><Copy size={16} /> Copiar código</button></div></div><div className="pix-payment-actions"><span><span className="pulse-dot" /> {pixPaymentStatus.data?.status === "PAID" ? "Pagamento confirmado" : "Aguardando pagamento"}</span><button type="button" className="text-button" onClick={verifyPixPayment} disabled={pixPaymentStatus.isFetching}><RefreshCw size={15} /> {pixPaymentStatus.isFetching ? "Verificando..." : "Já paguei"}</button></div></div> : null}
+                  <div className="demo-warning"><Info size={17} /><span>O valor e os dados da cobrança são calculados no servidor. A confirmação acontece por notificação segura da AmploPay.</span></div>{isEmptyPreview ? <div className="demo-validation-hint"><Info size={16} /> Validação QA: o botão de geração PIX deve rejeitar dados incompletos e assentos ausentes.</div> : null}
+                  <button className="button button-primary wide-button" type="submit" disabled={createPixPayment.isPending || Boolean(pixPayment)}>{createPixPayment.isPending ? "Gerando PIX..." : pixPayment ? "PIX gerado" : "Gerar código PIX"} {!createPixPayment.isPending && !pixPayment ? <ArrowRight size={17} /> : null}</button>
                 </form>
               </div>
               <aside className="flow-side"><OrderSummary cinema={selectedCinema} session={selectedSession} seats={seatSelections} plannedTicketTypes={plannedTicketTypes} total={total} plannedTotal={plannedTotal} onRemove={(id) => setSeatSelections((current) => current.filter((seat) => seat.id !== id))} /></aside>
@@ -649,7 +682,7 @@ export default function Home() {
           ) : null}
 
           {screen === "confirmation" && order ? (
-            <div className="confirmation-layout"><div className="confirmation-card"><div className="confirmation-icon"><Check size={30} /></div><span className="eyebrow">PEDIDO CONFIRMADO</span><h2>Seu lugar está reservado.</h2><p>Enviamos uma confirmação de demonstração para <strong>{order.buyer.email}</strong>.</p><div className="order-code"><span>CÓDIGO DO PEDIDO</span><strong>{order.code}</strong></div><div className="ticket-card"><div className="ticket-main"><span className="ticket-label">AVENGERS: DOOMSDAY</span><h3>{order.cinema.name}</h3><p>{order.cinema.city}, {order.cinema.uf} · {order.session.room}</p><div className="ticket-meta"><span><CalendarDays size={14} /> {order.session.dateLabel}</span><span><Clock3 size={14} /> {order.session.time}</span><span><Film size={14} /> {order.session.format}</span></div><div className="ticket-seats"><span>ASSENTOS</span><strong>{order.seats.map((seat) => `${seat.row}${seat.number}`).join(" · ")}</strong></div></div><div className="ticket-qr"><QRCodeCanvas value={`https://presale.doomsday.example/ticket/${order.code}`} size={132} bgColor="#f4f0e6" fgColor="#10141b" includeMargin /><span>APRESENTE NA ENTRADA</span></div></div>{isEmailErrorPreview ? <div className="demo-validation-hint"><Info size={16} /> QA: falha de envio simulada. O usuário recebe erro e pode tentar novamente.</div> : null}<div className="confirmation-actions"><button className="button button-primary" onClick={() => window.print()}><Download size={17} /> Baixar ingresso</button><button className="button button-secondary" disabled={sendDemoEmail.isPending} onClick={() => { if (isEmailErrorPreview) { toast.error("Não foi possível enviar a confirmação. Tente novamente."); return; } sendDemoEmail.mutate({ orderCode: order.code, email: order.buyer.email }, { onSuccess: (result) => toast.success(`Confirmação enviada para ${result.to} · ${result.messageId}`), onError: (error) => toast.error(error.message) }); }}><Mail size={17} /> {sendDemoEmail.isPending ? "Enviando..." : "Enviar por e-mail"}</button></div><button className="text-button" onClick={resetFlow}>Comprar outro ingresso <ArrowRight size={15} /></button></div><div className="confirmation-side"><div className="side-stat"><span>STATUS</span><strong><span className="pulse-dot" /> PRONTO PARA APRESENTAR</strong></div><div className="side-stat"><span>FORMA DE PAGAMENTO</span><strong>{payment === "pix" ? "Pix" : "Cartão de crédito"}</strong></div><div className="side-stat"><span>TOTAL</span><strong className="accent-value">{currency(order.total)}</strong></div><div className="scan-card"><ScanLine size={25} /><strong>Uma experiência digna da tela grande.</strong><span>O QR Code acima é uma credencial digital de demonstração.</span></div></div></div>
+            <div className="confirmation-layout"><div className="confirmation-card"><div className="confirmation-icon"><Check size={30} /></div><span className="eyebrow">PAGAMENTO PIX CONFIRMADO</span><h2>Seu lugar está reservado.</h2><p>O pagamento foi confirmado. Enviaremos os dados do pedido para <strong>{order.buyer.email}</strong>.</p><div className="order-code"><span>CÓDIGO DO PEDIDO</span><strong>{order.code}</strong></div><div className="ticket-card"><div className="ticket-main"><span className="ticket-label">AVENGERS: DOOMSDAY</span><h3>{order.cinema.name}</h3><p>{order.cinema.city}, {order.cinema.uf} · {order.session.room}</p><div className="ticket-meta"><span><CalendarDays size={14} /> {order.session.dateLabel}</span><span><Clock3 size={14} /> {order.session.time}</span><span><Film size={14} /> {order.session.format}</span></div><div className="ticket-seats"><span>ASSENTOS</span><strong>{order.seats.map((seat) => `${seat.row}${seat.number}`).join(" · ")}</strong></div></div><div className="ticket-qr"><QRCodeCanvas value={`https://presale.doomsday.example/ticket/${order.code}`} size={132} bgColor="#f4f0e6" fgColor="#10141b" includeMargin /><span>APRESENTE NA ENTRADA</span></div></div>{isEmailErrorPreview ? <div className="demo-validation-hint"><Info size={16} /> QA: falha de envio simulada. O usuário recebe erro e pode tentar novamente.</div> : null}<div className="confirmation-actions"><button className="button button-primary" onClick={() => window.print()}><Download size={17} /> Baixar ingresso</button><button className="button button-secondary" disabled={sendDemoEmail.isPending} onClick={() => { if (isEmailErrorPreview) { toast.error("Não foi possível enviar a confirmação. Tente novamente."); return; } sendDemoEmail.mutate({ orderCode: order.code, email: order.buyer.email }, { onSuccess: (result) => toast.success(`Confirmação enviada para ${result.to} · ${result.messageId}`), onError: (error) => toast.error(error.message) }); }}><Mail size={17} /> {sendDemoEmail.isPending ? "Enviando..." : "Enviar por e-mail"}</button></div><button className="text-button" onClick={resetFlow}>Comprar outro ingresso <ArrowRight size={15} /></button></div><div className="confirmation-side"><div className="side-stat"><span>STATUS</span><strong><span className="pulse-dot" /> PAGAMENTO APROVADO</strong></div><div className="side-stat"><span>FORMA DE PAGAMENTO</span><strong>Pix</strong></div><div className="side-stat"><span>TOTAL</span><strong className="accent-value">{currency(order.total)}</strong></div><div className="scan-card"><ScanLine size={25} /><strong>Uma experiência digna da tela grande.</strong><span>A confirmação depende da notificação segura de pagamento.</span></div></div></div>
           ) : null}
         </section>
       ) : null}
@@ -671,5 +704,5 @@ function TicketConfigurator({ quantities, session, total, onChange }: { quantiti
 function OrderSummary({ cinema, session, seats, plannedTicketTypes, total, plannedTotal, onRemove, onContinue }: { cinema: Cinema; session: Session; seats: SeatSelection[]; plannedTicketTypes: TicketType[]; total: number; plannedTotal: number; onRemove: (id: string) => void; onContinue?: () => void }) {
   const isSeatSelectionComplete = plannedTicketTypes.length > 0 && seats.length === plannedTicketTypes.length;
   const displayTotal = isSeatSelectionComplete ? total : plannedTotal;
-  return <div className="order-summary"><div className="summary-heading"><div><span className="eyebrow"><ShoppingBag size={14} /> RESUMO DO PEDIDO</span><h2>Seu pedido</h2></div><span className="summary-count">{plannedTicketTypes.length}</span></div><div className="summary-film"><div className="summary-poster"><img src={LOGO_URL} alt="Avengers Doomsday" /></div><div><strong>Avengers: Doomsday</strong><span>{cinema.name}</span><span>{session.dateLabel} · {session.time} · {session.format}</span></div></div><div className="summary-divider" /><div className="summary-location"><MapPin size={15} /><span>{cinema.city}, {cinema.uf}<small>{session.room}</small></span></div><div className="summary-items">{seats.length ? seats.map((seat) => <div className="summary-item" key={seat.id}><div><strong>Assento {seat.row}{seat.number}</strong><span>{seat.ticketType === "meia" ? "Meia-entrada" : "Inteira"}</span></div><div><span>{currency(seat.ticketType === "meia" ? HALF_PRICE : session.price)}</span><button type="button" onClick={() => onRemove(seat.id)} aria-label={`Remover assento ${seat.row}${seat.number}`}><Trash2 size={14} /></button></div></div>) : plannedTicketTypes.length ? plannedTicketTypes.map((ticketType, index) => <div className="summary-item summary-item-pending" key={`${ticketType}-${index}`}><div><strong>{ticketType === "meia" ? "Meia-entrada" : "Inteira"}</strong><span>Aguardando assento</span></div><div><span>{currency(ticketType === "meia" ? HALF_PRICE : session.price)}</span></div></div>) : <div className="summary-empty"><Ticket size={20} /><span>Escolha uma sessão e informe seus ingressos.</span></div>}</div><div className="summary-totals"><span>Ingressos <strong>{currency(displayTotal)}</strong></span><span>Taxa de serviço <strong>{currency(0)}</strong></span><div><span>Total</span><strong>{currency(displayTotal)}</strong></div></div>{onContinue ? <button className="button button-primary wide-button" onClick={onContinue}>Ir para pagamento <ArrowRight size={17} /></button> : null}<p className="summary-safe"><span className="pulse-dot" /> Ambiente de demonstração protegido</p></div>;
+  return <div className="order-summary"><div className="summary-heading"><div><span className="eyebrow"><ShoppingBag size={14} /> RESUMO DO PEDIDO</span><h2>Seu pedido</h2></div><span className="summary-count">{plannedTicketTypes.length}</span></div><div className="summary-film"><div className="summary-poster"><img src={LOGO_URL} alt="Avengers Doomsday" /></div><div><strong>Avengers: Doomsday</strong><span>{cinema.name}</span><span>{session.dateLabel} · {session.time} · {session.format}</span></div></div><div className="summary-divider" /><div className="summary-location"><MapPin size={15} /><span>{cinema.city}, {cinema.uf}<small>{session.room}</small></span></div><div className="summary-items">{seats.length ? seats.map((seat) => <div className="summary-item" key={seat.id}><div><strong>Assento {seat.row}{seat.number}</strong><span>{seat.ticketType === "meia" ? "Meia-entrada" : "Inteira"}</span></div><div><span>{currency(seat.ticketType === "meia" ? HALF_PRICE : session.price)}</span><button type="button" onClick={() => onRemove(seat.id)} aria-label={`Remover assento ${seat.row}${seat.number}`}><Trash2 size={14} /></button></div></div>) : plannedTicketTypes.length ? plannedTicketTypes.map((ticketType, index) => <div className="summary-item summary-item-pending" key={`${ticketType}-${index}`}><div><strong>{ticketType === "meia" ? "Meia-entrada" : "Inteira"}</strong><span>Aguardando assento</span></div><div><span>{currency(ticketType === "meia" ? HALF_PRICE : session.price)}</span></div></div>) : <div className="summary-empty"><Ticket size={20} /><span>Escolha uma sessão e informe seus ingressos.</span></div>}</div><div className="summary-totals"><span>Ingressos <strong>{currency(displayTotal)}</strong></span><span>Taxa de serviço <strong>{currency(0)}</strong></span><div><span>Total</span><strong>{currency(displayTotal)}</strong></div></div>{onContinue ? <button className="button button-primary wide-button" onClick={onContinue}>Ir para pagamento <ArrowRight size={17} /></button> : null}<p className="summary-safe"><span className="pulse-dot" /> Pagamento PIX protegido</p></div>;
 }

@@ -154,3 +154,20 @@
 
 - [x] Manter quatro horários por data/cidade, incluindo 15:30 como a única sessão 3D.
 - [x] Exibir as três sessões restantes como 2D · Tela premium e validar tipos, testes e build.
+
+## Preparação da integração PIX AmploPay
+
+- [x] Revisar a documentação e a autenticação oficiais da AmploPay para pagamentos PIX.
+- [x] Definir fluxo seguro de criação, consulta e confirmação de cobranças PIX no servidor.
+- [x] Solicitar somente as credenciais necessárias após documentar como serão protegidas e usadas.
+
+## Integração PIX AmploPay
+
+- [x] Cadastrar as chaves da AmploPay exclusivamente como segredos do servidor e validar permissões/expiração.
+- [x] Preparar a criação de cobrança PIX no servidor com valor calculado internamente, identificador único e suporte a QR Code/copia e cola.
+- [x] Preparar a persistência do estado da cobrança e do token de validação retornado pela AmploPay.
+- [x] Preparar o endpoint de webhook idempotente para confirmar somente pagamentos `TRANSACTION_PAID` validados.
+- [x] Preparar a experiência de checkout PIX, mantendo o cliente sem acesso a segredos.
+- [x] Documentar o cadastro do webhook, cobrir credenciais e regras críticas com testes e validar tipos/build.
+- [ ] Validar cobrança PIX real, persistência, webhook HTTPS e transição segura de pendente para pago antes de marcar o fluxo como operacional.
+- [ ] Publicar o site e receber confirmação explícita antes de ativar a criação de cobranças reais via PIX.

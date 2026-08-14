@@ -8,6 +8,13 @@
       "when": 1786468084356,
       "tag": "0000_secret_ender_wiggin",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1786715921535,
+      "tag": "0001_unusual_warbound",
+      "breakpoints": true
     }
   ]
 }

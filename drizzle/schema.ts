@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { int, json, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -25,4 +25,29 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// TODO: Add your tables here
+export const amplopayPixPayments = mysqlTable("amplopayPixPayments", {
+  id: int("id").autoincrement().primaryKey(),
+  orderCode: varchar("orderCode", { length: 64 }).notNull().unique(),
+  identifier: varchar("identifier", { length: 96 }).notNull().unique(),
+  transactionId: varchar("transactionId", { length: 128 }).unique(),
+  status: mysqlEnum("status", ["PENDING", "PAID", "FAILED", "REJECTED", "CANCELED", "REFUNDED", "CHARGED_BACK"]).notNull().default("PENDING"),
+  amountCents: int("amountCents").notNull(),
+  buyerName: varchar("buyerName", { length: 255 }).notNull(),
+  buyerEmail: varchar("buyerEmail", { length: 320 }).notNull(),
+  buyerDocument: varchar("buyerDocument", { length: 64 }).notNull(),
+  cinema: json("cinema").notNull(),
+  session: json("session").notNull(),
+  seats: json("seats").notNull(),
+  pixCode: text("pixCode"),
+  pixImageUrl: text("pixImageUrl"),
+  webhookToken: varchar("webhookToken", { length: 512 }),
+  lastWebhookEvent: varchar("lastWebhookEvent", { length: 64 }),
+  webhookProcessedAt: timestamp("webhookProcessedAt"),
+  paidAt: timestamp("paidAt"),
+  providerPayload: json("providerPayload"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type AmploPayPixPayment = typeof amplopayPixPayments.$inferSelect;
+export type InsertAmploPayPixPayment = typeof amplopayPixPayments.$inferInsert;

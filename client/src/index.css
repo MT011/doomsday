@@ -391,6 +391,21 @@ em { color: #4f9e63; font-style: normal; }
 .payment-icon { display: grid; place-items: center; width: 30px; height: 30px; color: #4f9e63; border: 1px solid rgba(65,143,82,.35); }
 .pix-icon { font-size: 14px; }
 .demo-warning { margin: 0 31px 4px; }
+.pix-payment-panel { margin: 4px 31px 20px; border: 1px solid rgba(91,177,110,.34); background: linear-gradient(135deg, rgba(38,87,57,.23), rgba(14,26,32,.9)); }
+.pix-payment-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 20px; border-bottom: 1px solid rgba(202,216,209,.12); }
+.pix-payment-heading .panel-index { margin-bottom: 5px; color: #7dc791; }
+.pix-payment-heading h3 { margin: 0; color: #eef4ed; font: 600 24px/1 'Barlow Condensed', sans-serif; text-transform: uppercase; }
+.pix-payment-heading p { max-width: 390px; margin: 7px 0 0; color: #91a49a; font-size: 11px; line-height: 1.55; }
+.pix-payment-heading > span { color: #79c58b; font: 700 25px 'Barlow Condensed', sans-serif; }
+.pix-payment-content { display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 20px; align-items: center; padding: 20px; }
+.pix-payment-qr { display: block; width: 150px; height: 150px; padding: 10px; background: #f4f0e6; object-fit: contain; }
+.pix-payment-code { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; min-width: 0; }
+.pix-payment-code > span { color: #84998d; font: 500 9px 'DM Mono', monospace; letter-spacing: .09em; }
+.pix-payment-code code { display: -webkit-box; overflow: hidden; max-height: 52px; color: #d7e6d9; font: 500 10px/1.55 'DM Mono', monospace; overflow-wrap: anywhere; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
+.pix-payment-code .button { padding: 10px 13px; font-size: 9px; }
+.pix-payment-actions { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 14px 20px 17px; border-top: 1px solid rgba(202,216,209,.11); }
+.pix-payment-actions > span { display: inline-flex; align-items: center; gap: 8px; color: #91a89b; font: 500 9px 'DM Mono', monospace; }
+.pix-payment-actions .text-button { padding: 0; }
 
 .confirmation-layout { display: grid; grid-template-columns: minmax(0, 1fr) 290px; gap: 30px; padding-top: 31px; }
 .confirmation-card { padding: 46px; border: 1px solid rgba(65,143,82,.3); background: linear-gradient(140deg, rgba(34,69,64,.76), rgba(15,25,32,.9)); }
@@ -521,6 +536,14 @@ em { color: #4f9e63; font-style: normal; }
   .ticket-option-actions { gap: 8px; }
   .ticket-option-actions > b { min-width: 60px; font-size: 9px; }
   .ticket-configurator-total { padding: 14px 15px; }
+  .pix-payment-panel { margin-inline: 20px; }
+  .pix-payment-heading { padding: 17px 15px; }
+  .pix-payment-heading h3 { font-size: 21px; }
+  .pix-payment-heading > span { font-size: 23px; }
+  .pix-payment-content { grid-template-columns: 1fr; justify-items: center; padding: 18px 15px; }
+  .pix-payment-code { width: 100%; }
+  .pix-payment-code .button { width: 100%; justify-content: center; }
+  .pix-payment-actions { align-items: flex-start; flex-direction: column; padding: 14px 15px 16px; }
   .map-toolbar { align-items: flex-start; flex-direction: column; }
   .seat-map-wrap { height: 430px; }
   .seat-map { min-width: 610px; }

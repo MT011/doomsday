@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { amplopayPixPayments, InsertAmploPayPixPayment, InsertUser, users } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,4 +89,30 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+export async function createAmploPayPixPayment(values: InsertAmploPayPixPayment) {
+  const db = await getDb();
+  if (!db) throw new Error("O banco de dados não está disponível para criar a cobrança PIX.");
+  await db.insert(amplopayPixPayments).values(values);
+  return getAmploPayPixPaymentByOrderCode(values.orderCode);
+}
+
+export async function getAmploPayPixPaymentByOrderCode(orderCode: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(amplopayPixPayments).where(eq(amplopayPixPayments.orderCode, orderCode)).limit(1);
+  return result[0];
+}
+
+export async function getAmploPayPixPaymentByTransactionId(transactionId: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(amplopayPixPayments).where(eq(amplopayPixPayments.transactionId, transactionId)).limit(1);
+  return result[0];
+}
+
+export async function updateAmploPayPixPayment(orderCode: string, values: Partial<InsertAmploPayPixPayment>) {
+  const db = await getDb();
+  if (!db) throw new Error("O banco de dados não está disponível para atualizar a cobrança PIX.");
+  await db.update(amplopayPixPayments).set(values).where(eq(amplopayPixPayments.orderCode, orderCode));
+  return getAmploPayPixPaymentByOrderCode(orderCode);
+}
