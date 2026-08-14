@@ -72,6 +72,7 @@ type Seat = {
 
 type SeatSelection = Seat & { ticketType: TicketType };
 type OrderSeat = Pick<SeatSelection, "id" | "row" | "number" | "ticketType">;
+type TicketQuantities = Record<TicketType, number>;
 
 type Order = {
   code: string;
@@ -91,6 +92,8 @@ const EVENT_ART_URL = "/manus-storage/doomsday-event-art_c0607a2c.webp";
 const DIVIDER_ART_URL = "/manus-storage/doomsday-divider-art_f3e0250e.webp";
 const WHOLE_PRICE = 39.9;
 const HALF_PRICE = 19.95;
+const MAX_TICKETS_PER_ORDER = 8;
+const EMPTY_TICKET_QUANTITIES: TicketQuantities = { inteira: 0, meia: 0 };
 
 const currency = (value: number) =>
   value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -124,23 +127,33 @@ function formatDateLabel(date: Date) {
   return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "short", timeZone: "UTC" }).replace(".", "").toUpperCase();
 }
 
-function buildSessions(cinema: Cinema): Session[] {
+function buildSessions(cinema: Cinema, date: string): Session[] {
   const seed = hashString(cinema.name);
-  const releaseDate = new Date(`${filmConfig.releaseDate}T00:00:00Z`);
-  releaseDate.setUTCDate(releaseDate.getUTCDate() + (seed % 3));
-  const day = String(releaseDate.getUTCDate()).padStart(2, "0");
-  const date = releaseDate.toISOString().slice(0, 10);
+  const sessionDate = new Date(`${date}T00:00:00Z`);
   const times = ["13:20", "15:00", "18:10", "21:25"];
   return times.map((time, index) => ({
     id: `${slug(cinema.name)}-${date}-${time.replace(":", "")}`,
     date,
-    dateLabel: formatDateLabel(releaseDate),
+    dateLabel: formatDateLabel(sessionDate),
     time,
     language: index % 3 === 0 ? "Dublado" : "Legendado",
     format: index === 1 ? "IMAX" : index === 2 ? "3D" : "2D",
     room: `Sala ${(seed + index) % 5 + 1}`,
     price: index === 1 ? 44.9 : index === 2 ? 42.9 : 39.9,
   }));
+}
+
+function buildPresaleDates() {
+  const releaseDate = new Date(`${filmConfig.releaseDate}T00:00:00Z`);
+  return Array.from({ length: 6 }, (_, offset) => {
+    const date = new Date(releaseDate);
+    date.setUTCDate(date.getUTCDate() + offset);
+    return {
+      value: date.toISOString().slice(0, 10),
+      label: formatDateLabel(date),
+      weekday: date.toLocaleDateString("pt-BR", { weekday: "short", timeZone: "UTC" }).replace(".", "").toUpperCase(),
+    };
+  });
 }
 
 function buildSeats(cinemaName: string, sessionId: string): Seat[] {
@@ -225,7 +238,9 @@ export default function Home() {
   const [selectedCity, setSelectedCity] = useState(() => getInitialLocation().city);
   const noCinemaScenario = isNoCinemaPreview && selectedState === "SP" && selectedCity === "São Paulo";
   const [selectedCinemaName, setSelectedCinemaName] = useState("");
+  const [selectedDate, setSelectedDate] = useState<string>(filmConfig.releaseDate);
   const [selectedSessionId, setSelectedSessionId] = useState("");
+  const [ticketQuantities, setTicketQuantities] = useState<TicketQuantities>(EMPTY_TICKET_QUANTITIES);
   const [seatSelections, setSeatSelections] = useState<SeatSelection[]>([]);
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -270,10 +285,18 @@ export default function Home() {
     );
   }, [cinemasForCity, noCinemaScenario, selectedCinemaName, selectedCity, selectedState, stateOptions]);
 
-  const sessions = useMemo(() => buildSessions(selectedCinema), [selectedCinema]);
+  const presaleDates = useMemo(() => buildPresaleDates(), []);
+  const sessions = useMemo(() => buildSessions(selectedCinema, selectedDate), [selectedCinema, selectedDate]);
   const selectedSession = sessions.find((session) => session.id === selectedSessionId) ?? sessions[0];
+  const isSessionSelected = sessions.some((session) => session.id === selectedSessionId);
   const seats = useMemo(() => buildSeats(selectedCinema.name, selectedSession.id), [selectedCinema.name, selectedSession.id]);
   const rows = useMemo(() => Array.from(new Set(seats.map((seat) => seat.row))), [seats]);
+  const plannedTicketTypes = useMemo<TicketType[]>(() => [
+    ...Array.from({ length: ticketQuantities.inteira }, () => "inteira" as const),
+    ...Array.from({ length: ticketQuantities.meia }, () => "meia" as const),
+  ], [ticketQuantities]);
+  const ticketQuantity = plannedTicketTypes.length;
+  const plannedTotal = Number((ticketQuantities.inteira * selectedSession.price + ticketQuantities.meia * HALF_PRICE).toFixed(2));
   const total = seatSelections.reduce((sum, seat) => sum + (seat.ticketType === "meia" ? HALF_PRICE : selectedSession.price), 0);
 
   useEffect(() => {
@@ -287,11 +310,12 @@ export default function Home() {
   }, [citiesForState, selectedCity]);
 
   useEffect(() => {
-    setSelectedSessionId(sessions[0]?.id ?? "");
+    setSelectedSessionId("");
+    setTicketQuantities(EMPTY_TICKET_QUANTITIES);
     setSeatSelections([]);
     setZoom(1);
     setPan({ x: 0, y: 0 });
-  }, [selectedCinema.name, sessions]);
+  }, [selectedCinema.name, selectedDate]);
 
   useEffect(() => {
     if (screen !== "seats") setIsDragging(false);
@@ -314,6 +338,8 @@ export default function Home() {
   useEffect(() => {
     if (!isDemoPreview || isEmptyPreview || screen === "discover" || !seats.length || seatSelections.length) return;
     const demoSeats = seats.filter((seat) => seat.status === "available").slice(0, 2).map((seat) => ({ ...seat, ticketType: "inteira" as const }));
+    setSelectedSessionId(selectedSession.id);
+    setTicketQuantities({ inteira: 2, meia: 0 });
     setSeatSelections(demoSeats);
     if (screen === "confirmation" && !order) {
       setOrder({
@@ -334,7 +360,9 @@ export default function Home() {
     const nextCity = cinemaCatalog.find((cinema) => cinema.uf === uf)?.city ?? "";
     setSelectedCity(nextCity);
     setSelectedCinemaName("");
+    setSelectedDate(filmConfig.releaseDate);
     setSelectedSessionId("");
+    setTicketQuantities(EMPTY_TICKET_QUANTITIES);
     setSeatSelections([]);
   };
 
@@ -342,6 +370,7 @@ export default function Home() {
     setSelectedCity(city);
     setSelectedCinemaName("");
     setSelectedSessionId("");
+    setTicketQuantities(EMPTY_TICKET_QUANTITIES);
     setSeatSelections([]);
   };
 
@@ -350,7 +379,36 @@ export default function Home() {
     window.setTimeout(() => document.getElementById("purchase-flow")?.scrollIntoView({ behavior: "smooth" }), 20);
   };
 
+  const selectSessionDate = (date: string) => {
+    if (date === selectedDate) return;
+    setSelectedDate(date);
+    setSelectedSessionId("");
+    setTicketQuantities(EMPTY_TICKET_QUANTITIES);
+    setSeatSelections([]);
+  };
+
+  const selectSession = (sessionId: string) => {
+    if (sessionId === selectedSessionId) return;
+    setSelectedSessionId(sessionId);
+    setTicketQuantities(EMPTY_TICKET_QUANTITIES);
+    setSeatSelections([]);
+  };
+
+  const updateTicketQuantity = (ticketType: TicketType, direction: 1 | -1) => {
+    const next = { ...ticketQuantities, [ticketType]: Math.max(0, ticketQuantities[ticketType] + direction) };
+    if (next.inteira + next.meia > MAX_TICKETS_PER_ORDER) {
+      toast.error(`O limite é de ${MAX_TICKETS_PER_ORDER} ingressos por pedido.`);
+      return;
+    }
+    setTicketQuantities(next);
+    setSeatSelections([]);
+  };
+
   const startSeats = (session: Session) => {
+    if (!isSessionSelected || ticketQuantity === 0) {
+      toast.error("Escolha uma sessão e informe a quantidade de ingressos antes de continuar.");
+      return;
+    }
     setSelectedSessionId(session.id);
     setSeatSelections([]);
     setScreen("seats");
@@ -362,18 +420,19 @@ export default function Home() {
     setSeatSelections((current) => {
       const existing = current.find((selected) => selected.id === seat.id);
       if (existing) return current.filter((selected) => selected.id !== seat.id);
-      return [...current, { ...seat, ticketType: "inteira" }];
+      if (current.length >= ticketQuantity) {
+        toast.error(`Você solicitou ${ticketQuantity} ingresso${ticketQuantity > 1 ? "s" : ""}. Remova um assento ou ajuste a quantidade.`);
+        return current;
+      }
+      const nextTicketType = (Object.keys(ticketQuantities) as TicketType[]).find((ticketType) => current.filter((selected) => selected.ticketType === ticketType).length < ticketQuantities[ticketType]) ?? "inteira";
+      return [...current, { ...seat, ticketType: nextTicketType }];
     });
-  };
-
-  const updateTicketType = (seatId: string, ticketType: TicketType) => {
-    setSeatSelections((current) => current.map((seat) => (seat.id === seatId ? { ...seat, ticketType } : seat)));
   };
 
   const submitOrder = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!buyer.name || !buyer.email || !buyer.document || seatSelections.length === 0) {
-      toast.error("Preencha seus dados e selecione ao menos um assento.");
+    if (!buyer.name || !buyer.email || !buyer.document || seatSelections.length !== ticketQuantity) {
+      toast.error(ticketQuantity ? `Preencha seus dados e selecione os ${ticketQuantity} assentos solicitados.` : "Selecione sua sessão e a quantidade de ingressos.");
       return;
     }
     createDemoOrder.mutate(
@@ -414,6 +473,9 @@ export default function Home() {
   const resetFlow = () => {
     setScreen("discover");
     setOrder(null);
+    setSelectedDate(filmConfig.releaseDate);
+    setSelectedSessionId("");
+    setTicketQuantities(EMPTY_TICKET_QUANTITIES);
     setSeatSelections([]);
     setBuyer({ name: "", email: "", document: "" });
     window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 20);
@@ -542,12 +604,13 @@ export default function Home() {
                 </div>
                 <div className="panel session-panel">
                   <div className="panel-heading"><div><span className="panel-index">02</span><h2>Escolha uma sessão</h2><p>{selectedCinema.name} · {selectedCity}, {selectedState}</p></div><CalendarDays size={22} /></div>
-                  <div className="date-strip">{[0, 1, 2].map((offset) => { const date = new Date(`${filmConfig.releaseDate}T00:00:00Z`); date.setUTCDate(date.getUTCDate() + offset); return <button className={`date-chip ${offset === 0 ? "is-active" : ""}`} key={offset}><strong>{formatDateLabel(date)}</strong><span>{date.toLocaleDateString("pt-BR", { weekday: "short", timeZone: "UTC" }).replace(".", "").toUpperCase()}</span></button>; })}</div>
-                  <div className="session-list">{isEmptyPreview || noCinemaScenario ? <div className="summary-empty session-empty"><Info size={20} /><span>{noCinemaScenario ? "Nenhuma sessão disponível porque não há cinema selecionado." : "Nenhuma sessão disponível para este cinema na data selecionada."}</span></div> : sessions.map((session) => <button key={session.id} className={`session-card ${selectedSession.id === session.id ? "is-highlighted" : ""}`} onClick={() => setSelectedSessionId(session.id)}><span className="session-time"><Clock3 size={16} /><strong>{session.time}</strong><small>{session.room}</small></span><span className="session-details"><strong>{session.language}</strong><span>{session.format} · Tela premium</span></span><span className="session-price">{currency(session.price)}<small>por inteira</small></span><span className="session-arrow"><ArrowRight size={18} /></span></button>)}</div>
-                  <button className="button button-primary wide-button" disabled={isEmptyPreview || noCinemaScenario} onClick={() => startSeats(selectedSession)}>Escolher assentos <ArrowRight size={17} /></button>
+                  <div className="date-strip" aria-label="Datas disponíveis para pré-venda">{presaleDates.map((date) => <button type="button" className={`date-chip ${selectedDate === date.value ? "is-active" : ""}`} key={date.value} onClick={() => selectSessionDate(date.value)}><strong>{date.label}</strong><span>{date.weekday}</span></button>)}</div>
+                  <div className="session-list">{isEmptyPreview || noCinemaScenario ? <div className="summary-empty session-empty"><Info size={20} /><span>{noCinemaScenario ? "Nenhuma sessão disponível porque não há cinema selecionado." : "Nenhuma sessão disponível para este cinema na data selecionada."}</span></div> : sessions.map((session) => <button type="button" key={session.id} className={`session-card ${selectedSessionId === session.id ? "is-highlighted" : ""}`} onClick={() => selectSession(session.id)}><span className="session-time"><Clock3 size={16} /><strong>{session.time}</strong><small>{session.room}</small></span><span className="session-details"><strong>{session.language}</strong><span>{session.format} · Tela premium</span></span><span className="session-price">{currency(session.price)}<small>por inteira</small></span><span className="session-arrow"><ArrowRight size={18} /></span></button>)}</div>
+                  {isSessionSelected && !isEmptyPreview && !noCinemaScenario ? <TicketConfigurator quantities={ticketQuantities} session={selectedSession} total={plannedTotal} onChange={updateTicketQuantity} /> : null}
+                  <button className="button button-primary wide-button" disabled={isEmptyPreview || noCinemaScenario || !isSessionSelected || ticketQuantity === 0} onClick={() => startSeats(selectedSession)}>Escolher {ticketQuantity ? `${ticketQuantity} assento${ticketQuantity > 1 ? "s" : ""}` : "assentos"} <ArrowRight size={17} /></button>
                 </div>
               </div>
-              <aside className="flow-side"><OrderSummary cinema={selectedCinema} session={selectedSession} seats={seatSelections} total={total} onRemove={(id) => setSeatSelections((current) => current.filter((seat) => seat.id !== id))} onUpdateTicketType={updateTicketType} /></aside>
+              <aside className="flow-side"><OrderSummary cinema={selectedCinema} session={selectedSession} seats={seatSelections} plannedTicketTypes={plannedTicketTypes} total={total} plannedTotal={plannedTotal} onRemove={(id) => setSeatSelections((current) => current.filter((seat) => seat.id !== id))} /></aside>
             </div>
           ) : null}
 
@@ -562,7 +625,7 @@ export default function Home() {
                 </div>
                 <div className="seat-note"><Info size={16} /><span>Os assentos são bloqueados temporariamente durante o checkout. A disponibilidade real depende da integração com o operador de cinemas.</span></div>
               </div>
-              <aside className="flow-side"><OrderSummary cinema={selectedCinema} session={selectedSession} seats={seatSelections} total={total} onRemove={(id) => setSeatSelections((current) => current.filter((seat) => seat.id !== id))} onUpdateTicketType={updateTicketType} onContinue={() => { if (!seatSelections.length) { toast.error("Selecione ao menos um assento para continuar."); return; } setScreen("checkout"); }} /></aside>
+              <aside className="flow-side"><OrderSummary cinema={selectedCinema} session={selectedSession} seats={seatSelections} plannedTicketTypes={plannedTicketTypes} total={total} plannedTotal={plannedTotal} onRemove={(id) => setSeatSelections((current) => current.filter((seat) => seat.id !== id))} onContinue={() => { if (seatSelections.length !== ticketQuantity) { toast.error(ticketQuantity ? `Selecione os ${ticketQuantity} assentos solicitados para continuar.` : "Informe a quantidade de ingressos antes de continuar."); return; } setScreen("checkout"); }} /></aside>
             </div>
           ) : null}
 
@@ -577,7 +640,7 @@ export default function Home() {
                   <button className="button button-primary wide-button" type="submit" disabled={createDemoOrder.isPending}>{createDemoOrder.isPending ? "Gerando confirmação..." : "Confirmar pedido de demonstração"} {!createDemoOrder.isPending ? <ArrowRight size={17} /> : null}</button>
                 </form>
               </div>
-              <aside className="flow-side"><OrderSummary cinema={selectedCinema} session={selectedSession} seats={seatSelections} total={total} onRemove={(id) => setSeatSelections((current) => current.filter((seat) => seat.id !== id))} onUpdateTicketType={updateTicketType} /></aside>
+              <aside className="flow-side"><OrderSummary cinema={selectedCinema} session={selectedSession} seats={seatSelections} plannedTicketTypes={plannedTicketTypes} total={total} plannedTotal={plannedTotal} onRemove={(id) => setSeatSelections((current) => current.filter((seat) => seat.id !== id))} /></aside>
             </div>
           ) : null}
 
@@ -592,6 +655,17 @@ export default function Home() {
   );
 }
 
-function OrderSummary({ cinema, session, seats, total, onRemove, onUpdateTicketType, onContinue }: { cinema: Cinema; session: Session; seats: SeatSelection[]; total: number; onRemove: (id: string) => void; onUpdateTicketType?: (seatId: string, ticketType: TicketType) => void; onContinue?: () => void }) {
-  return <div className="order-summary"><div className="summary-heading"><div><span className="eyebrow"><ShoppingBag size={14} /> RESUMO DO PEDIDO</span><h2>Seu pedido</h2></div><span className="summary-count">{seats.length}</span></div><div className="summary-film"><div className="summary-poster"><img src={LOGO_URL} alt="Avengers Doomsday" /></div><div><strong>Avengers: Doomsday</strong><span>{cinema.name}</span><span>{session.dateLabel} · {session.time} · {session.format}</span></div></div><div className="summary-divider" /><div className="summary-location"><MapPin size={15} /><span>{cinema.city}, {cinema.uf}<small>{session.room}</small></span></div><div className="summary-items">{seats.length ? seats.map((seat) => <div className="summary-item" key={seat.id}><div><strong>Assento {seat.row}{seat.number}</strong>{onUpdateTicketType ? <select className="ticket-type-select" value={seat.ticketType} onChange={(event) => onUpdateTicketType(seat.id, event.target.value as TicketType)} aria-label={`Tipo de ingresso do assento ${seat.row}${seat.number}`}><option value="inteira">Inteira</option><option value="meia">Meia-entrada</option></select> : <span>{seat.ticketType === "meia" ? "Meia-entrada" : "Inteira"}</span>}</div><div><span>{currency(seat.ticketType === "meia" ? HALF_PRICE : session.price)}</span><button onClick={() => onRemove(seat.id)} aria-label={`Remover assento ${seat.row}${seat.number}`}><Trash2 size={14} /></button></div></div>) : <div className="summary-empty"><Ticket size={20} /><span>Escolha seus assentos para montar o pedido.</span></div>}</div><div className="summary-totals"><span>Ingressos <strong>{currency(total)}</strong></span><span>Taxa de serviço <strong>{seats.length ? currency(0) : currency(0)}</strong></span><div><span>Total</span><strong>{currency(total)}</strong></div></div>{onContinue ? <button className="button button-primary wide-button" onClick={onContinue}>Ir para pagamento <ArrowRight size={17} /></button> : null}<p className="summary-safe"><span className="pulse-dot" /> Ambiente de demonstração protegido</p></div>;
+function TicketConfigurator({ quantities, session, total, onChange }: { quantities: TicketQuantities; session: Session; total: number; onChange: (ticketType: TicketType, direction: 1 | -1) => void }) {
+  const ticketOptions: Array<{ type: TicketType; title: string; description: string; price: number }> = [
+    { type: "inteira", title: "Inteira", description: "Ingresso regular", price: session.price },
+    { type: "meia", title: "Meia-entrada", description: "Sujeita à comprovação", price: HALF_PRICE },
+  ];
+  const quantity = quantities.inteira + quantities.meia;
+  return <div className="ticket-configurator"><div className="ticket-configurator-heading"><div><span className="panel-index">03</span><h3>Escolha seus ingressos</h3><p>Defina o tipo e a quantidade antes de selecionar os assentos.</p></div><span>{quantity}/{MAX_TICKETS_PER_ORDER}</span></div><div className="ticket-option-list">{ticketOptions.map((option) => <div className="ticket-option" key={option.type}><div><strong>{option.title}</strong><span>{option.description}</span></div><div className="ticket-option-actions"><b>{currency(option.price)}</b><div className="quantity-stepper"><button type="button" onClick={() => onChange(option.type, -1)} disabled={quantities[option.type] === 0} aria-label={`Diminuir quantidade de ${option.title}`}><Minus size={14} /></button><output aria-label={`Quantidade de ${option.title}`}>{quantities[option.type]}</output><button type="button" onClick={() => onChange(option.type, 1)} disabled={quantity === MAX_TICKETS_PER_ORDER} aria-label={`Aumentar quantidade de ${option.title}`}><Plus size={14} /></button></div></div></div>)}</div><div className="ticket-configurator-total"><span>{quantity ? `${quantity} ingresso${quantity > 1 ? "s" : ""} selecionado${quantity > 1 ? "s" : ""}` : "Selecione ao menos um ingresso"}</span><strong>{currency(total)}</strong></div></div>;
+}
+
+function OrderSummary({ cinema, session, seats, plannedTicketTypes, total, plannedTotal, onRemove, onContinue }: { cinema: Cinema; session: Session; seats: SeatSelection[]; plannedTicketTypes: TicketType[]; total: number; plannedTotal: number; onRemove: (id: string) => void; onContinue?: () => void }) {
+  const isSeatSelectionComplete = plannedTicketTypes.length > 0 && seats.length === plannedTicketTypes.length;
+  const displayTotal = isSeatSelectionComplete ? total : plannedTotal;
+  return <div className="order-summary"><div className="summary-heading"><div><span className="eyebrow"><ShoppingBag size={14} /> RESUMO DO PEDIDO</span><h2>Seu pedido</h2></div><span className="summary-count">{plannedTicketTypes.length}</span></div><div className="summary-film"><div className="summary-poster"><img src={LOGO_URL} alt="Avengers Doomsday" /></div><div><strong>Avengers: Doomsday</strong><span>{cinema.name}</span><span>{session.dateLabel} · {session.time} · {session.format}</span></div></div><div className="summary-divider" /><div className="summary-location"><MapPin size={15} /><span>{cinema.city}, {cinema.uf}<small>{session.room}</small></span></div><div className="summary-items">{seats.length ? seats.map((seat) => <div className="summary-item" key={seat.id}><div><strong>Assento {seat.row}{seat.number}</strong><span>{seat.ticketType === "meia" ? "Meia-entrada" : "Inteira"}</span></div><div><span>{currency(seat.ticketType === "meia" ? HALF_PRICE : session.price)}</span><button type="button" onClick={() => onRemove(seat.id)} aria-label={`Remover assento ${seat.row}${seat.number}`}><Trash2 size={14} /></button></div></div>) : plannedTicketTypes.length ? plannedTicketTypes.map((ticketType, index) => <div className="summary-item summary-item-pending" key={`${ticketType}-${index}`}><div><strong>{ticketType === "meia" ? "Meia-entrada" : "Inteira"}</strong><span>Aguardando assento</span></div><div><span>{currency(ticketType === "meia" ? HALF_PRICE : session.price)}</span></div></div>) : <div className="summary-empty"><Ticket size={20} /><span>Escolha uma sessão e informe seus ingressos.</span></div>}</div><div className="summary-totals"><span>Ingressos <strong>{currency(displayTotal)}</strong></span><span>Taxa de serviço <strong>{currency(0)}</strong></span><div><span>Total</span><strong>{currency(displayTotal)}</strong></div></div>{onContinue ? <button className="button button-primary wide-button" onClick={onContinue}>Ir para pagamento <ArrowRight size={17} /></button> : null}<p className="summary-safe"><span className="pulse-dot" /> Ambiente de demonstração protegido</p></div>;
 }

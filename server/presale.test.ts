@@ -26,6 +26,11 @@ describe("presale rules", () => {
     expect(() => validateDemoSeats([seats[0], seats[0]])).toThrow("assentos duplicados");
   });
 
+  it("rejects orders with more than eight tickets", () => {
+    const nineSeats = Array.from({ length: 9 }, (_, index) => ({ id: `B-${index + 1}`, row: "B", number: index + 1, ticketType: "inteira" as const }));
+    expect(() => validateDemoSeats(nineSeats)).toThrow("máximo 8 assentos");
+  });
+
   it("returns a traceable demo email confirmation", () => {
     const result = sendDemoConfirmationEmail({ orderCode: "DD-DEMO-12345678", email: "maria@example.com" });
     expect(result.accepted).toBe(true);

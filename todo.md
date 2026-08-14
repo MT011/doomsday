@@ -130,3 +130,12 @@
 - [x] Redesenhar a descoberta de cinemas como módulo de conversão com disponibilidade, alcance nacional e CTA direto.
 - [x] Priorizar a organização mobile e validar o novo conteúdo em desktop e mobile.
 - [x] Executar testes/build e salvar checkpoint do redesenho.
+
+## Seleção de sessão, ingressos e resumo
+
+- [x] Exibir datas de sessão de 18 a 23 de dezembro na etapa de seleção.
+- [x] Manter horários e formatos de demonstração disponíveis para qualquer cidade selecionada.
+- [x] Exibir controles de quantidade e tipo inteira/meia-entrada depois que o usuário selecionar um horário.
+- [x] Atualizar o resumo “Seu pedido” com quantidade, subtotais, taxa e total antes da seleção de assentos.
+- [x] Aplicar o limite de ingressos ao mapa de assentos e preservar os dados ao voltar entre etapas.
+- [x] Cobrir as regras de preço e quantidade com testes, validar responsividade e salvar checkpoint.

@@ -249,7 +249,8 @@ em { color: #4f9e63; font-style: normal; }
 .select-field select, .field input { width: 100%; height: 44px; padding: 0 13px; color: #e6eee6; border: 1px solid rgba(205,219,210,.15); border-radius: 2px; outline: none; background: #18242c; font-size: 12px; }
 .select-field select { appearance: auto; }
 .select-field select:focus, .field input:focus { border-color: #4c9b60; }
-.date-strip { display: flex; gap: 10px; padding: 0 31px 20px; border-bottom: 1px solid rgba(202,216,209,.1); }
+.date-strip { display: flex; gap: 10px; padding: 0 31px 20px; overflow-x: auto; scrollbar-width: none; border-bottom: 1px solid rgba(202,216,209,.1); }
+.date-strip::-webkit-scrollbar { display: none; }
 .date-chip { min-width: 88px; padding: 12px 13px; color: #71827d; border: 1px solid rgba(205,219,210,.13); background: transparent; cursor: pointer; text-align: left; }
 .date-chip.is-active { color: #0d1713; border-color: #4f9e63; background: #4f9e63; }
 .date-chip strong, .date-chip span { display: block; }
@@ -269,6 +270,28 @@ em { color: #4f9e63; font-style: normal; }
 .session-price { align-items: end; gap: 4px; color: #dce9df; font: 600 13px 'DM Mono', monospace; }
 .session-arrow { color: #6e8079; }
 .session-card:hover .session-arrow { color: #4f9e63; transform: translateX(3px); }
+.ticket-configurator { margin: 18px 31px 0; border: 1px solid rgba(107,178,125,.31); background: linear-gradient(135deg, rgba(45,91,61,.19), rgba(16,28,35,.82)); }
+.ticket-configurator-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 19px 19px 15px; border-bottom: 1px solid rgba(202,216,209,.12); }
+.ticket-configurator-heading .panel-index { margin-bottom: 5px; color: #78b888; }
+.ticket-configurator-heading h3 { margin: 0; color: #e7f0e8; font: 600 22px/1 'Barlow Condensed', sans-serif; text-transform: uppercase; }
+.ticket-configurator-heading p { margin: 7px 0 0; color: #91a79b; font-size: 11px; }
+.ticket-configurator-heading > span { display: grid; place-items: center; min-width: 42px; height: 25px; color: #0d1713; background: #63bd78; font: 700 10px 'DM Mono', monospace; }
+.ticket-option-list { padding: 0 19px; }
+.ticket-option { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 68px; border-bottom: 1px solid rgba(202,216,209,.1); }
+.ticket-option:last-child { border-bottom: 0; }
+.ticket-option > div:first-child { display: flex; flex-direction: column; gap: 5px; }
+.ticket-option strong { color: #e8efe8; font-size: 13px; }
+.ticket-option span { color: #81958b; font: 500 9px 'DM Mono', monospace; }
+.ticket-option-actions { display: flex; align-items: center; gap: 13px; }
+.ticket-option-actions > b { min-width: 67px; color: #d6e5d9; font: 600 10px 'DM Mono', monospace; text-align: right; }
+.quantity-stepper { display: grid; grid-template-columns: 29px 31px 29px; align-items: center; border: 1px solid rgba(202,216,209,.18); background: #101a21; }
+.quantity-stepper button { display: grid; place-items: center; width: 29px; height: 29px; color: #bccec1; background: transparent; cursor: pointer; transition: color .16s ease-out, background .16s ease-out; }
+.quantity-stepper button:hover:not(:disabled) { color: #0c1713; background: #63bd78; }
+.quantity-stepper button:disabled { opacity: .35; cursor: not-allowed; }
+.quantity-stepper output { color: #eef4ed; font: 700 11px 'DM Mono', monospace; text-align: center; }
+.ticket-configurator-total { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 15px 19px; background: rgba(6,15,15,.35); }
+.ticket-configurator-total span { color: #8ea398; font: 500 9px 'DM Mono', monospace; }
+.ticket-configurator-total strong { color: #6fc483; font: 700 23px 'Barlow Condensed', sans-serif; }
 
 .order-summary { position: sticky; top: 108px; border: 1px solid rgba(202,216,209,.14); background: #111b23; }
 .summary-heading { display: flex; align-items: center; justify-content: space-between; padding: 26px 22px 20px; }
@@ -295,6 +318,8 @@ em { color: #4f9e63; font-style: normal; }
 .summary-item > div:last-child { display: flex; align-items: center; gap: 9px; color: #dce7df; font: 500 10px 'DM Mono', monospace; }
 .summary-item button { display: grid; place-items: center; padding: 4px; color: #71837b; background: transparent; cursor: pointer; }
 .summary-item button:hover { color: #fa7770; }
+.summary-item-pending { opacity: .84; }
+.summary-item-pending strong::before { display: inline-block; width: 6px; height: 6px; margin-right: 6px; border-radius: 50%; background: #4f9e63; content: ''; }
 .summary-empty { display: flex; align-items: center; gap: 10px; min-height: 58px; color: #6f827b; font-size: 11px; line-height: 1.5; }
 .session-empty { min-height: 110px; padding: 16px 0; }
 .summary-empty svg { flex-shrink: 0; color: #4f9e63; }
@@ -480,8 +505,19 @@ em { color: #4f9e63; font-style: normal; }
   .select-grid, .form-grid, .payment-options { grid-template-columns: 1fr; padding-inline: 20px; }
   .select-grid { padding-bottom: 23px; }
   .session-list, .date-strip, .map-toolbar, .seat-legend { padding-inline: 20px; }
+  .date-strip { padding-bottom: 17px; }
+  .date-chip { flex: 0 0 78px; min-width: 78px; padding: 10px 11px; }
   .session-card { grid-template-columns: 87px 1fr 22px; gap: 10px; }
   .session-price { display: none; }
+  .ticket-configurator { margin: 14px 20px 0; }
+  .ticket-configurator-heading { padding: 17px 15px 13px; }
+  .ticket-configurator-heading h3 { font-size: 20px; }
+  .ticket-configurator-heading p { max-width: 210px; line-height: 1.45; }
+  .ticket-option-list { padding: 0 15px; }
+  .ticket-option { min-height: 74px; gap: 8px; }
+  .ticket-option-actions { gap: 8px; }
+  .ticket-option-actions > b { min-width: 60px; font-size: 9px; }
+  .ticket-configurator-total { padding: 14px 15px; }
   .map-toolbar { align-items: flex-start; flex-direction: column; }
   .seat-map-wrap { height: 430px; }
   .seat-map { min-width: 610px; }
