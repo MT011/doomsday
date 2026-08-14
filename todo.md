@@ -169,32 +169,38 @@
 - [x] Preparar o endpoint de webhook idempotente para confirmar somente pagamentos `TRANSACTION_PAID` validados.
 - [x] Preparar a experiência de checkout PIX, mantendo o cliente sem acesso a segredos.
 - [x] Documentar o cadastro do webhook, cobrir credenciais e regras críticas com testes e validar tipos/build.
-- [ ] Validar cobrança PIX real, persistência, webhook HTTPS e transição segura de pendente para pago antes de marcar o fluxo como operacional.
+- [x] Validar cobrança PIX real, persistência, webhook HTTPS e transição segura de pendente para pago antes de marcar o fluxo como operacional.
 - [x] Publicar o site e receber confirmação explícita antes de ativar a criação de cobranças reais via PIX.
 - [x] Habilitar a chave de ativação do PIX real no ambiente de produção e revalidar as credenciais AmploPay.
-- [ ] Validar a rota pública HTTPS de webhook com uma cobrança real, comprovando que token inválido é rejeitado sem alterar o pagamento.
-- [ ] Aguardar a primeira cobrança PIX gerada pelo usuário no site para validar o QR Code, a persistência e o webhook real.
+- [x] Validar a rota pública HTTPS de webhook com uma cobrança real, comprovando que token inválido é rejeitado sem alterar o pagamento.
+- [x] Aguardar a primeira cobrança PIX gerada pelo usuário no site para validar o QR Code, a persistência e o webhook real.
 
 ## Correção de origem do checkout PIX
 
 - [x] Corrigir a validação de origem para aceitar com segurança o domínio HTTPS publicado atrás do proxy.
-- [ ] Validar o checkout publicado e solicitar novo teste de geração de PIX sem criar cobrança em nome do usuário.
+- [x] Validar o checkout publicado e solicitar novo teste de geração de PIX sem criar cobrança em nome do usuário.
 
 ## Correção de payload PIX AmploPay
 
-- [ ] Diagnosticar os campos rejeitados pela AmploPay na criação da cobrança PIX sem expor dados do comprador.
+- [x] Diagnosticar os campos rejeitados pela AmploPay na criação da cobrança PIX sem expor dados do comprador.
 - [x] Ajustar o payload e a validação do checkout conforme a documentação oficial.
-- [ ] Validar a correção e solicitar novo teste de geração de QR Code PIX ao usuário.
+- [x] Validar a correção e solicitar novo teste de geração de QR Code PIX ao usuário.
 - [x] Redigir dados pessoais dos registros locais de diagnóstico PIX antes de nova análise de falhas.
 
 ## Finalização após pagamento PIX
 
 - [x] Investigar por que o checkout não avança automaticamente após a confirmação da AmploPay.
 - [x] Concluir o pedido e abrir a tela de ingresso quando o status PIX for aprovado.
-- [ ] Validar a confirmação com status de cobrança e publicar a correção.
+- [x] Validar a confirmação com status de cobrança e publicar a correção.
 
 ## Preços temporários para teste PIX
 
 - [x] Aplicar inteira de R$ 5,00 e meia-entrada de R$ 2,50 no servidor, sessões, resumo e checkout.
 - [x] Atualizar os testes de cálculo, validar e publicar o ambiente temporário de teste.
-- [ ] Restaurar os valores comerciais após a validação PIX solicitada pelo usuário.
+- [x] Restaurar os valores comerciais após a validação PIX solicitada pelo usuário.
+
+## Validação operacional PIX aprovada
+
+- [x] Confirmar com o usuário a geração do PIX, o recebimento no gateway e a conclusão do fluxo de teste.
+- [x] Restaurar a inteira para R$ 51,28 e a meia-entrada para R$ 25,64 após o teste aprovado.
+- [ ] Validar os cálculos comerciais restaurados, publicar e registrar o PIX como operacional.

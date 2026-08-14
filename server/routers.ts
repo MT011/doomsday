@@ -38,8 +38,8 @@ const demoOrderSchema = z.object({
 });
 
 const pixOrderSchema = demoOrderSchema.omit({ payment: true });
-const WHOLE_TICKET_PRICE = 5;
-const HALF_TICKET_PRICE = 2.5;
+const WHOLE_TICKET_PRICE = 51.28;
+const HALF_TICKET_PRICE = 25.64;
 
 export function getPublicOrigin(req: { headers: { origin?: string | string[] } }) {
   const configuredOrigin = process.env.AMPLOPAY_CALLBACK_ORIGIN;
