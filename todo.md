@@ -170,4 +170,7 @@
 - [x] Preparar a experiência de checkout PIX, mantendo o cliente sem acesso a segredos.
 - [x] Documentar o cadastro do webhook, cobrir credenciais e regras críticas com testes e validar tipos/build.
 - [ ] Validar cobrança PIX real, persistência, webhook HTTPS e transição segura de pendente para pago antes de marcar o fluxo como operacional.
-- [ ] Publicar o site e receber confirmação explícita antes de ativar a criação de cobranças reais via PIX.
+- [x] Publicar o site e receber confirmação explícita antes de ativar a criação de cobranças reais via PIX.
+- [x] Habilitar a chave de ativação do PIX real no ambiente de produção e revalidar as credenciais AmploPay.
+- [ ] Validar a rota pública HTTPS de webhook com uma cobrança real, comprovando que token inválido é rejeitado sem alterar o pagamento.
+- [ ] Aguardar a primeira cobrança PIX gerada pelo usuário no site para validar o QR Code, a persistência e o webhook real.
