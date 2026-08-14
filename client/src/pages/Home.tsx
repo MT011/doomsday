@@ -130,14 +130,19 @@ function formatDateLabel(date: Date) {
 function buildSessions(cinema: Cinema, date: string): Session[] {
   const seed = hashString(cinema.name);
   const sessionDate = new Date(`${date}T00:00:00Z`);
-  const times = ["13:20", "15:00", "18:10", "21:25"];
-  return times.map((time, index) => ({
-    id: `${slug(cinema.name)}-${date}-${time.replace(":", "")}`,
+  const sessions = [
+    { time: "13:20", language: "Dublado", format: "2D" as const },
+    { time: "15:30", language: "Legendado", format: "3D" as const },
+    { time: "18:10", language: "Legendado", format: "2D" as const },
+    { time: "21:25", language: "Dublado", format: "2D" as const },
+  ];
+  return sessions.map((session, index) => ({
+    id: `${slug(cinema.name)}-${date}-${session.time.replace(":", "")}`,
     date,
     dateLabel: formatDateLabel(sessionDate),
-    time,
-    language: index % 3 === 0 ? "Dublado" : "Legendado",
-    format: index === 1 ? "IMAX" : index === 2 ? "3D" : "2D",
+    time: session.time,
+    language: session.language,
+    format: session.format,
     room: `Sala ${(seed + index) % 5 + 1}`,
     price: WHOLE_PRICE,
   }));

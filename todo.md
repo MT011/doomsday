@@ -149,3 +149,8 @@
 
 - [x] Exibir o seletor de inteira, meia e quantidade imediatamente abaixo do horário de sessão selecionado.
 - [x] Preservar o comportamento e a legibilidade do painel em desktop e mobile, validando tipos, testes e build.
+
+## Ajuste de horários e formatos
+
+- [x] Manter quatro horários por data/cidade, incluindo 15:30 como a única sessão 3D.
+- [x] Exibir as três sessões restantes como 2D · Tela premium e validar tipos, testes e build.
