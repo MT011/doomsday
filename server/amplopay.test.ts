@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildWebhookUrl, isSecureTokenMatch, normalizeAmploPayStatus } from "./amplopay";
+import { buildWebhookUrl, formatBrazilCpf, formatBrazilPhone, isSecureTokenMatch, normalizeAmploPayStatus, safeProviderValidationMessage } from "./amplopay";
 import { getPublicOrigin } from "./routers";
 
 describe("AmploPay PIX adapter", () => {
@@ -24,5 +24,17 @@ describe("AmploPay PIX adapter", () => {
     const publicOrigin = "https://doomsdaypf-q7jmpgef.manus.space";
     expect(getPublicOrigin({ headers: { origin: publicOrigin } })).toBe(publicOrigin);
     expect(() => getPublicOrigin({ headers: { origin: "https://origem-maliciosa.example" } })).toThrow("não corresponde");
+  });
+
+  it("normalizes CPF and phone data required by the PIX provider", () => {
+    expect(formatBrazilCpf("13659397660")).toBe("136.593.976-60");
+    expect(formatBrazilPhone("11999999999")).toBe("(11) 99999-9999");
+    expect(() => formatBrazilCpf("123")).toThrow("CPF");
+    expect(() => formatBrazilPhone("1199")).toThrow("celular");
+  });
+
+  it("returns only rejected field names from a provider validation error", () => {
+    expect(safeProviderValidationMessage({ details: { "client.document": "sensitive input", amount: "invalid" } })).toBe("Dados da cobrança inválidos nos campos: client.document, amount.");
+    expect(safeProviderValidationMessage({ details: "raw provider payload" })).toContain("Verifique nome, CPF, celular");
   });
 });

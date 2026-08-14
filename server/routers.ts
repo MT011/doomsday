@@ -5,7 +5,7 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
 import { createDemoOrder, sendDemoConfirmationEmail } from "./presale";
-import { buildWebhookUrl, createAmploPayIdentifier, createAmploPayPixCharge } from "./amplopay";
+import { buildWebhookUrl, createAmploPayIdentifier, createAmploPayPixCharge, formatBrazilCpf, formatBrazilPhone } from "./amplopay";
 import { createAmploPayPixPayment, getAmploPayPixPaymentByOrderCode, updateAmploPayPixPayment } from "./db";
 
 const demoSeatSchema = z.object({
@@ -20,6 +20,7 @@ const demoOrderSchema = z.object({
     name: z.string().trim().min(3),
     email: z.string().email(),
     document: z.string().trim().min(5),
+    phone: z.string().trim().min(10).max(32),
   }),
   payment: z.enum(["pix", "card"]),
   cinema: z.object({ name: z.string(), city: z.string(), state: z.string(), uf: z.string() }),
@@ -91,16 +92,21 @@ export const appRouter = router({
       const orderCode = `DD-PIX-${randomUUID().replace(/-/g, "").slice(0, 10).toUpperCase()}`;
       const identifier = createAmploPayIdentifier(orderCode);
       const callbackUrl = buildWebhookUrl(getPublicOrigin(ctx.req));
-      const dueDate = new Date().toISOString().slice(0, 10);
+      const dueDate = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+      const formattedBuyer = {
+        ...input.buyer,
+        document: formatBrazilCpf(input.buyer.document),
+        phone: formatBrazilPhone(input.buyer.phone),
+      };
 
       await createAmploPayPixPayment({
         orderCode,
         identifier,
         status: "PENDING",
         amountCents: Math.round(amount * 100),
-        buyerName: input.buyer.name,
-        buyerEmail: input.buyer.email,
-        buyerDocument: input.buyer.document,
+        buyerName: formattedBuyer.name,
+        buyerEmail: formattedBuyer.email,
+        buyerDocument: formattedBuyer.document,
         cinema: input.cinema,
         session: input.session,
         seats: input.seats,
@@ -110,7 +116,7 @@ export const appRouter = router({
         const charge = await createAmploPayPixCharge({
           identifier,
           amount,
-          buyer: input.buyer,
+          buyer: formattedBuyer,
           products: input.seats.map((seat) => ({
             id: `${input.session.id}-${seat.id}`,
             name: `Avengers: Doomsday — ${seat.ticketType === "meia" ? "Meia-entrada" : "Inteira"} — Assento ${seat.row}${seat.number}`,

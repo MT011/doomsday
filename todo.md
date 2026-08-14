@@ -179,3 +179,10 @@
 
 - [x] Corrigir a validação de origem para aceitar com segurança o domínio HTTPS publicado atrás do proxy.
 - [ ] Validar o checkout publicado e solicitar novo teste de geração de PIX sem criar cobrança em nome do usuário.
+
+## Correção de payload PIX AmploPay
+
+- [ ] Diagnosticar os campos rejeitados pela AmploPay na criação da cobrança PIX sem expor dados do comprador.
+- [x] Ajustar o payload e a validação do checkout conforme a documentação oficial.
+- [ ] Validar a correção e solicitar novo teste de geração de QR Code PIX ao usuário.
+- [x] Redigir dados pessoais dos registros locais de diagnóstico PIX antes de nova análise de falhas.

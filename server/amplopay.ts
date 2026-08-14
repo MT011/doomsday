@@ -38,6 +38,17 @@ function readNestedString(value: unknown, path: string[]): string | undefined {
   return readString(current);
 }
 
+export function safeProviderValidationMessage(payload: ProviderResponse) {
+  const details = payload.details;
+  if (details && typeof details === "object" && !Array.isArray(details)) {
+    const fields = Object.keys(details as Record<string, unknown>)
+      .filter((field) => /^[a-zA-Z][a-zA-Z0-9_.-]{0,63}$/.test(field))
+      .slice(0, 5);
+    if (fields.length) return `Dados da cobrança inválidos nos campos: ${fields.join(", ")}.`;
+  }
+  return "Dados da cobrança inválidos. Verifique nome, CPF, celular e tente novamente.";
+}
+
 function getAmploPayCredentials() {
   const publicKey = process.env.AMPLOPAY_PUBLIC_KEY;
   const secretKey = process.env.AMPLOPAY_SECRET_KEY;
@@ -73,6 +84,21 @@ export function normalizeAmploPayStatus(status: unknown): AmploPayPaymentStatus 
 export function createAmploPayIdentifier(orderCode: string) {
   const entropy = randomUUID().replace(/-/g, "").slice(0, 12);
   return `dd-${orderCode.toLowerCase()}-${entropy}`.slice(0, 96);
+}
+
+export function formatBrazilCpf(value: string) {
+  const digits = value.replace(/\D/g, "");
+  if (digits.length !== 11) throw new Error("Informe um CPF com 11 dígitos para gerar o PIX.");
+  return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
+}
+
+export function formatBrazilPhone(value: string) {
+  const digits = value.replace(/\D/g, "");
+  if (digits.length !== 10 && digits.length !== 11) throw new Error("Informe um celular válido com DDD para gerar o PIX.");
+  const areaCode = digits.slice(0, 2);
+  const localNumber = digits.slice(2);
+  const divider = localNumber.length === 9 ? 5 : 4;
+  return `(${areaCode}) ${localNumber.slice(0, divider)}-${localNumber.slice(divider)}`;
 }
 
 export function buildWebhookUrl(origin: string) {
@@ -131,8 +157,7 @@ export async function createAmploPayPixCharge(input: AmploPayPixChargeInput): Pr
 
   const payload = await response.json().catch(() => ({})) as ProviderResponse;
   if (!response.ok) {
-    const message = readString(payload.message) ?? readString(payload.errorDescription) ?? "Não foi possível criar a cobrança PIX.";
-    throw new Error(message);
+    throw new Error(safeProviderValidationMessage(payload));
   }
 
   const transactionId = readString(payload.transactionId) ?? readString(payload.id);
