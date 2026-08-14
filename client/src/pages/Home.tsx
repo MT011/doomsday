@@ -90,8 +90,8 @@ const LOGO_URL = "/manus-storage/avengers-doomsday-logo_28159119.webp";
 const HERO_TRANSITION_URL = "/manus-storage/doomsday-opening-transition_258aaec4.mp4";
 const EVENT_ART_URL = "/manus-storage/doomsday-event-art_c0607a2c.webp";
 const DIVIDER_ART_URL = "/manus-storage/doomsday-divider-art_f3e0250e.webp";
-const WHOLE_PRICE = 39.9;
-const HALF_PRICE = 19.95;
+const WHOLE_PRICE = 51.28;
+const HALF_PRICE = 25.64;
 const MAX_TICKETS_PER_ORDER = 8;
 const EMPTY_TICKET_QUANTITIES: TicketQuantities = { inteira: 0, meia: 0 };
 
@@ -139,7 +139,7 @@ function buildSessions(cinema: Cinema, date: string): Session[] {
     language: index % 3 === 0 ? "Dublado" : "Legendado",
     format: index === 1 ? "IMAX" : index === 2 ? "3D" : "2D",
     room: `Sala ${(seed + index) % 5 + 1}`,
-    price: index === 1 ? 44.9 : index === 2 ? 42.9 : 39.9,
+    price: WHOLE_PRICE,
   }));
 }
 

@@ -139,3 +139,8 @@
 - [x] Atualizar o resumo “Seu pedido” com quantidade, subtotais, taxa e total antes da seleção de assentos.
 - [x] Aplicar o limite de ingressos ao mapa de assentos e preservar os dados ao voltar entre etapas.
 - [x] Cobrir as regras de preço e quantidade com testes, validar responsividade e salvar checkpoint.
+
+## Ajuste de valores dos ingressos
+
+- [x] Atualizar a inteira demonstrativa para R$ 51,28 e a meia-entrada para R$ 25,64 em sessões, resumo e confirmação.
+- [x] Atualizar os testes de cálculo e validar tipos, testes e build antes do checkpoint.

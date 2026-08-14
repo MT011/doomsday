@@ -9,7 +9,7 @@ const session = {
   language: "Legendado",
   format: "IMAX" as const,
   room: "Sala 4",
-  price: 44.9,
+  price: 51.28,
 };
 
 const seats = [
@@ -19,7 +19,7 @@ const seats = [
 
 describe("presale rules", () => {
   it("calculates whole and half-price tickets", () => {
-    expect(calculateDemoOrderTotal(session.price, seats)).toBe(64.85);
+    expect(calculateDemoOrderTotal(session.price, seats)).toBe(76.92);
   });
 
   it("rejects duplicate seats", () => {
@@ -50,7 +50,7 @@ describe("presale rules", () => {
 
     expect(order.code).toMatch(/^DD-DEMO-[A-Z0-9]{8}$/);
     expect(order.qrPayload).toContain(order.code);
-    expect(order.total).toBe(64.85);
+    expect(order.total).toBe(76.92);
     expect(order.mode).toBe("demo");
   });
 });
