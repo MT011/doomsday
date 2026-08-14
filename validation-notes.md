@@ -43,3 +43,7 @@ Foi executado um teste automatizado com cliques reais no botão Voltar em todas 
 O desktop apresentou boa hierarquia entre a narrativa do evento, a jornada de pré-venda e o radar de disponibilidade. No primeiro passe mobile, as novas grades mantiveram colunas desktop e comprimiram o texto em excesso. A próxima etapa corrige as seções para uma coluna, aumenta a área útil de leitura e reorganiza os módulos de informação para viewport estreita.
 
 Após o refinamento, a validação mobile confirmou uma coluna de leitura para a narrativa, painel de lançamento, cards da jornada e radar de disponibilidade. Os CTAs ocupam a largura disponível e os blocos preservam espaçamento e contraste. A nova captura desktop confirmou que a hierarquia em duas colunas, a arte de fundo e a jornada de conversão permanecem intactas.
+
+## Verificação pós-restauração comercial
+
+Em 14 de agosto de 2026, o código local, os testes e o build confirmaram a restauração de R$ 51,28 para inteira e R$ 25,64 para meia-entrada. Contudo, duas cargas do checkout no domínio público ainda exibiram R$ 5,00/R$ 2,50 após o checkpoint `dd3024e8`. A publicação precisa ser inspecionada antes de considerar a restauração comercial concluída; nenhuma cobrança nova deve ser criada enquanto o domínio público não refletir os valores comerciais.
