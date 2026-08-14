@@ -192,3 +192,9 @@
 - [x] Investigar por que o checkout não avança automaticamente após a confirmação da AmploPay.
 - [x] Concluir o pedido e abrir a tela de ingresso quando o status PIX for aprovado.
 - [ ] Validar a confirmação com status de cobrança e publicar a correção.
+
+## Preços temporários para teste PIX
+
+- [x] Aplicar inteira de R$ 5,00 e meia-entrada de R$ 2,50 no servidor, sessões, resumo e checkout.
+- [x] Atualizar os testes de cálculo, validar e publicar o ambiente temporário de teste.
+- [ ] Restaurar os valores comerciais após a validação PIX solicitada pelo usuário.

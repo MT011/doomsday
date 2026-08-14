@@ -17,7 +17,7 @@ export type DemoOrderInput = {
   seats: DemoSeat[];
 };
 
-export const halfPrice = 25.64;
+export const halfPrice = 2.5;
 
 export function calculateDemoOrderTotal(sessionPrice: number, seats: DemoSeat[]) {
   return Number(seats.reduce((total, seat) => total + (seat.ticketType === "meia" ? halfPrice : sessionPrice), 0).toFixed(2));

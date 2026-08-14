@@ -100,8 +100,8 @@ const LOGO_URL = "/manus-storage/avengers-doomsday-logo_28159119.webp";
 const HERO_TRANSITION_URL = "/manus-storage/doomsday-opening-transition_258aaec4.mp4";
 const EVENT_ART_URL = "/manus-storage/doomsday-event-art_c0607a2c.webp";
 const DIVIDER_ART_URL = "/manus-storage/doomsday-divider-art_f3e0250e.webp";
-const WHOLE_PRICE = 51.28;
-const HALF_PRICE = 25.64;
+const WHOLE_PRICE = 5;
+const HALF_PRICE = 2.5;
 const MAX_TICKETS_PER_ORDER = 8;
 const EMPTY_TICKET_QUANTITIES: TicketQuantities = { inteira: 0, meia: 0 };
 
