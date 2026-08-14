@@ -51,3 +51,27 @@ Em 14 de agosto de 2026, o código local, os testes e o build confirmaram a rest
 ## Máscaras de dados do checkout
 
 Em 14 de agosto de 2026, a entrada controlada do checkout foi validada com valores sintéticos. O CPF foi apresentado como `123.456.789-01` e o celular como `(12) 34567-8910`, com teclados numérico e telefônico indicados para dispositivos móveis. A normalização de dígitos no servidor permanece ativa antes do envio à AmploPay.
+
+## Rolagem para pagamento
+
+Em 14 de agosto de 2026, a passagem de assentos para pagamento foi acionada no fluxo de QA. O checkout foi exibido com o elemento `purchase-flow` posicionado no topo visível da viewport, removendo o comportamento anterior de manter o usuário no fim da página. As demais transições não foram alteradas.
+
+## Regressão do funil após ajuste de rolagem
+
+Em 14 de agosto de 2026, a regressão foi iniciada pela etapa de sessões, utilizando a seleção de QA com dois assentos planejados. A validação das transições subsequentes é registrada junto aos seus estados de tela, sem criar cobranças PIX.
+
+A transição sessões→assentos foi acionada com sucesso no cenário de QA, preservando os dois lugares planejados. As rotas de retorno continuam em verificação visual após a atualização de estado da interface.
+
+O retorno assentos→sessões foi acionado pelo botão Voltar e restaurou a sessão de 13:20, os dois ingressos planejados e os dois assentos no resumo. A regressão confirma que a nova rolagem para pagamento não alterou essas duas transições.
+
+A tela de confirmação foi carregada no cenário de QA e o botão Voltar retornou corretamente ao checkout, exibindo novamente o formulário, a opção PIX e o resumo de dois assentos. Nenhuma cobrança foi criada durante essa regressão.
+
+As regras de navegação passaram a ser exercitadas em teste automatizado: sessões→assentos, assentos→pagamento, todos os retornos contextuais e checkout→confirmação somente quando a cobrança PIX local fica aprovada. A suíte de validação passou com 21 testes, sem criar nova cobrança.
+
+Em 14 de agosto de 2026, o cenário local exclusivo de QA `?screen=checkout&pixApproved=1` percorreu a transição real do checkout para a confirmação. A tela resultante exibiu o código `DD-QA-PAID`, o estado “Pagamento aprovado” e os dois assentos de QA, sem criar uma cobrança. O parâmetro é bloqueado no ambiente publicado.
+
+No mesmo cenário, o botão Voltar da confirmação retornou ao checkout com os assentos A1 e A2, o resumo de R$ 102,56 e o código PIX de QA preservados. A etapa de checkout abriu no topo do fluxo, sem recarregar a página nem criar uma transação.
+
+No domínio publicado, a mesma URL com `pixApproved=1` permaneceu no checkout normal, exibindo apenas a ação "Gerar código PIX". Não houve QR Code, confirmação automática nem cobrança criada, confirmando que a simulação está restrita ao ambiente local.
+
+Após a correção da ordem de preenchimento do cenário local, o efeito de PIX aprovado passou a aguardar que os dados do comprador, assentos e total estejam prontos antes de criar o pagamento simulado. A confirmação resultante exibiu o e-mail `cliente@exemplo.com`, os assentos A1 e A2, o total de R$ 102,56 e o código `DD-QA-PAID`. O botão Voltar retornou ao checkout com o formulário preenchido, o PIX de QA e o resumo do pedido intactos; a guarda adicional impede que essa navegação seja imediatamente revertida para confirmação. A regressão integrada do funil foi concluída com todos os dados do pedido preservados.

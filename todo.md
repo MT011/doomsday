@@ -215,3 +215,12 @@
 - [x] Formatar CPF progressivamente como 000.000.000-00 durante a digitação.
 - [x] Formatar celular com DDD progressivamente como (12) 34567-8910 durante a digitação.
 - [x] Validar a normalização enviada ao PIX, responsividade, tipos, testes e build antes de publicar.
+
+## Rolagem ao entrar no pagamento
+
+- [x] Levar a transição de assentos para pagamento ao topo do fluxo de compra.
+- [x] Corrigir o cenário QA local de PIX aprovado para preservar dados do comprador, assentos e total na confirmação.
+- [x] Validar a rolagem da etapa de pagamento sem alterar as outras transições do funil.
+- [x] Executar regressão reproduzível das transições sessões→assentos, checkout→confirmação e botões Voltar após o ajuste de rolagem.
+- [x] Extrair e testar a decisão real de checkout→confirmação com PIX aprovado, incluindo comprador, assentos, total e retorno sem loop.
+- [x] Executar o caminho QA local checkout→confirmação com PIX aprovado simulado, sem expor essa simulação em produção.

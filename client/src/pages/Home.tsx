@@ -37,6 +37,9 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { cinemaCatalog } from "@/data/cinemas";
+import { getCheckoutScreen, getPreviousScreen, getScreenAfterPixStatus, getSeatsScreen } from "@/lib/flow-navigation";
+import { canConfirmPixCheckout, isCheckoutPurchaseReady } from "@/lib/pix-confirmation";
+import { scrollToPurchaseFlow } from "@/lib/scroll";
 import { trpc } from "@/lib/trpc";
 import { filmConfig } from "@shared/film-config";
 import { formatCpfInput, formatPhoneInput } from "@shared/input-masks";
@@ -247,6 +250,7 @@ export default function Home() {
   const [isHeroVideoVisible, setIsHeroVideoVisible] = useState(true);
   const [isHeroIntroPreview] = useState(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("intro") === "1");
   const [isDemoPreview] = useState(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).has("screen"));
+  const [isLocalApprovedPixPreview] = useState(() => import.meta.env.DEV && typeof window !== "undefined" && new URLSearchParams(window.location.search).get("pixApproved") === "1");
   const [isEmptyPreview] = useState(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("empty") === "1");
   const [isEmailErrorPreview] = useState(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("emailError") === "1");
   const [isNoCinemaPreview] = useState(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("noCinemas") === "1");
@@ -317,6 +321,7 @@ export default function Home() {
   const total = seatSelections.reduce((sum, seat) => sum + (seat.ticketType === "meia" ? HALF_PRICE : selectedSession.price), 0);
   const pixStatusInput = useMemo(() => ({ orderCode: pixPayment?.orderCode ?? "PENDING" }), [pixPayment?.orderCode]);
   const pixPaymentStatus = trpc.presale.getPixPaymentStatus.useQuery(pixStatusInput, { enabled: Boolean(pixPayment), retry: false, refetchInterval: pixPayment ? 3000 : false });
+  const effectivePixStatus = isLocalApprovedPixPreview ? "PAID" : pixPaymentStatus.data?.status;
 
   useEffect(() => {
     if (!selectedCinemaName || !cinemasForCity.some((cinema) => cinema.name === selectedCinemaName)) {
@@ -341,7 +346,13 @@ export default function Home() {
   }, [screen]);
 
   useEffect(() => {
-    if (screen !== "checkout" || !pixPayment || pixPaymentStatus.data?.status !== "PAID" || order) return;
+    const checkoutReady = isCheckoutPurchaseReady({ hasBuyer: Boolean(buyer.name && buyer.email), selectedSeatCount: seatSelections.length, ticketQuantity, amount: total });
+    if (!isLocalApprovedPixPreview || screen !== "checkout" || pixPayment || !checkoutReady) return;
+    setPixPayment({ orderCode: "DD-QA-PAID", status: "PAID", amount: total, pixCode: "QA_LOCAL_APPROVED_PIX", pixImageUrl: null });
+  }, [buyer.email, buyer.name, isLocalApprovedPixPreview, pixPayment, screen, seatSelections.length, ticketQuantity, total]);
+
+  useEffect(() => {
+    if (!pixPayment || !canConfirmPixCheckout({ screen, status: effectivePixStatus, hasPayment: true, hasOrder: Boolean(order), hasBuyer: Boolean(buyer.name && buyer.email), selectedSeatCount: seatSelections.length, ticketQuantity, amount: pixPayment.amount })) return;
     setOrder({
       code: pixPayment.orderCode,
       createdAt: new Date().toISOString(),
@@ -354,7 +365,7 @@ export default function Home() {
     });
     setScreen("confirmation");
     window.setTimeout(() => document.getElementById("purchase-flow")?.scrollIntoView({ behavior: "smooth" }), 20);
-  }, [buyer, order, pixPayment, pixPaymentStatus.data?.status, screen, seatSelections, selectedCinema, selectedSession]);
+  }, [buyer, effectivePixStatus, order, pixPayment, screen, seatSelections, selectedCinema, selectedSession]);
 
   useEffect(() => {
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -371,11 +382,14 @@ export default function Home() {
   }, [isHeroIntroPreview]);
 
   useEffect(() => {
-    if (!isDemoPreview || isEmptyPreview || screen === "discover" || !seats.length || seatSelections.length) return;
+    if (!isDemoPreview || isEmptyPreview || screen === "discover" || !seats.length) return;
     const demoSeats = seats.filter((seat) => seat.status === "available").slice(0, 2).map((seat) => ({ ...seat, ticketType: "inteira" as const }));
-    setSelectedSessionId(selectedSession.id);
-    setTicketQuantities({ inteira: 2, meia: 0 });
-    setSeatSelections(demoSeats);
+    if (!seatSelections.length) {
+      setSelectedSessionId(selectedSession.id);
+      setTicketQuantities({ inteira: 2, meia: 0 });
+      setSeatSelections(demoSeats);
+    }
+    setBuyer((current) => current.name && current.email ? current : { name: "Cliente de demonstração", email: "cliente@exemplo.com", document: "00000000000", phone: "11999999999" });
     if (screen === "confirmation" && !order) {
       setOrder({
         code: "DD-DEMO-PREVIEW",
@@ -446,7 +460,7 @@ export default function Home() {
     }
     setSelectedSessionId(session.id);
     setSeatSelections([]);
-    setScreen("seats");
+    setScreen(getSeatsScreen());
     window.setTimeout(() => document.getElementById("purchase-flow")?.scrollIntoView({ behavior: "smooth" }), 20);
   };
 
@@ -523,10 +537,9 @@ export default function Home() {
   };
 
   const goBack = () => {
-    if (screen === "sessions") resetFlow();
-    else if (screen === "seats") setScreen("sessions");
-    else if (screen === "checkout") setScreen("seats");
-    else if (screen === "confirmation") setScreen("checkout");
+    const previousScreen = getPreviousScreen(screen);
+    if (previousScreen === "discover") resetFlow();
+    else setScreen(previousScreen);
   };
 
   return (
@@ -665,7 +678,7 @@ export default function Home() {
                 </div>
                 <div className="seat-note"><Info size={16} /><span>Os assentos são bloqueados temporariamente durante o checkout. A disponibilidade real depende da integração com o operador de cinemas.</span></div>
               </div>
-              <aside className="flow-side"><OrderSummary cinema={selectedCinema} session={selectedSession} seats={seatSelections} plannedTicketTypes={plannedTicketTypes} total={total} plannedTotal={plannedTotal} onRemove={(id) => setSeatSelections((current) => current.filter((seat) => seat.id !== id))} onContinue={() => { if (seatSelections.length !== ticketQuantity) { toast.error(ticketQuantity ? `Selecione os ${ticketQuantity} assentos solicitados para continuar.` : "Informe a quantidade de ingressos antes de continuar."); return; } setScreen("checkout"); }} /></aside>
+              <aside className="flow-side"><OrderSummary cinema={selectedCinema} session={selectedSession} seats={seatSelections} plannedTicketTypes={plannedTicketTypes} total={total} plannedTotal={plannedTotal} onRemove={(id) => setSeatSelections((current) => current.filter((seat) => seat.id !== id))} onContinue={() => { if (seatSelections.length !== ticketQuantity) { toast.error(ticketQuantity ? `Selecione os ${ticketQuantity} assentos solicitados para continuar.` : "Informe a quantidade de ingressos antes de continuar."); return; } setScreen(getCheckoutScreen()); window.setTimeout(scrollToPurchaseFlow, 20); }} /></aside>
             </div>
           ) : null}
 
