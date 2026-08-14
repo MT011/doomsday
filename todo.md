@@ -144,3 +144,8 @@
 
 - [x] Atualizar a inteira demonstrativa para R$ 51,28 e a meia-entrada para R$ 25,64 em sessões, resumo e confirmação.
 - [x] Atualizar os testes de cálculo e validar tipos, testes e build antes do checkpoint.
+
+## Posicionamento do seletor de ingressos
+
+- [x] Exibir o seletor de inteira, meia e quantidade imediatamente abaixo do horário de sessão selecionado.
+- [x] Preservar o comportamento e a legibilidade do painel em desktop e mobile, validando tipos, testes e build.

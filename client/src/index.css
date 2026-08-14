@@ -270,6 +270,9 @@ em { color: #4f9e63; font-style: normal; }
 .session-price { align-items: end; gap: 4px; color: #dce9df; font: 600 13px 'DM Mono', monospace; }
 .session-arrow { color: #6e8079; }
 .session-card:hover .session-arrow { color: #4f9e63; transform: translateX(3px); }
+.session-choice.is-expanded { padding-bottom: 14px; border-bottom: 1px solid rgba(115,188,134,.25); }
+.session-choice.is-expanded .session-card { border-bottom: 0; }
+.session-choice .ticket-configurator { margin: 0; }
 .ticket-configurator { margin: 18px 31px 0; border: 1px solid rgba(107,178,125,.31); background: linear-gradient(135deg, rgba(45,91,61,.19), rgba(16,28,35,.82)); }
 .ticket-configurator-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 19px 19px 15px; border-bottom: 1px solid rgba(202,216,209,.12); }
 .ticket-configurator-heading .panel-index { margin-bottom: 5px; color: #78b888; }
