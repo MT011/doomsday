@@ -22,8 +22,10 @@ function getTransactionId(payload: WebhookPayload) {
   return readString(payload.transaction?.id) ?? readString(payload.transactionId);
 }
 
-function getProviderStatus(payload: WebhookPayload) {
-  return normalizeAmploPayStatus(payload.transaction?.status ?? payload.status ?? payload.event);
+export function getProviderStatus(payload: WebhookPayload) {
+  const eventStatus = normalizeAmploPayStatus(payload.event);
+  if (eventStatus !== "PENDING") return eventStatus;
+  return normalizeAmploPayStatus(payload.transaction?.status ?? payload.status);
 }
 
 export function registerAmploPayWebhook(app: Express) {

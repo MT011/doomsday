@@ -315,7 +315,7 @@ export default function Home() {
   const plannedTotal = Number((ticketQuantities.inteira * selectedSession.price + ticketQuantities.meia * HALF_PRICE).toFixed(2));
   const total = seatSelections.reduce((sum, seat) => sum + (seat.ticketType === "meia" ? HALF_PRICE : selectedSession.price), 0);
   const pixStatusInput = useMemo(() => ({ orderCode: pixPayment?.orderCode ?? "PENDING" }), [pixPayment?.orderCode]);
-  const pixPaymentStatus = trpc.presale.getPixPaymentStatus.useQuery(pixStatusInput, { enabled: Boolean(pixPayment), retry: false });
+  const pixPaymentStatus = trpc.presale.getPixPaymentStatus.useQuery(pixStatusInput, { enabled: Boolean(pixPayment), retry: false, refetchInterval: pixPayment ? 3000 : false });
 
   useEffect(() => {
     if (!selectedCinemaName || !cinemasForCity.some((cinema) => cinema.name === selectedCinemaName)) {
@@ -338,6 +338,22 @@ export default function Home() {
   useEffect(() => {
     if (screen !== "seats") setIsDragging(false);
   }, [screen]);
+
+  useEffect(() => {
+    if (screen !== "checkout" || !pixPayment || pixPaymentStatus.data?.status !== "PAID" || order) return;
+    setOrder({
+      code: pixPayment.orderCode,
+      createdAt: new Date().toISOString(),
+      buyer,
+      payment: "pix",
+      session: selectedSession,
+      cinema: selectedCinema,
+      seats: seatSelections.map(({ id, row, number, ticketType }) => ({ id, row, number, ticketType })),
+      total: pixPayment.amount,
+    });
+    setScreen("confirmation");
+    window.setTimeout(() => document.getElementById("purchase-flow")?.scrollIntoView({ behavior: "smooth" }), 20);
+  }, [buyer, order, pixPayment, pixPaymentStatus.data?.status, screen, seatSelections, selectedCinema, selectedSession]);
 
   useEffect(() => {
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -472,22 +488,9 @@ export default function Home() {
 
   const verifyPixPayment = async () => {
     const result = await pixPaymentStatus.refetch();
-    if (result.data?.status !== "PAID" || !pixPayment) {
+    if (result.data?.status !== "PAID") {
       toast.message("Pagamento ainda pendente. Assim que a AmploPay confirmar, seus assentos serão liberados.");
-      return;
     }
-    setOrder({
-      code: pixPayment.orderCode,
-      createdAt: new Date().toISOString(),
-      buyer,
-      payment: "pix",
-      session: selectedSession,
-      cinema: selectedCinema,
-      seats: seatSelections.map(({ id, row, number, ticketType }) => ({ id, row, number, ticketType })),
-      total: pixPayment.amount,
-    });
-    setScreen("confirmation");
-    window.setTimeout(() => document.getElementById("purchase-flow")?.scrollIntoView({ behavior: "smooth" }), 20);
   };
 
   const handlePointerDown = (event: PointerEvent<HTMLDivElement>) => {

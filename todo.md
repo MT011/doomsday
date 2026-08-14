@@ -186,3 +186,9 @@
 - [x] Ajustar o payload e a validação do checkout conforme a documentação oficial.
 - [ ] Validar a correção e solicitar novo teste de geração de QR Code PIX ao usuário.
 - [x] Redigir dados pessoais dos registros locais de diagnóstico PIX antes de nova análise de falhas.
+
+## Finalização após pagamento PIX
+
+- [x] Investigar por que o checkout não avança automaticamente após a confirmação da AmploPay.
+- [x] Concluir o pedido e abrir a tela de ingresso quando o status PIX for aprovado.
+- [ ] Validar a confirmação com status de cobrança e publicar a correção.
