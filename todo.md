@@ -237,3 +237,9 @@
 - [x] Diagnosticar o flash da imagem estática antes do início do vídeo do hero.
 - [x] Manter a imagem estática oculta até o término da transição de abertura, preservando alternativa para movimento reduzido.
 - [x] Validar a sequência vídeo → imagem em desktop e mobile, além de tipos, testes e build.
+
+## Guia de migração externa
+
+- [x] Auditar dependências de infraestrutura, autenticação, banco, analytics e recursos ainda vinculadas à Manus.
+- [x] Documentar as variáveis, serviços e configurações necessárias para migrar o PIX para outro domínio HTTPS.
+- [x] Preparar um prompt reutilizável e um checklist de implantação para o novo ambiente.
