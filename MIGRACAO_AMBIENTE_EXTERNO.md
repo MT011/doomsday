@@ -136,6 +136,22 @@ Critérios de aceite:
 | 7 | Validar uma cobrança autorizada de teste, o webhook e a confirmação do pedido. |
 | 8 | Remover chaves antigas do ambiente que deixará de operar e monitorar o novo webhook. |
 
+## Publicação na Vercel
+
+O repositório agora inclui `pnpm-workspace.yaml`, que autoriza somente os scripts nativos de `esbuild` e `@tailwindcss/oxide` exigidos pelo Vite e Tailwind. Inclui também `server.ts`, que exporta a aplicação Express para a Vercel, e `vercel.json`, com instalação imutável, comando de build e saída em `dist/public`.[9]
+
+Na Vercel, conecte a branch `main`, mantenha os comandos que já estão no `vercel.json` e cadastre as variáveis de ambiente na área **Settings → Environment Variables**. Após receber esta atualização do GitHub, execute um novo deploy com **Clear Build Cache**. O aviso sobre chunk acima de 500 kB emitido pelo Vite não interrompe a compilação; ele é somente uma recomendação de otimização.
+
+| Configuração da Vercel | Valor |
+|---|---|
+| Install Command | `pnpm install --frozen-lockfile` |
+| Build Command | `pnpm run build` |
+| Output Directory | `dist/public` |
+| Versão Node | `22.x` |
+| Handler do backend | `server.ts` (export padrão Express) |
+
+> Antes de ativar `AMPLOPAY_PIX_ENABLED=true`, confirme que o domínio final abre via HTTPS e que `https://seu-dominio.com.br/api/amplopay/webhook` está cadastrado na AmploPay. O valor de `AMPLOPAY_CALLBACK_ORIGIN` deve ser exatamente a origem pública, sem barra final ou caminho.
+
 ## Referências internas
 
 [1] `server/_core/index.ts` — registra OAuth e proxy de storage da Manus no servidor.
@@ -153,3 +169,5 @@ Critérios de aceite:
 [7] `client/src/_core/hooks/useAuth.ts` e `client/src/main.tsx` — contêm comportamento de OAuth/sessão da Manus.
 
 [8] `client/index.html` — inclui a tag de analytics configurada por variáveis de ambiente.
+
+[9] `pnpm-workspace.yaml`, `server.ts`, `server/app.ts` e `vercel.json` — compatibilidade de instalação, função Express e saída estática para Vercel.

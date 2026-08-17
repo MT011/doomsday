@@ -243,3 +243,10 @@
 - [x] Auditar dependências de infraestrutura, autenticação, banco, analytics e recursos ainda vinculadas à Manus.
 - [x] Documentar as variáveis, serviços e configurações necessárias para migrar o PIX para outro domínio HTTPS.
 - [x] Preparar um prompt reutilizável e um checklist de implantação para o novo ambiente.
+
+## Compatibilidade de publicação na Vercel
+
+- [x] Diagnosticar a falha de instalação dos binários `esbuild` e `@tailwindcss/oxide` na Vercel.
+- [x] Adicionar configuração de build compatível com Vercel sem expor os segredos do PIX.
+- [x] Validar a instalação e o build com os comandos equivalentes aos da Vercel.
+- [x] Documentar os próximos passos de variáveis, banco, webhook e nova publicação.
