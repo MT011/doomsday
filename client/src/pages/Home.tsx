@@ -510,6 +510,7 @@ export default function Home() {
   };
 
   const handlePointerDown = (event: PointerEvent<HTMLDivElement>) => {
+    if ((event.target as HTMLElement).closest('.seat-dot')) return;
     setIsDragging(true);
     setDragOrigin({ x: event.clientX - pan.x, y: event.clientY - pan.y });
     event.currentTarget.setPointerCapture(event.pointerId);
