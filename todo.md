@@ -224,3 +224,10 @@
 - [x] Executar regressão reproduzível das transições sessões→assentos, checkout→confirmação e botões Voltar após o ajuste de rolagem.
 - [x] Extrair e testar a decisão real de checkout→confirmação com PIX aprovado, incluindo comprador, assentos, total e retorno sem loop.
 - [x] Executar o caminho QA local checkout→confirmação com PIX aprovado simulado, sem expor essa simulação em produção.
+
+## Independência dos recursos visuais
+
+- [x] Inventariar imagens e vídeo atualmente hospedados externamente e medir o tamanho do vídeo de abertura.
+- [x] Copiar os recursos para `client/public/assets/` e atualizar as referências do site para caminhos locais.
+- [x] Validar o carregamento de imagens e vídeo em `localhost`, os tipos, os testes e o build.
+- [x] Registrar o tamanho do vídeo e a recomendação de hospedagem para implantação fora da Manus.

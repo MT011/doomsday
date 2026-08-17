@@ -99,11 +99,11 @@ type PixPayment = {
   pixImageUrl: string | null;
 };
 
-const HERO_URL = "/manus-storage/avengers-doomsday-hero_13158c4a.webp";
-const LOGO_URL = "/manus-storage/avengers-doomsday-logo_28159119.webp";
-const HERO_TRANSITION_URL = "/manus-storage/doomsday-opening-transition_258aaec4.mp4";
-const EVENT_ART_URL = "/manus-storage/doomsday-event-art_c0607a2c.webp";
-const DIVIDER_ART_URL = "/manus-storage/doomsday-divider-art_f3e0250e.webp";
+const HERO_URL = "/assets/avengers-doomsday-hero.webp";
+const LOGO_URL = "/assets/avengers-doomsday-logo.webp";
+const HERO_TRANSITION_URL = "/assets/doomsday-opening-transition.mp4";
+const EVENT_ART_URL = "/assets/doomsday-event-art.webp";
+const DIVIDER_ART_URL = "/assets/doomsday-divider-art.webp";
 const WHOLE_PRICE = 51.28;
 const HALF_PRICE = 25.64;
 const MAX_TICKETS_PER_ORDER = 8;

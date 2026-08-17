@@ -75,3 +75,7 @@ No mesmo cenário, o botão Voltar da confirmação retornou ao checkout com os 
 No domínio publicado, a mesma URL com `pixApproved=1` permaneceu no checkout normal, exibindo apenas a ação "Gerar código PIX". Não houve QR Code, confirmação automática nem cobrança criada, confirmando que a simulação está restrita ao ambiente local.
 
 Após a correção da ordem de preenchimento do cenário local, o efeito de PIX aprovado passou a aguardar que os dados do comprador, assentos e total estejam prontos antes de criar o pagamento simulado. A confirmação resultante exibiu o e-mail `cliente@exemplo.com`, os assentos A1 e A2, o total de R$ 102,56 e o código `DD-QA-PAID`. O botão Voltar retornou ao checkout com o formulário preenchido, o PIX de QA e o resumo do pedido intactos; a guarda adicional impede que essa navegação seja imediatamente revertida para confirmação. A regressão integrada do funil foi concluída com todos os dados do pedido preservados.
+
+## Recursos visuais locais
+
+Em 17 de agosto de 2026, as cinco imagens/vídeo utilizados pelo site foram copiados para `client/public/assets/` e as referências foram alteradas para `/assets/...`. A verificação local retornou HTTP 200, os tipos MIME esperados e os tamanhos completos para todos os arquivos. O conjunto totaliza aproximadamente 1,82 MiB; o vídeo de abertura tem 705.816 bytes (0,67 MiB), tamanho adequado para permanecer no repositório neste estágio, com recomendação de medir carregamento em rede móvel antes da campanha.
