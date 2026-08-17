@@ -231,3 +231,9 @@
 - [x] Copiar os recursos para `client/public/assets/` e atualizar as referências do site para caminhos locais.
 - [x] Validar o carregamento de imagens e vídeo em `localhost`, os tipos, os testes e o build.
 - [x] Registrar o tamanho do vídeo e a recomendação de hospedagem para implantação fora da Manus.
+
+## Correção da abertura em vídeo
+
+- [x] Diagnosticar o flash da imagem estática antes do início do vídeo do hero.
+- [x] Manter a imagem estática oculta até o término da transição de abertura, preservando alternativa para movimento reduzido.
+- [x] Validar a sequência vídeo → imagem em desktop e mobile, além de tipos, testes e build.

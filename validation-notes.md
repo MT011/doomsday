@@ -79,3 +79,7 @@ Após a correção da ordem de preenchimento do cenário local, o efeito de PIX 
 ## Recursos visuais locais
 
 Em 17 de agosto de 2026, as cinco imagens/vídeo utilizados pelo site foram copiados para `client/public/assets/` e as referências foram alteradas para `/assets/...`. A verificação local retornou HTTP 200, os tipos MIME esperados e os tamanhos completos para todos os arquivos. O conjunto totaliza aproximadamente 1,82 MiB; o vídeo de abertura tem 705.816 bytes (0,67 MiB), tamanho adequado para permanecer no repositório neste estágio, com recomendação de medir carregamento em rede móvel antes da campanha.
+
+## Sequência de abertura do hero
+
+Em 17 de agosto de 2026, a camada de vídeo passou a permanecer invisível até o evento de reprodução efetiva; durante esse pré-carregamento, a arte estática também permanece oculta. A abertura foi conferida em desktop e em 390×844: o vídeo assumiu o hero antes da imagem estática, sem o flash anterior. O encerramento mantém o fade lento para a arte e o fallback de movimento reduzido segue exibindo diretamente a imagem. Tipos, 23 testes e build foram aprovados.
