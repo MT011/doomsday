@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { initTRPC } from "@trpc/server";
+import type { Request, Response } from "express";
 import superjson from "superjson";
 import { z } from "zod";
 import { buildWebhookUrl, createAmploPayIdentifier, createAmploPayPixCharge, formatBrazilCpf, formatBrazilPhone } from "./amplopay";
@@ -8,8 +9,8 @@ import { getPublicOrigin } from "./pix-origin";
 import { createDemoOrder, sendDemoConfirmationEmail } from "./presale";
 
 export type PublicApiContext = {
-  req: { headers: { origin?: string | string[] } };
-  res: { clearCookie: (name: string, options?: Record<string, unknown>) => void };
+  req: Request;
+  res: Response;
   user: null;
 };
 

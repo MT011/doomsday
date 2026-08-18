@@ -282,3 +282,15 @@
 - [x] Remover dependências de OAuth, storage proxy e system router da função pública de PIX.
 - [x] Direcionar as entradas `api/trpc` e `api/amplopay/webhook` para o backend isolado.
 - [ ] Confirmar resposta JSON no domínio oficial sem erro de execução da função.
+
+## Diagnóstico por runtime da Vercel
+
+- [ ] Obter a mensagem do Runtime Log da função que retorna “A server error has occurred”.
+- [ ] Corrigir a dependência ou variável indicada pelo log de runtime.
+- [ ] Revalidar o retorno JSON público antes de reativar o PIX no domínio oficial.
+
+## Tipagem Express para Vercel
+
+- [x] Corrigir os tipos de contexto tRPC usados no `server/app.ts`.
+- [x] Corrigir as importações de tipos Express no webhook PIX.
+- [x] Validar compilação TypeScript no formato usado pela Vercel e publicar a correção.
