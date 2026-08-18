@@ -300,3 +300,9 @@
 - [x] Substituir anotações Express incompatíveis por limites seguros na função pública.
 - [x] Revalidar o build em Node 22 e TypeScript 5.9 da Vercel.
 - [ ] Publicar e confirmar uma resposta JSON da API no domínio oficial.
+
+## Resolução ESM da Vercel
+
+- [x] Corrigir os imports das entradas serverless para incluir o backend no bundle da Vercel.
+- [x] Validar o bundle ESM das funções sem dependência de caminho relativo em runtime.
+- [ ] Publicar e confirmar JSON em `/api/trpc` no domínio oficial.

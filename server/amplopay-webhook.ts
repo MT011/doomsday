@@ -1,5 +1,5 @@
-import { getAmploPayPixPaymentByTransactionId, updateAmploPayPixPayment } from "./db";
-import { isSecureTokenMatch, normalizeAmploPayStatus } from "./amplopay";
+import { getAmploPayPixPaymentByTransactionId, updateAmploPayPixPayment } from "./db.js";
+import { isSecureTokenMatch, normalizeAmploPayStatus } from "./amplopay.js";
 
 type WebhookPayload = Record<string, unknown> & {
   event?: string;

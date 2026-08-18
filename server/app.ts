@@ -1,7 +1,7 @@
 import express from "express";
 import { createExpressMiddleware, type CreateExpressContextOptions } from "@trpc/server/adapters/express";
-import { registerAmploPayWebhook } from "./amplopay-webhook";
-import { publicApiRouter, type PublicApiContext } from "./public-api-router";
+import { registerAmploPayWebhook } from "./amplopay-webhook.js";
+import { publicApiRouter, type PublicApiContext } from "./public-api-router.js";
 
 function createPublicContext({ req, res }: CreateExpressContextOptions): PublicApiContext {
   return { req, res, user: null };
