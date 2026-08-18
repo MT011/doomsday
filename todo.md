@@ -348,3 +348,20 @@
 - [ ] Fazer redeploy de Production após a ativação do PIX.
 - [x] Expor uma verificação sem cobrança para confirmar a ativação do PIX na produção.
 - [ ] Confirmar o webhook oficial da AmploPay e validar uma cobrança real autorizada.
+
+## Sincronização de produção Vercel
+
+- [ ] Verificar se o commit atual do GitHub é o mesmo da implantação Production da Vercel.
+- [ ] Corrigir a sincronização da implantação sem solicitar novos redeploys ao usuário antes do diagnóstico.
+
+## Correção definitiva do vínculo Vercel
+
+- [ ] Mapear a implantação Vercel que recebeu o commit atual e a implantação que atende o domínio oficial.
+- [ ] Vincular o domínio oficial à implantação de Production do projeto correto.
+- [ ] Confirmar a rota de prontidão PIX no domínio oficial sem criar cobrança.
+
+## Avaliação de banco de dados na Vercel
+
+- [x] Verificar a oferta de banco atual da Vercel e os limites relevantes.
+- [x] Comparar o custo e a compatibilidade de uma migração para a arquitetura PIX MySQL/TiDB atual.
+- [ ] Aguardar a decisão do usuário antes de alterar a infraestrutura de dados.

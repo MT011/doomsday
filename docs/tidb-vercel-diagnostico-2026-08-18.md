@@ -17,3 +17,9 @@ Adaptar a instrução `CREATE TABLE` à variante compatível do TiDB e voltar a 
 ## Validação concluída
 
 Após publicar a inicialização com o banco exclusivo `doomsday_presale` e executar um novo deployment de Production, a mesma consulta somente leitura retornou `Cobrança PIX não encontrada.`. Esse é o resultado esperado para o código artificial consultado: a tabela foi preparada, a consulta alcançou o TiDB e **nenhuma cobrança PIX foi criada**.
+
+## Divergência de implantação posterior
+
+O commit `70a21b11`, que inclui a consulta `presale.getPixReadiness`, está confirmado na branch `main` do GitHub e recebeu status Vercel de deployment concluído. Porém, o domínio oficial ainda respondeu `No procedure found` para essa nova rota. A evidência indica que o domínio de produção está vinculado a outra implantação ou ambiente Vercel, e não que a atualização deixou de chegar ao GitHub.
+
+O painel Vercel associado ao deployment exige sessão do proprietário para confirmar o ambiente e a associação de domínio.
