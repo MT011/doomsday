@@ -269,10 +269,16 @@
 
 - [x] Diagnosticar por que `/api/*` é atendida pela página 404 estática em vez da função Express.
 - [x] Criar uma entrada de função em `/api` e mapear as rotas do checkout PIX para ela.
-- [ ] Validar que respostas de API usam JSON e não a página de erro da Vercel.
+- [x] Validar que respostas de API usam JSON e não a página de erro da Vercel.
 
 ## Rotas explícitas da Vercel
 
 - [x] Criar funções específicas para `/api/trpc/*` e `/api/amplopay/webhook`.
 - [x] Confirmar o build e o contrato de respostas JSON das entradas explícitas.
 - [ ] Publicar a nova configuração e validar o domínio oficial após o redeploy.
+
+## Isolamento do backend público na Vercel
+
+- [x] Remover dependências de OAuth, storage proxy e system router da função pública de PIX.
+- [x] Direcionar as entradas `api/trpc` e `api/amplopay/webhook` para o backend isolado.
+- [ ] Confirmar resposta JSON no domínio oficial sem erro de execução da função.
