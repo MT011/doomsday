@@ -294,3 +294,9 @@
 - [x] Corrigir os tipos de contexto tRPC usados no `server/app.ts`.
 - [x] Corrigir as importações de tipos Express no webhook PIX.
 - [x] Validar compilação TypeScript no formato usado pela Vercel e publicar a correção.
+
+## Compatibilidade TypeScript da função serverless
+
+- [x] Substituir anotações Express incompatíveis por limites seguros na função pública.
+- [x] Revalidar o build em Node 22 e TypeScript 5.9 da Vercel.
+- [ ] Publicar e confirmar uma resposta JSON da API no domínio oficial.

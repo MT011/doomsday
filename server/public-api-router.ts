@@ -1,6 +1,5 @@
 import { randomUUID } from "node:crypto";
 import { initTRPC } from "@trpc/server";
-import type { Request, Response } from "express";
 import superjson from "superjson";
 import { z } from "zod";
 import { buildWebhookUrl, createAmploPayIdentifier, createAmploPayPixCharge, formatBrazilCpf, formatBrazilPhone } from "./amplopay";
@@ -9,8 +8,8 @@ import { getPublicOrigin } from "./pix-origin";
 import { createDemoOrder, sendDemoConfirmationEmail } from "./presale";
 
 export type PublicApiContext = {
-  req: Request;
-  res: Response;
+  req: any;
+  res: any;
   user: null;
 };
 
