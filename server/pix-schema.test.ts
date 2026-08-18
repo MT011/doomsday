@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getTiDbConnectionOptions, PIX_PAYMENTS_CREATE_SQL } from "./db";
+import { getTiDbConnectionOptions, needsTiDbApplicationDatabase, PIX_PAYMENTS_CREATE_SQL } from "./db";
 
 describe("schema de persistência PIX", () => {
   it("cria a tabela de modo idempotente com as chaves necessárias", () => {
@@ -32,5 +32,11 @@ describe("conexão TiDB", () => {
 
   it("não cria conexão parcial sem senha", () => {
     expect(getTiDbConnectionOptions({ TIDB_HOST: "gateway.example", TIDB_USER: "usuario" })).toBeUndefined();
+  });
+
+  it("troca um schema de sistema por banco exclusivo da aplicação", () => {
+    expect(needsTiDbApplicationDatabase("sys")).toBe(true);
+    expect(needsTiDbApplicationDatabase("mysql")).toBe(true);
+    expect(needsTiDbApplicationDatabase("doomsday_presale")).toBe(false);
   });
 });

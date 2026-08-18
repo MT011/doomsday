@@ -8,6 +8,13 @@ let _db: ReturnType<typeof drizzle> | null = null;
 let _pixPaymentsTableReady: Promise<void> | null = null;
 
 type EnvironmentValues = Record<string, string | undefined>;
+export const TIDB_APPLICATION_DATABASE = "doomsday_presale";
+
+const TIDB_SYSTEM_DATABASES = new Set(["information_schema", "mysql", "performance_schema", "sys"]);
+
+export function needsTiDbApplicationDatabase(database: string | undefined) {
+  return !database || TIDB_SYSTEM_DATABASES.has(database.trim().toLowerCase());
+}
 
 export function getTiDbConnectionOptions(env: EnvironmentValues = process.env): PoolOptions | undefined {
   const host = env.TIDB_HOST?.trim();
@@ -76,7 +83,13 @@ export async function getDb() {
     try {
       const tiDbOptions = getTiDbConnectionOptions();
       if (tiDbOptions) {
-        _db = drizzle({ connection: tiDbOptions });
+        if (needsTiDbApplicationDatabase(tiDbOptions.database)) {
+          const bootstrapDb = drizzle({ connection: tiDbOptions });
+          await bootstrapDb.execute(sql.raw(`CREATE DATABASE IF NOT EXISTS \`${TIDB_APPLICATION_DATABASE}\``));
+          _db = drizzle({ connection: { ...tiDbOptions, database: TIDB_APPLICATION_DATABASE } });
+        } else {
+          _db = drizzle({ connection: tiDbOptions });
+        }
       } else if (process.env.DATABASE_URL) {
         _db = drizzle(process.env.DATABASE_URL);
       }

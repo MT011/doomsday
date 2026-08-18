@@ -69,9 +69,9 @@ Na Vercel, acesse **Settings → Environment Variables** e crie as cinco variáv
 | `TIDB_PORT` | `4000` | Não |
 | `TIDB_USER` | Usuário exibido pelo TiDB, normalmente terminado em `.root` | Não |
 | `TIDB_PASSWORD` | A senha gerada no painel TiDB | **Sim** |
-| `TIDB_DATABASE` | `sys` | Não |
+| `TIDB_DATABASE` | `sys` (o servidor criará e usará `doomsday_presale`) | Não |
 
-> **Não é necessário criar `DATABASE_URL` se as cinco variáveis `TIDB_*` estiverem preenchidas.** Caso opte por utilizar `DATABASE_URL`, mantenha a URL apenas no painel de variáveis da Vercel e inclua a configuração TLS compatível com o driver.
+> **Não é necessário criar `DATABASE_URL` se as cinco variáveis `TIDB_*` estiverem preenchidas.** O valor `sys` é somente o ponto inicial de conexão: como ele é um schema de sistema do TiDB, o servidor cria e usa automaticamente o banco exclusivo `doomsday_presale` para as cobranças PIX. Caso opte por utilizar `DATABASE_URL`, mantenha a URL apenas no painel de variáveis da Vercel e inclua a configuração TLS compatível com o driver.
 
 Depois de salvar as variáveis em Production, execute **Deployments → Redeploy** na implantação mais recente. O primeiro acesso de PIX cria a tabela `amplopayPixPayments` de forma idempotente, sem inserir cobranças de teste.
 

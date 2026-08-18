@@ -330,3 +330,9 @@
 - [x] Aceitar host, porta, usuário, senha e banco TiDB em variáveis de ambiente separadas.
 - [x] Aplicar TLS obrigatório na conexão TiDB serverless.
 - [x] Documentar o preenchimento dessas variáveis na Vercel sem expor a senha.
+
+## Correção de DDL no TiDB
+
+- [x] Identificar que o endpoint estava conectado ao schema de sistema `sys`, não ao banco de aplicação.
+- [x] Aplicar inicialização automática do banco exclusivo `doomsday_presale` antes da tabela PIX.
+- [ ] Publicar e validar uma consulta PIX somente leitura sem criar cobrança.
