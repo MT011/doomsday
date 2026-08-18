@@ -13,3 +13,7 @@ O navegador de diagnóstico foi direcionado à página de login da Vercel. O err
 ## Próxima ação
 
 Adaptar a instrução `CREATE TABLE` à variante compatível do TiDB e voltar a executar a mesma consulta somente leitura após um novo deploy.
+
+## Validação concluída
+
+Após publicar a inicialização com o banco exclusivo `doomsday_presale` e executar um novo deployment de Production, a mesma consulta somente leitura retornou `Cobrança PIX não encontrada.`. Esse é o resultado esperado para o código artificial consultado: a tabela foi preparada, a consulta alcançou o TiDB e **nenhuma cobrança PIX foi criada**.

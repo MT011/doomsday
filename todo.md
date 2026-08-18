@@ -310,14 +310,14 @@
 ## Banco de dados da Vercel para PIX
 
 - [x] Confirmar a ausência de `DATABASE_URL` no ambiente de produção da Vercel.
-- [ ] Configurar um MySQL/TiDB externo e aplicar o esquema que inclui `amplopayPixPayments`.
-- [ ] Cadastrar `DATABASE_URL` na Vercel e validar uma consulta PIX somente leitura.
+- [x] Configurar o TiDB externo e aplicar o esquema que inclui `amplopayPixPayments`.
+- [x] Cadastrar os campos `TIDB_*` na Vercel e validar uma consulta PIX somente leitura.
 
 ## Correção da DATABASE_URL em produção
 
-- [ ] Confirmar que a URL completa do MySQL/TiDB está marcada em Production, sem valor vazio ou placeholder.
-- [ ] Fazer novo redeploy de Production após salvar a variável.
-- [ ] Retestar o checkout sem criar cobrança até a persistência estar disponível.
+- [x] Confirmar os campos TiDB de Production sem valor vazio ou placeholder.
+- [x] Fazer novo redeploy de Production após salvar as variáveis.
+- [x] Retestar a consulta PIX sem criar cobrança até a persistência ficar disponível.
 
 ## Inicialização da tabela PIX no TiDB
 
@@ -335,9 +335,9 @@
 
 - [x] Identificar que o endpoint estava conectado ao schema de sistema `sys`, não ao banco de aplicação.
 - [x] Aplicar inicialização automática do banco exclusivo `doomsday_presale` antes da tabela PIX.
-- [ ] Publicar e validar uma consulta PIX somente leitura sem criar cobrança.
+- [x] Publicar e validar uma consulta PIX somente leitura sem criar cobrança.
 
 ## Diagnóstico detalhado do TiDB
 
 - [x] Exibir de forma sanitizada o código e a causa do erro TiDB de inicialização da tabela.
-- [ ] Corrigir a DDL final conforme o erro confirmado e retestar a persistência.
+- [x] Corrigir a inicialização do banco de aplicação e retestar a persistência.
