@@ -262,5 +262,11 @@
 ## Origem oficial publicada pelo repositório
 
 - [x] Definir `https://www.prevendadoomsday.com.br` como origem padrão segura do callback PIX.
-- [ ] Publicar a atualização de domínio no GitHub para acionar a implantação automática da Vercel.
+- [x] Publicar a atualização de domínio no GitHub para acionar a implantação automática da Vercel.
 - [ ] Confirmar que a rota de webhook deixa de retornar 404 após a atualização da Vercel.
+
+## Correção de rotas API na Vercel
+
+- [x] Diagnosticar por que `/api/*` é atendida pela página 404 estática em vez da função Express.
+- [x] Criar uma entrada de função em `/api` e mapear as rotas do checkout PIX para ela.
+- [ ] Validar que respostas de API usam JSON e não a página de erro da Vercel.
