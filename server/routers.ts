@@ -81,7 +81,7 @@ export const appRouter = router({
       const amount = calculateOrderAmount(input.seats);
       const orderCode = `DD-PIX-${randomUUID().replace(/-/g, "").slice(0, 10).toUpperCase()}`;
       const identifier = createAmploPayIdentifier(orderCode);
-      const callbackUrl = buildWebhookUrl(getPublicOrigin(ctx.req));
+      const callbackUrl = buildWebhookUrl(getPublicOrigin(ctx.req as { headers: { origin?: string | string[] } }));
       const dueDate = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
       const formattedBuyer = {
         ...input.buyer,

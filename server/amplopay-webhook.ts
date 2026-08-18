@@ -1,4 +1,3 @@
-import type { Express, Request, Response } from "express";
 import { getAmploPayPixPaymentByTransactionId, updateAmploPayPixPayment } from "./db";
 import { isSecureTokenMatch, normalizeAmploPayStatus } from "./amplopay";
 
@@ -28,8 +27,9 @@ export function getProviderStatus(payload: WebhookPayload) {
   return normalizeAmploPayStatus(payload.transaction?.status ?? payload.status);
 }
 
-export function registerAmploPayWebhook(app: Express) {
-  app.post("/api/amplopay/webhook", async (req: Request, res: Response) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function registerAmploPayWebhook(app: any) {
+  app.post("/api/amplopay/webhook", async (req: any, res: any) => {
     const payload = req.body as WebhookPayload;
     const transactionId = getTransactionId(payload);
     if (!transactionId) {
