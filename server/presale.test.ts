@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { calculateDemoOrderTotal, createDemoOrder, sendDemoConfirmationEmail, validateDemoSeats } from "./presale";
+import { getPixReadiness } from "./public-api-router";
 
 const session = {
   id: "session-1",
@@ -18,6 +19,18 @@ const seats = [
 ];
 
 describe("presale rules", () => {
+  it("reports PIX readiness without returning any credential", () => {
+    const result = getPixReadiness({
+      AMPLOPAY_PIX_ENABLED: "true",
+      AMPLOPAY_PUBLIC_KEY: "public-test-key",
+      AMPLOPAY_SECRET_KEY: "private-test-key",
+      AMPLOPAY_CALLBACK_ORIGIN: "https://www.prevendadoomsday.com.br",
+    });
+
+    expect(result).toEqual({ pixEnabled: true, credentialsConfigured: true, callbackOriginConfigured: true });
+    expect(JSON.stringify(result)).not.toContain("test-key");
+  });
+
   it("calculates whole and half-price tickets", () => {
     expect(calculateDemoOrderTotal(session.price, seats)).toBe(76.92);
   });

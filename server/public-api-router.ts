@@ -50,6 +50,16 @@ const pixOrderSchema = orderSchema.omit({ payment: true });
 const WHOLE_TICKET_PRICE = 51.28;
 const HALF_TICKET_PRICE = 25.64;
 
+type PixReadinessEnvironment = Record<string, string | undefined>;
+
+export function getPixReadiness(env: PixReadinessEnvironment = process.env) {
+  return {
+    pixEnabled: env.AMPLOPAY_PIX_ENABLED === "true",
+    credentialsConfigured: Boolean(env.AMPLOPAY_PUBLIC_KEY?.trim() && env.AMPLOPAY_SECRET_KEY?.trim()),
+    callbackOriginConfigured: Boolean(env.AMPLOPAY_CALLBACK_ORIGIN?.trim()),
+  };
+}
+
 function calculateOrderAmount(seats: Array<{ ticketType: "inteira" | "meia" }>) {
   return Number(seats.reduce((total, seat) => total + (seat.ticketType === "meia" ? HALF_TICKET_PRICE : WHOLE_TICKET_PRICE), 0).toFixed(2));
 }
@@ -60,6 +70,7 @@ export const publicApiRouter = router({
     logout: publicProcedure.mutation(() => ({ success: true } as const)),
   }),
   presale: router({
+    getPixReadiness: publicProcedure.query(() => getPixReadiness()),
     createDemoOrder: publicProcedure.input(orderSchema).mutation(({ input }) => createDemoOrder(input)),
     sendDemoConfirmationEmail: publicProcedure
       .input(z.object({ orderCode: z.string().min(1), email: z.string().email() }))

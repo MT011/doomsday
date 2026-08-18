@@ -341,3 +341,10 @@
 
 - [x] Exibir de forma sanitizada o código e a causa do erro TiDB de inicialização da tabela.
 - [x] Corrigir a inicialização do banco de aplicação e retestar a persistência.
+
+## Ativação final do PIX AmploPay
+
+- [ ] Cadastrar `AMPLOPAY_PIX_ENABLED=true` no ambiente Production da Vercel.
+- [ ] Fazer redeploy de Production após a ativação do PIX.
+- [x] Expor uma verificação sem cobrança para confirmar a ativação do PIX na produção.
+- [ ] Confirmar o webhook oficial da AmploPay e validar uma cobrança real autorizada.
