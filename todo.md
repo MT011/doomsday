@@ -250,3 +250,17 @@
 - [x] Adicionar configuração de build compatível com Vercel sem expor os segredos do PIX.
 - [x] Validar a instalação e o build com os comandos equivalentes aos da Vercel.
 - [x] Documentar os próximos passos de variáveis, banco, webhook e nova publicação.
+
+## Migração do PIX para domínio oficial
+
+- [x] Confirmar que `https://www.prevendadoomsday.com.br` está publicado em HTTPS e acessível.
+- [ ] Publicar a função Express atualizada na Vercel para disponibilizar `/api/amplopay/webhook`, atualmente retornando HTTP 404.
+- [ ] Preparar a atualização de `AMPLOPAY_CALLBACK_ORIGIN` e do webhook para o domínio oficial.
+- [ ] Obter confirmação explícita antes de ativar PIX real ou iniciar cobrança de teste.
+- [ ] Validar o recebimento do webhook e a confirmação de pedido no domínio oficial.
+
+## Origem oficial publicada pelo repositório
+
+- [x] Definir `https://www.prevendadoomsday.com.br` como origem padrão segura do callback PIX.
+- [ ] Publicar a atualização de domínio no GitHub para acionar a implantação automática da Vercel.
+- [ ] Confirmar que a rota de webhook deixa de retornar 404 após a atualização da Vercel.

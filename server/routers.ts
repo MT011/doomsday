@@ -40,10 +40,14 @@ const demoOrderSchema = z.object({
 const pixOrderSchema = demoOrderSchema.omit({ payment: true });
 const WHOLE_TICKET_PRICE = 51.28;
 const HALF_TICKET_PRICE = 25.64;
+export const OFFICIAL_PIX_CALLBACK_ORIGIN = "https://www.prevendadoomsday.com.br";
+
+export function resolvePublicOrigin(configuredOrigin = process.env.AMPLOPAY_CALLBACK_ORIGIN) {
+  return configuredOrigin || OFFICIAL_PIX_CALLBACK_ORIGIN;
+}
 
 export function getPublicOrigin(req: { headers: { origin?: string | string[] } }) {
-  const configuredOrigin = process.env.AMPLOPAY_CALLBACK_ORIGIN;
-  if (!configuredOrigin) throw new Error("A origem HTTPS pública do callback PIX não está configurada.");
+  const configuredOrigin = resolvePublicOrigin();
 
   let configuredUrl: URL;
   try {

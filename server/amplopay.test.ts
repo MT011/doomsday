@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildWebhookUrl, formatBrazilCpf, formatBrazilPhone, isSecureTokenMatch, normalizeAmploPayStatus, safeProviderValidationMessage } from "./amplopay";
-import { getPublicOrigin } from "./routers";
+import { getPublicOrigin, OFFICIAL_PIX_CALLBACK_ORIGIN, resolvePublicOrigin } from "./routers";
 
 describe("AmploPay PIX adapter", () => {
   it("normalizes provider statuses before persisting payment state", () => {
@@ -24,6 +24,10 @@ describe("AmploPay PIX adapter", () => {
     const publicOrigin = "https://doomsdaypf-q7jmpgef.manus.space";
     expect(getPublicOrigin({ headers: { origin: publicOrigin } })).toBe(publicOrigin);
     expect(() => getPublicOrigin({ headers: { origin: "https://origem-maliciosa.example" } })).toThrow("não corresponde");
+  });
+
+  it("falls back to the official domain when the deployment has no callback origin override", () => {
+    expect(resolvePublicOrigin("")).toBe(OFFICIAL_PIX_CALLBACK_ORIGIN);
   });
 
   it("normalizes CPF and phone data required by the PIX provider", () => {
