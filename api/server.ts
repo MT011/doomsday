@@ -1,6 +1,7 @@
-import { createApp } from "../server/app";
+// @ts-expect-error — pre-bundled by esbuild during build step, no .d.ts
+import app from "../dist/api-handler.js";
 
-export default createApp();
+export default app;
 
 export const config = {
   api: {
