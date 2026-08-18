@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { PIX_PAYMENTS_CREATE_SQL } from "./db";
+import { getTiDbConnectionOptions, PIX_PAYMENTS_CREATE_SQL } from "./db";
 
 describe("schema de persistência PIX", () => {
   it("cria a tabela de modo idempotente com as chaves necessárias", () => {
@@ -9,5 +9,28 @@ describe("schema de persistência PIX", () => {
     expect(PIX_PAYMENTS_CREATE_SQL).toContain("`transactionId`");
     expect(PIX_PAYMENTS_CREATE_SQL).toContain("`webhookToken`");
     expect(PIX_PAYMENTS_CREATE_SQL).not.toMatch(/INSERT\s+INTO/i);
+  });
+});
+
+describe("conexão TiDB", () => {
+  it("monta uma conexão TLS a partir de campos separados", () => {
+    const options = getTiDbConnectionOptions({
+      TIDB_HOST: "gateway01.sa-east-1.prod.aws.tidbcloud.com",
+      TIDB_PORT: "4000",
+      TIDB_USER: "usuario.root",
+      TIDB_PASSWORD: "segredo-nao-real",
+      TIDB_DATABASE: "sys",
+    });
+
+    expect(options).toMatchObject({
+      host: "gateway01.sa-east-1.prod.aws.tidbcloud.com",
+      port: 4000,
+      database: "sys",
+      ssl: { minVersion: "TLSv1.2", rejectUnauthorized: true },
+    });
+  });
+
+  it("não cria conexão parcial sem senha", () => {
+    expect(getTiDbConnectionOptions({ TIDB_HOST: "gateway.example", TIDB_USER: "usuario" })).toBeUndefined();
   });
 });

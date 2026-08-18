@@ -26,7 +26,7 @@ Entregue ao responsável técnico somente as informações abaixo. Os valores se
 | Repositório GitHub | URL/organização do repositório | Sim | Clone a branch `main`. |
 | Domínio final | `https://seu-dominio.com.br` | Sim | Deve ter HTTPS válido e sem caminho adicional. |
 | URL do webhook | `https://seu-dominio.com.br/api/amplopay/webhook` | Sim | Cadastre na AmploPay após a publicação. |
-| Banco MySQL/TiDB | URL de conexão segura | Sim | Não envie a URL em texto aberto; cadastre como segredo. |
+| Banco MySQL/TiDB | Campos seguros ou URL de conexão | Sim | Prefira os campos `TIDB_*` na Vercel para não montar uma URL com senha. |
 | Chave pública AmploPay | Segredo `AMPLOPAY_PUBLIC_KEY` | Sim | Use a mesma conta AmploPay autorizada. |
 | Chave secreta AmploPay | Segredo `AMPLOPAY_SECRET_KEY` | Sim | Nunca exponha no frontend. |
 | E-mail transacional | Provedor, domínio remetente e chave | Para produção | O código atual só simula o envio de e-mail. |
@@ -37,11 +37,18 @@ Entregue ao responsável técnico somente as informações abaixo. Os valores se
 Crie os valores no painel de segredos do novo provedor. O exemplo é apenas um modelo, sem credenciais reais.
 
 ```dotenv
-# Runtime e banco
+# Runtime
 NODE_ENV=production
 PORT=3000
-DATABASE_URL=mysql://USUARIO:SENHA@HOST:3306/NOME_DO_BANCO
 JWT_SECRET=gere-uma-chave-aleatoria-com-no-minimo-32-caracteres
+
+# Banco TiDB Serverless: o servidor aplica TLS 1.2 e valida o certificado.
+# Cadastre cada valor como segredo no painel, sem versionar um arquivo .env.
+TIDB_HOST=gateway01.sa-east-1.prod.aws.tidbcloud.com
+TIDB_PORT=4000
+TIDB_USER=USUARIO_FORNECIDO_PELO_TIDB
+TIDB_PASSWORD=CADASTRAR_NO_PAINEL_DE_SEGREDOS
+TIDB_DATABASE=sys
 
 # PIX AmploPay — variáveis privadas do servidor
 AMPLOPAY_PUBLIC_KEY=CADASTRAR_NO_PAINEL_DE_SEGREDOS
@@ -51,6 +58,22 @@ AMPLOPAY_CALLBACK_ORIGIN=https://seu-dominio.com.br
 ```
 
 O código exige `AMPLOPAY_PIX_ENABLED=true` antes de criar cobranças e valida que a origem do navegador coincide com `AMPLOPAY_CALLBACK_ORIGIN`. O webhook resultante é montado como `/api/amplopay/webhook`.[3] [4]
+
+### Configuração simplificada para TiDB Serverless na Vercel
+
+Na Vercel, acesse **Settings → Environment Variables** e crie as cinco variáveis `TIDB_HOST`, `TIDB_PORT`, `TIDB_USER`, `TIDB_PASSWORD` e `TIDB_DATABASE`. Marque **Production** em todas elas; pode marcar Preview e Development somente se também quiser testar nesses ambientes. A aplicação monta a conexão a partir desses campos e ativa **TLS 1.2 com validação do certificado**, exigência usual do endpoint público do TiDB Serverless.[9]
+
+| Variável na Vercel | Valor a preencher para a instância TiDB criada | Sigilosa? |
+|---|---|---:|
+| `TIDB_HOST` | Host mostrado pelo TiDB, por exemplo `gateway01.sa-east-1.prod.aws.tidbcloud.com` | Não |
+| `TIDB_PORT` | `4000` | Não |
+| `TIDB_USER` | Usuário exibido pelo TiDB, normalmente terminado em `.root` | Não |
+| `TIDB_PASSWORD` | A senha gerada no painel TiDB | **Sim** |
+| `TIDB_DATABASE` | `sys` | Não |
+
+> **Não é necessário criar `DATABASE_URL` se as cinco variáveis `TIDB_*` estiverem preenchidas.** Caso opte por utilizar `DATABASE_URL`, mantenha a URL apenas no painel de variáveis da Vercel e inclua a configuração TLS compatível com o driver.
+
+Depois de salvar as variáveis em Production, execute **Deployments → Redeploy** na implantação mais recente. O primeiro acesso de PIX cria a tabela `amplopayPixPayments` de forma idempotente, sem inserir cobranças de teste.
 
 > Mantenha `AMPLOPAY_PIX_ENABLED=false` até o domínio HTTPS estar publicado e o webhook estar cadastrado na AmploPay. Em seguida, faça uma cobrança de baixo valor autorizada por você para confirmar geração, recebimento do webhook e tela de confirmação.
 

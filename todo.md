@@ -323,4 +323,10 @@
 
 - [x] Garantir a criação idempotente da tabela de cobranças PIX no banco TiDB conectado.
 - [x] Validar que a inicialização não altera cobranças existentes e falha de modo legível sem conexão.
-- [ ] Publicar a rotina para que o checkout no domínio oficial possa persistir cobranças.
+- [x] Publicar a rotina para que o checkout no domínio oficial possa persistir cobranças.
+
+## Conexão TiDB simplificada
+
+- [x] Aceitar host, porta, usuário, senha e banco TiDB em variáveis de ambiente separadas.
+- [x] Aplicar TLS obrigatório na conexão TiDB serverless.
+- [x] Documentar o preenchimento dessas variáveis na Vercel sem expor a senha.

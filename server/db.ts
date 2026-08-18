@@ -1,10 +1,34 @@
 import { eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
+import type { PoolOptions } from "mysql2";
 import { amplopayPixPayments, InsertAmploPayPixPayment, InsertUser, users } from "../drizzle/schema.js";
 import { ENV } from './_core/env.js';
 
 let _db: ReturnType<typeof drizzle> | null = null;
 let _pixPaymentsTableReady: Promise<void> | null = null;
+
+type EnvironmentValues = Record<string, string | undefined>;
+
+export function getTiDbConnectionOptions(env: EnvironmentValues = process.env): PoolOptions | undefined {
+  const host = env.TIDB_HOST?.trim();
+  const user = env.TIDB_USER?.trim();
+  const password = env.TIDB_PASSWORD;
+  if (!host || !user || !password) return undefined;
+
+  const parsedPort = Number(env.TIDB_PORT ?? "4000");
+  if (!Number.isInteger(parsedPort) || parsedPort < 1 || parsedPort > 65535) {
+    throw new Error("A porta configurada para o TiDB é inválida.");
+  }
+
+  return {
+    host,
+    port: parsedPort,
+    user,
+    password,
+    database: env.TIDB_DATABASE?.trim() || "sys",
+    ssl: { minVersion: "TLSv1.2", rejectUnauthorized: true },
+  };
+}
 
 export const PIX_PAYMENTS_CREATE_SQL = `
   CREATE TABLE IF NOT EXISTS \`amplopayPixPayments\` (
@@ -48,9 +72,14 @@ async function ensurePixPaymentsTable(db: ReturnType<typeof drizzle>) {
 
 // Lazily create the drizzle instance so local tooling can run without a DB.
 export async function getDb() {
-  if (!_db && process.env.DATABASE_URL) {
+  if (!_db) {
     try {
-      _db = drizzle(process.env.DATABASE_URL);
+      const tiDbOptions = getTiDbConnectionOptions();
+      if (tiDbOptions) {
+        _db = drizzle({ connection: tiDbOptions });
+      } else if (process.env.DATABASE_URL) {
+        _db = drizzle(process.env.DATABASE_URL);
+      }
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
       _db = null;
