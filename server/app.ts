@@ -1,10 +1,9 @@
 import express from "express";
 import { createExpressMiddleware, type CreateExpressContextOptions } from "@trpc/server/adapters/express";
-import { appRouter } from "./routers";
 import { registerAmploPayWebhook } from "./amplopay-webhook";
-import type { TrpcContext } from "./_core/context";
+import { publicApiRouter, type PublicApiContext } from "./public-api-router";
 
-function createPublicContext({ req, res }: CreateExpressContextOptions): TrpcContext {
+function createPublicContext({ req, res }: CreateExpressContextOptions): PublicApiContext {
   return { req, res, user: null };
 }
 
@@ -21,7 +20,7 @@ export function createApp() {
   app.use(
     "/api/trpc",
     createExpressMiddleware({
-      router: appRouter,
+      router: publicApiRouter,
       createContext: createPublicContext,
     })
   );

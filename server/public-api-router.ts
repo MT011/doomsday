@@ -1,23 +1,30 @@
-import { z } from "zod";
 import { randomUUID } from "node:crypto";
-import { COOKIE_NAME } from "@shared/const";
-import { getSessionCookieOptions } from "./_core/cookies";
-import { systemRouter } from "./_core/systemRouter";
-import { publicProcedure, router } from "./_core/trpc";
-import { createDemoOrder, sendDemoConfirmationEmail } from "./presale";
+import { initTRPC } from "@trpc/server";
+import superjson from "superjson";
+import { z } from "zod";
 import { buildWebhookUrl, createAmploPayIdentifier, createAmploPayPixCharge, formatBrazilCpf, formatBrazilPhone } from "./amplopay";
 import { createAmploPayPixPayment, getAmploPayPixPaymentByOrderCode, updateAmploPayPixPayment } from "./db";
 import { getPublicOrigin } from "./pix-origin";
-export { getPublicOrigin, OFFICIAL_PIX_CALLBACK_ORIGIN, resolvePublicOrigin } from "./pix-origin";
+import { createDemoOrder, sendDemoConfirmationEmail } from "./presale";
 
-const demoSeatSchema = z.object({
+export type PublicApiContext = {
+  req: { headers: { origin?: string | string[] } };
+  res: { clearCookie: (name: string, options?: Record<string, unknown>) => void };
+  user: null;
+};
+
+const t = initTRPC.context<PublicApiContext>().create({ transformer: superjson });
+const router = t.router;
+const publicProcedure = t.procedure;
+
+const seatSchema = z.object({
   id: z.string().min(1),
   row: z.string().min(1),
   number: z.number().int().positive(),
   ticketType: z.enum(["inteira", "meia"]),
 });
 
-const demoOrderSchema = z.object({
+const orderSchema = z.object({
   buyer: z.object({
     name: z.string().trim().min(3),
     email: z.string().email(),
@@ -36,28 +43,24 @@ const demoOrderSchema = z.object({
     room: z.string(),
     price: z.number().positive(),
   }),
-  seats: z.array(demoSeatSchema).min(1).max(8),
+  seats: z.array(seatSchema).min(1).max(8),
 });
 
-const pixOrderSchema = demoOrderSchema.omit({ payment: true });
+const pixOrderSchema = orderSchema.omit({ payment: true });
 const WHOLE_TICKET_PRICE = 51.28;
 const HALF_TICKET_PRICE = 25.64;
+
 function calculateOrderAmount(seats: Array<{ ticketType: "inteira" | "meia" }>) {
   return Number(seats.reduce((total, seat) => total + (seat.ticketType === "meia" ? HALF_TICKET_PRICE : WHOLE_TICKET_PRICE), 0).toFixed(2));
 }
 
-export const appRouter = router({
-  system: systemRouter,
+export const publicApiRouter = router({
   auth: router({
-    me: publicProcedure.query((opts) => opts.ctx.user),
-    logout: publicProcedure.mutation(({ ctx }) => {
-      const cookieOptions = getSessionCookieOptions(ctx.req);
-      ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
-      return { success: true } as const;
-    }),
+    me: publicProcedure.query(() => null),
+    logout: publicProcedure.mutation(() => ({ success: true } as const)),
   }),
   presale: router({
-    createDemoOrder: publicProcedure.input(demoOrderSchema).mutation(({ input }) => createDemoOrder(input)),
+    createDemoOrder: publicProcedure.input(orderSchema).mutation(({ input }) => createDemoOrder(input)),
     sendDemoConfirmationEmail: publicProcedure
       .input(z.object({ orderCode: z.string().min(1), email: z.string().email() }))
       .mutation(({ input }) => sendDemoConfirmationEmail(input)),
@@ -67,20 +70,16 @@ export const appRouter = router({
       const identifier = createAmploPayIdentifier(orderCode);
       const callbackUrl = buildWebhookUrl(getPublicOrigin(ctx.req));
       const dueDate = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-      const formattedBuyer = {
-        ...input.buyer,
-        document: formatBrazilCpf(input.buyer.document),
-        phone: formatBrazilPhone(input.buyer.phone),
-      };
+      const buyer = { ...input.buyer, document: formatBrazilCpf(input.buyer.document), phone: formatBrazilPhone(input.buyer.phone) };
 
       await createAmploPayPixPayment({
         orderCode,
         identifier,
         status: "PENDING",
         amountCents: Math.round(amount * 100),
-        buyerName: formattedBuyer.name,
-        buyerEmail: formattedBuyer.email,
-        buyerDocument: formattedBuyer.document,
+        buyerName: buyer.name,
+        buyerEmail: buyer.email,
+        buyerDocument: buyer.document,
         cinema: input.cinema,
         session: input.session,
         seats: input.seats,
@@ -90,8 +89,8 @@ export const appRouter = router({
         const charge = await createAmploPayPixCharge({
           identifier,
           amount,
-          buyer: formattedBuyer,
-          products: input.seats.map((seat) => ({
+          buyer,
+          products: input.seats.map(seat => ({
             id: `${input.session.id}-${seat.id}`,
             name: `Avengers: Doomsday — ${seat.ticketType === "meia" ? "Meia-entrada" : "Inteira"} — Assento ${seat.row}${seat.number}`,
             quantity: 1,
@@ -122,5 +121,3 @@ export const appRouter = router({
     }),
   }),
 });
-
-export type AppRouter = typeof appRouter;
