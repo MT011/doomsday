@@ -5,12 +5,12 @@
   "outputDirectory": "dist/public",
   "functions": {
     "api/server.ts": {
-      "includeFiles": "dist/**/*",
       "maxDuration": 30
     }
   },
   "rewrites": [
-    { "source": "/api/:path*", "destination": "/api/server" },
+    { "source": "/api/trpc/(.*)", "destination": "/api/server" },
+    { "source": "/api/amplopay/(.*)", "destination": "/api/server" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }
