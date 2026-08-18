@@ -1,9 +1,50 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { amplopayPixPayments, InsertAmploPayPixPayment, InsertUser, users } from "../drizzle/schema.js";
 import { ENV } from './_core/env.js';
 
 let _db: ReturnType<typeof drizzle> | null = null;
+let _pixPaymentsTableReady: Promise<void> | null = null;
+
+export const PIX_PAYMENTS_CREATE_SQL = `
+  CREATE TABLE IF NOT EXISTS \`amplopayPixPayments\` (
+    \`id\` INT NOT NULL AUTO_INCREMENT,
+    \`orderCode\` VARCHAR(64) NOT NULL,
+    \`identifier\` VARCHAR(96) NOT NULL,
+    \`transactionId\` VARCHAR(128) NULL,
+    \`status\` ENUM('PENDING', 'PAID', 'FAILED', 'REJECTED', 'CANCELED', 'REFUNDED', 'CHARGED_BACK') NOT NULL DEFAULT 'PENDING',
+    \`amountCents\` INT NOT NULL,
+    \`buyerName\` VARCHAR(255) NOT NULL,
+    \`buyerEmail\` VARCHAR(320) NOT NULL,
+    \`buyerDocument\` VARCHAR(64) NOT NULL,
+    \`cinema\` JSON NOT NULL,
+    \`session\` JSON NOT NULL,
+    \`seats\` JSON NOT NULL,
+    \`pixCode\` TEXT NULL,
+    \`pixImageUrl\` TEXT NULL,
+    \`webhookToken\` VARCHAR(512) NULL,
+    \`lastWebhookEvent\` VARCHAR(64) NULL,
+    \`webhookProcessedAt\` TIMESTAMP NULL,
+    \`paidAt\` TIMESTAMP NULL,
+    \`providerPayload\` JSON NULL,
+    \`createdAt\` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    \`updatedAt\` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (\`id\`),
+    UNIQUE KEY \`amplopayPixPayments_orderCode_unique\` (\`orderCode\`),
+    UNIQUE KEY \`amplopayPixPayments_identifier_unique\` (\`identifier\`),
+    UNIQUE KEY \`amplopayPixPayments_transactionId_unique\` (\`transactionId\`)
+  )
+`;
+
+async function ensurePixPaymentsTable(db: ReturnType<typeof drizzle>) {
+  if (!_pixPaymentsTableReady) {
+    _pixPaymentsTableReady = db.execute(sql.raw(PIX_PAYMENTS_CREATE_SQL)).then(() => undefined).catch(error => {
+      _pixPaymentsTableReady = null;
+      throw error;
+    });
+  }
+  await _pixPaymentsTableReady;
+}
 
 // Lazily create the drizzle instance so local tooling can run without a DB.
 export async function getDb() {
@@ -92,6 +133,7 @@ export async function getUserByOpenId(openId: string) {
 export async function createAmploPayPixPayment(values: InsertAmploPayPixPayment) {
   const db = await getDb();
   if (!db) throw new Error("O banco de dados não está disponível para criar a cobrança PIX.");
+  await ensurePixPaymentsTable(db);
   await db.insert(amplopayPixPayments).values(values);
   return getAmploPayPixPaymentByOrderCode(values.orderCode);
 }
@@ -99,6 +141,7 @@ export async function createAmploPayPixPayment(values: InsertAmploPayPixPayment)
 export async function getAmploPayPixPaymentByOrderCode(orderCode: string) {
   const db = await getDb();
   if (!db) return undefined;
+  await ensurePixPaymentsTable(db);
   const result = await db.select().from(amplopayPixPayments).where(eq(amplopayPixPayments.orderCode, orderCode)).limit(1);
   return result[0];
 }
@@ -106,6 +149,7 @@ export async function getAmploPayPixPaymentByOrderCode(orderCode: string) {
 export async function getAmploPayPixPaymentByTransactionId(transactionId: string) {
   const db = await getDb();
   if (!db) return undefined;
+  await ensurePixPaymentsTable(db);
   const result = await db.select().from(amplopayPixPayments).where(eq(amplopayPixPayments.transactionId, transactionId)).limit(1);
   return result[0];
 }
@@ -113,6 +157,7 @@ export async function getAmploPayPixPaymentByTransactionId(transactionId: string
 export async function updateAmploPayPixPayment(orderCode: string, values: Partial<InsertAmploPayPixPayment>) {
   const db = await getDb();
   if (!db) throw new Error("O banco de dados não está disponível para atualizar a cobrança PIX.");
+  await ensurePixPaymentsTable(db);
   await db.update(amplopayPixPayments).set(values).where(eq(amplopayPixPayments.orderCode, orderCode));
   return getAmploPayPixPaymentByOrderCode(orderCode);
 }

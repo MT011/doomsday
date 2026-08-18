@@ -254,7 +254,7 @@
 ## Migração do PIX para domínio oficial
 
 - [x] Confirmar que `https://www.prevendadoomsday.com.br` está publicado em HTTPS e acessível.
-- [ ] Publicar a função Express atualizada na Vercel para disponibilizar `/api/amplopay/webhook`, atualmente retornando HTTP 404.
+- [x] Publicar a função Express atualizada na Vercel para disponibilizar `/api/amplopay/webhook`, atualmente retornando HTTP 404.
 - [ ] Preparar a atualização de `AMPLOPAY_CALLBACK_ORIGIN` e do webhook para o domínio oficial.
 - [ ] Obter confirmação explícita antes de ativar PIX real ou iniciar cobrança de teste.
 - [ ] Validar o recebimento do webhook e a confirmação de pedido no domínio oficial.
@@ -263,7 +263,7 @@
 
 - [x] Definir `https://www.prevendadoomsday.com.br` como origem padrão segura do callback PIX.
 - [x] Publicar a atualização de domínio no GitHub para acionar a implantação automática da Vercel.
-- [ ] Confirmar que a rota de webhook deixa de retornar 404 após a atualização da Vercel.
+- [x] Confirmar que a rota de webhook deixa de retornar 404 após a atualização da Vercel.
 
 ## Correção de rotas API na Vercel
 
@@ -275,19 +275,19 @@
 
 - [x] Criar funções específicas para `/api/trpc/*` e `/api/amplopay/webhook`.
 - [x] Confirmar o build e o contrato de respostas JSON das entradas explícitas.
-- [ ] Publicar a nova configuração e validar o domínio oficial após o redeploy.
+- [x] Publicar a nova configuração e validar o domínio oficial após o redeploy.
 
 ## Isolamento do backend público na Vercel
 
 - [x] Remover dependências de OAuth, storage proxy e system router da função pública de PIX.
 - [x] Direcionar as entradas `api/trpc` e `api/amplopay/webhook` para o backend isolado.
-- [ ] Confirmar resposta JSON no domínio oficial sem erro de execução da função.
+- [x] Confirmar resposta JSON no domínio oficial sem erro de execução da função.
 
 ## Diagnóstico por runtime da Vercel
 
-- [ ] Obter a mensagem do Runtime Log da função que retorna “A server error has occurred”.
-- [ ] Corrigir a dependência ou variável indicada pelo log de runtime.
-- [ ] Revalidar o retorno JSON público antes de reativar o PIX no domínio oficial.
+- [x] Obter a mensagem do Runtime Log da função que retorna “A server error has occurred”.
+- [x] Corrigir a dependência ou variável indicada pelo log de runtime.
+- [x] Revalidar o retorno JSON público antes de reativar o PIX no domínio oficial.
 
 ## Tipagem Express para Vercel
 
@@ -299,10 +299,28 @@
 
 - [x] Substituir anotações Express incompatíveis por limites seguros na função pública.
 - [x] Revalidar o build em Node 22 e TypeScript 5.9 da Vercel.
-- [ ] Publicar e confirmar uma resposta JSON da API no domínio oficial.
+- [x] Publicar e confirmar uma resposta JSON da API no domínio oficial.
 
 ## Resolução ESM da Vercel
 
 - [x] Corrigir os imports das entradas serverless para incluir o backend no bundle da Vercel.
 - [x] Validar o bundle ESM das funções sem dependência de caminho relativo em runtime.
-- [ ] Publicar e confirmar JSON em `/api/trpc` no domínio oficial.
+- [x] Publicar e confirmar JSON em `/api/trpc` no domínio oficial.
+
+## Banco de dados da Vercel para PIX
+
+- [x] Confirmar a ausência de `DATABASE_URL` no ambiente de produção da Vercel.
+- [ ] Configurar um MySQL/TiDB externo e aplicar o esquema que inclui `amplopayPixPayments`.
+- [ ] Cadastrar `DATABASE_URL` na Vercel e validar uma consulta PIX somente leitura.
+
+## Correção da DATABASE_URL em produção
+
+- [ ] Confirmar que a URL completa do MySQL/TiDB está marcada em Production, sem valor vazio ou placeholder.
+- [ ] Fazer novo redeploy de Production após salvar a variável.
+- [ ] Retestar o checkout sem criar cobrança até a persistência estar disponível.
+
+## Inicialização da tabela PIX no TiDB
+
+- [x] Garantir a criação idempotente da tabela de cobranças PIX no banco TiDB conectado.
+- [x] Validar que a inicialização não altera cobranças existentes e falha de modo legível sem conexão.
+- [ ] Publicar a rotina para que o checkout no domínio oficial possa persistir cobranças.
