@@ -21,9 +21,11 @@ describe("AmploPay PIX adapter", () => {
   });
 
   it("uses the configured public origin behind a proxy and rejects a divergent checkout origin", () => {
-    const publicOrigin = "https://doomsdaypf-q7jmpgef.manus.space";
+    const publicOrigin = "https://www.prevendadoomsday.com.br";
+    process.env.AMPLOPAY_CALLBACK_ORIGIN = publicOrigin;
     expect(getPublicOrigin({ headers: { origin: publicOrigin } })).toBe(publicOrigin);
     expect(() => getPublicOrigin({ headers: { origin: "https://origem-maliciosa.example" } })).toThrow("não corresponde");
+    delete process.env.AMPLOPAY_CALLBACK_ORIGIN;
   });
 
   it("normalizes CPF and phone data required by the PIX provider", () => {
