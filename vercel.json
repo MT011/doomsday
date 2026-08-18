@@ -4,7 +4,10 @@
   "buildCommand": "pnpm run build",
   "outputDirectory": "dist/public",
   "functions": {
-    "api/[...path].ts": {
+    "api/trpc/[...path].ts": {
+      "maxDuration": 30
+    },
+    "api/amplopay/webhook.ts": {
       "maxDuration": 30
     }
   }
