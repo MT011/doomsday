@@ -6,6 +6,7 @@ import { ENV } from './_core/env.js';
 
 let _db: ReturnType<typeof drizzle> | null = null;
 let _pixPaymentsTableReady: Promise<void> | null = null;
+let _databaseInitializationError: Error | null = null;
 
 type EnvironmentValues = Record<string, string | undefined>;
 export const TIDB_APPLICATION_DATABASE = "doomsday_presale";
@@ -14,6 +15,45 @@ const TIDB_SYSTEM_DATABASES = new Set(["information_schema", "mysql", "performan
 
 export function needsTiDbApplicationDatabase(database: string | undefined) {
   return !database || TIDB_SYSTEM_DATABASES.has(database.trim().toLowerCase());
+}
+
+type DatabaseErrorLike = {
+  message?: unknown;
+  code?: unknown;
+  errno?: unknown;
+  sqlMessage?: unknown;
+  cause?: unknown;
+};
+
+function asDatabaseError(value: unknown): DatabaseErrorLike {
+  return typeof value === "object" && value !== null ? value as DatabaseErrorLike : {};
+}
+
+function sanitizeDatabaseErrorDetail(value: unknown) {
+  if (typeof value !== "string") return undefined;
+  return value
+    .replace(/mysql:\/\/[^\s]+/gi, "mysql://[oculto]")
+    .replace(/password\s*[:=]\s*[^\s,;]+/gi, "password=[oculto]")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 480);
+}
+
+export function formatTiDbInitializationError(error: unknown) {
+  const outer = asDatabaseError(error);
+  const cause = asDatabaseError(outer.cause);
+  const code = typeof cause.code === "string" || typeof outer.code === "string"
+    ? String(cause.code ?? outer.code)
+    : undefined;
+  const errno = typeof cause.errno === "number" || typeof outer.errno === "number"
+    ? String(cause.errno ?? outer.errno)
+    : undefined;
+  const detail = sanitizeDatabaseErrorDetail(cause.sqlMessage)
+    ?? sanitizeDatabaseErrorDetail(cause.message)
+    ?? sanitizeDatabaseErrorDetail(outer.sqlMessage)
+    ?? sanitizeDatabaseErrorDetail(outer.message);
+  const qualifiers = [code && `código ${code}`, errno && `erro ${errno}`].filter(Boolean).join(", ");
+  return `Não foi possível preparar o banco PIX do TiDB${qualifiers ? ` (${qualifiers})` : ""}${detail ? `: ${detail}` : "."}`;
 }
 
 export function getTiDbConnectionOptions(env: EnvironmentValues = process.env): PoolOptions | undefined {
@@ -71,7 +111,7 @@ async function ensurePixPaymentsTable(db: ReturnType<typeof drizzle>) {
   if (!_pixPaymentsTableReady) {
     _pixPaymentsTableReady = db.execute(sql.raw(PIX_PAYMENTS_CREATE_SQL)).then(() => undefined).catch(error => {
       _pixPaymentsTableReady = null;
-      throw error;
+      throw new Error(formatTiDbInitializationError(error));
     });
   }
   await _pixPaymentsTableReady;
@@ -94,7 +134,8 @@ export async function getDb() {
         _db = drizzle(process.env.DATABASE_URL);
       }
     } catch (error) {
-      console.warn("[Database] Failed to connect:", error);
+      _databaseInitializationError = new Error(formatTiDbInitializationError(error));
+      console.warn("[Database] Failed to initialize:", _databaseInitializationError.message);
       _db = null;
     }
   }
@@ -174,7 +215,7 @@ export async function getUserByOpenId(openId: string) {
 
 export async function createAmploPayPixPayment(values: InsertAmploPayPixPayment) {
   const db = await getDb();
-  if (!db) throw new Error("O banco de dados não está disponível para criar a cobrança PIX.");
+  if (!db) throw _databaseInitializationError ?? new Error("O banco de dados não está disponível para criar a cobrança PIX.");
   await ensurePixPaymentsTable(db);
   await db.insert(amplopayPixPayments).values(values);
   return getAmploPayPixPaymentByOrderCode(values.orderCode);
@@ -182,7 +223,10 @@ export async function createAmploPayPixPayment(values: InsertAmploPayPixPayment)
 
 export async function getAmploPayPixPaymentByOrderCode(orderCode: string) {
   const db = await getDb();
-  if (!db) return undefined;
+  if (!db) {
+    if (_databaseInitializationError) throw _databaseInitializationError;
+    return undefined;
+  }
   await ensurePixPaymentsTable(db);
   const result = await db.select().from(amplopayPixPayments).where(eq(amplopayPixPayments.orderCode, orderCode)).limit(1);
   return result[0];
@@ -190,7 +234,10 @@ export async function getAmploPayPixPaymentByOrderCode(orderCode: string) {
 
 export async function getAmploPayPixPaymentByTransactionId(transactionId: string) {
   const db = await getDb();
-  if (!db) return undefined;
+  if (!db) {
+    if (_databaseInitializationError) throw _databaseInitializationError;
+    return undefined;
+  }
   await ensurePixPaymentsTable(db);
   const result = await db.select().from(amplopayPixPayments).where(eq(amplopayPixPayments.transactionId, transactionId)).limit(1);
   return result[0];
@@ -198,7 +245,7 @@ export async function getAmploPayPixPaymentByTransactionId(transactionId: string
 
 export async function updateAmploPayPixPayment(orderCode: string, values: Partial<InsertAmploPayPixPayment>) {
   const db = await getDb();
-  if (!db) throw new Error("O banco de dados não está disponível para atualizar a cobrança PIX.");
+  if (!db) throw _databaseInitializationError ?? new Error("O banco de dados não está disponível para atualizar a cobrança PIX.");
   await ensurePixPaymentsTable(db);
   await db.update(amplopayPixPayments).set(values).where(eq(amplopayPixPayments.orderCode, orderCode));
   return getAmploPayPixPaymentByOrderCode(orderCode);

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getTiDbConnectionOptions, needsTiDbApplicationDatabase, PIX_PAYMENTS_CREATE_SQL } from "./db";
+import { formatTiDbInitializationError, getTiDbConnectionOptions, needsTiDbApplicationDatabase, PIX_PAYMENTS_CREATE_SQL } from "./db";
 
 describe("schema de persistência PIX", () => {
   it("cria a tabela de modo idempotente com as chaves necessárias", () => {
@@ -38,5 +38,20 @@ describe("conexão TiDB", () => {
     expect(needsTiDbApplicationDatabase("sys")).toBe(true);
     expect(needsTiDbApplicationDatabase("mysql")).toBe(true);
     expect(needsTiDbApplicationDatabase("doomsday_presale")).toBe(false);
+  });
+
+  it("expõe a causa TiDB sem manter uma URL com senha", () => {
+    const message = formatTiDbInitializationError({
+      cause: {
+        code: "ER_DBACCESS_DENIED_ERROR",
+        errno: 1044,
+        sqlMessage: "Access denied; mysql://user:password@host:4000/sys",
+      },
+    });
+
+    expect(message).toContain("ER_DBACCESS_DENIED_ERROR");
+    expect(message).toContain("1044");
+    expect(message).toContain("mysql://[oculto]");
+    expect(message).not.toContain("user:password@host");
   });
 });

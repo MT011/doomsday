@@ -336,3 +336,8 @@
 - [x] Identificar que o endpoint estava conectado ao schema de sistema `sys`, não ao banco de aplicação.
 - [x] Aplicar inicialização automática do banco exclusivo `doomsday_presale` antes da tabela PIX.
 - [ ] Publicar e validar uma consulta PIX somente leitura sem criar cobrança.
+
+## Diagnóstico detalhado do TiDB
+
+- [x] Exibir de forma sanitizada o código e a causa do erro TiDB de inicialização da tabela.
+- [ ] Corrigir a DDL final conforme o erro confirmado e retestar a persistência.
