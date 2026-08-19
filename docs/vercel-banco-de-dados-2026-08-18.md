@@ -18,6 +18,8 @@ O projeto Supabase `supabase-lime-notebook` está conectado ao projeto Vercel `d
 
 Uma consulta somente leitura confirmou que a tabela pública `amplopayPixPayments` já existe com 21 colunas, incluindo identificador, status, valor, dados do comprador, sessão, assentos, QR Code e campos de webhook. A etapa seguinte é somente conferir chaves e ausência de cobranças antes de alinhá-la ao schema Postgres do backend; nenhuma tabela foi excluída nem cobrança criada.
 
+Após a correção TLS do pool Postgres, a rota pública de status PIX foi consultada com um código artificial e retornou `Cobrança PIX não encontrada.`. Esse é o resultado esperado: confirma que a Vercel alcançou o Supabase e leu a tabela, sem inserir cobrança ou movimentar dinheiro.
+
 ## Referências
 
 [1] Vercel, [Postgres on Vercel](https://vercel.com/docs/postgres).

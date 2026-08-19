@@ -371,12 +371,12 @@
 - [x] Confirmar o projeto Supabase integrado e a disponibilidade da conexão Postgres segura.
 - [x] Migrar o schema e o acesso à tabela PIX de MySQL/TiDB para Postgres.
 - [x] Confirmar as variáveis Supabase em Production na Vercel sem expor segredos.
-- [ ] Validar consulta PIX somente leitura no Supabase antes de qualquer cobrança real.
+- [x] Validar consulta PIX somente leitura no Supabase antes de qualquer cobrança real.
 
 ## Compatibilidade TLS Supabase
 
 - [x] Remover o conflito entre parâmetros TLS da URL Supabase e o pool Postgres serverless.
-- [ ] Publicar e validar a leitura PIX no Supabase sem criar cobrança.
+- [x] Publicar e validar a leitura PIX no Supabase sem criar cobrança.
 
 ## Acesso assistido aos painéis
 
