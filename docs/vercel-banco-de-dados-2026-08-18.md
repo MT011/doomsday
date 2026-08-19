@@ -20,6 +20,10 @@ Uma consulta somente leitura confirmou que a tabela pública `amplopayPixPayment
 
 Após a correção TLS do pool Postgres, a rota pública de status PIX foi consultada com um código artificial e retornou `Cobrança PIX não encontrada.`. Esse é o resultado esperado: confirma que a Vercel alcançou o Supabase e leu a tabela, sem inserir cobrança ou movimentar dinheiro.
 
+## Webhook AmploPay em produção
+
+Foi criado no painel AmploPay o webhook **Doomsday — PIX Produção**, configurado para o evento **Transação paga**, todos os produtos próprios e o endpoint `https://www.prevendadoomsday.com.br/api/amplopay/webhook`. O cadastro antigo apontando para o domínio Manus foi preservado temporariamente para manter o histórico da integração anterior. O endpoint oficial será exercitado na primeira cobrança PIX real autorizada; nenhum PIX foi criado nesta etapa.
+
 ## Referências
 
 [1] Vercel, [Postgres on Vercel](https://vercel.com/docs/postgres).

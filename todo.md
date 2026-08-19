@@ -255,7 +255,7 @@
 
 - [x] Confirmar que `https://www.prevendadoomsday.com.br` está publicado em HTTPS e acessível.
 - [x] Publicar a função Express atualizada na Vercel para disponibilizar `/api/amplopay/webhook`, atualmente retornando HTTP 404.
-- [ ] Preparar a atualização de `AMPLOPAY_CALLBACK_ORIGIN` e do webhook para o domínio oficial.
+- [x] Preparar a atualização de `AMPLOPAY_CALLBACK_ORIGIN` e cadastrar o webhook para o domínio oficial.
 - [ ] Obter confirmação explícita antes de ativar PIX real ou iniciar cobrança de teste.
 - [ ] Validar o recebimento do webhook e a confirmação de pedido no domínio oficial.
 
@@ -347,7 +347,8 @@
 - [x] Cadastrar `AMPLOPAY_PIX_ENABLED=true` no ambiente Production da Vercel.
 - [x] Fazer redeploy de Production após a ativação do PIX.
 - [x] Expor uma verificação sem cobrança para confirmar a ativação do PIX na produção.
-- [ ] Confirmar o webhook oficial da AmploPay e validar uma cobrança real autorizada.
+- [x] Cadastrar o webhook oficial da AmploPay para transações PIX pagas no domínio de produção.
+- [ ] Validar o recebimento do webhook e a confirmação de pedido em uma cobrança real autorizada.
 
 ## Sincronização de produção Vercel
 
