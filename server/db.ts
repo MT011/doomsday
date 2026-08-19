@@ -19,7 +19,12 @@ export async function getDb() {
 export async function createAmploPayPixPayment(values: InsertAmploPayPixPayment) {
   const db = await getDb();
   if (!db) throw new Error("O banco de dados não está disponível para criar a cobrança PIX.");
-  await db.insert(amplopayPixPayments).values(values);
+  try {
+    await db.insert(amplopayPixPayments).values(values);
+  } catch (error: any) {
+    console.error("[DB] Insert failed:", error?.message ?? error);
+    throw new Error("Erro ao salvar cobrança PIX: " + (error?.message ?? "desconhecido"));
+  }
   return getAmploPayPixPaymentByOrderCode(values.orderCode);
 }
 
