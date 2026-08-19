@@ -414,3 +414,9 @@
 - [x] Limitar o deslocamento do mapa aos limites úteis da planta de assentos no mobile.
 - [x] Adicionar gesto de deslize iniciado na borda esquerda para retornar uma etapa, sem conflitar com a seleção de assentos e a rolagem.
 - [x] Cobrir os novos gestos com testes e validar visualmente em viewport móvel.
+
+## Integração Meta Pixel
+
+- [x] Configurar o Meta Pixel `3311339612363930` no frontend sem dados pessoais identificáveis.
+- [x] Registrar eventos do funil: PageView, ViewContent, InitiateCheckout e Purchase após pagamento confirmado.
+- [x] Cobrir o rastreamento com testes automatizados e validar o carregamento do Pixel no site.
