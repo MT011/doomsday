@@ -40,6 +40,7 @@ import { cinemaCatalog } from "@/data/cinemas";
 import { getCheckoutScreen, getPreviousScreen, getScreenAfterPixStatus, getSeatsScreen } from "@/lib/flow-navigation";
 import { canConfirmPixCheckout, isCheckoutPurchaseReady } from "@/lib/pix-confirmation";
 import { scrollToPurchaseFlow } from "@/lib/scroll";
+import { getBottomUpSeatRows } from "@/lib/seat-map-orientation";
 import { trpc } from "@/lib/trpc";
 import { filmConfig } from "@shared/film-config";
 import { formatCpfInput, formatPhoneInput } from "@shared/input-masks";
@@ -312,7 +313,7 @@ export default function Home() {
   const selectedSession = sessions.find((session) => session.id === selectedSessionId) ?? sessions[0];
   const isSessionSelected = sessions.some((session) => session.id === selectedSessionId);
   const seats = useMemo(() => buildSeats(selectedCinema.name, selectedSession.id), [selectedCinema.name, selectedSession.id]);
-  const rows = useMemo(() => Array.from(new Set(seats.map((seat) => seat.row))), [seats]);
+  const rows = useMemo(() => getBottomUpSeatRows(Array.from(new Set(seats.map((seat) => seat.row)))), [seats]);
   const plannedTicketTypes = useMemo<TicketType[]>(() => [
     ...Array.from({ length: ticketQuantities.inteira }, () => "inteira" as const),
     ...Array.from({ length: ticketQuantities.meia }, () => "meia" as const),

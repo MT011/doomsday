@@ -390,3 +390,8 @@
 - [x] Identificar que a branch `main` do GitHub foi substituída por um commit divergente e incompleto.
 - [x] Obter confirmação explícita antes de substituir a branch `main` pela versão validada localmente.
 - [x] Restaurar a versão validada do checkout PIX e promover a implantação de Production.
+
+## Orientação do mapa de assentos
+
+- [x] Inverter visualmente a progressão das filas para baixo-para-cima mantendo a tela no topo.
+- [x] Validar a interação de assentos, zoom e pan em desktop e mobile após a inversão.
