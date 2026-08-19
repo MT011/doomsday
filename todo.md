@@ -395,3 +395,9 @@
 
 - [x] Inverter visualmente a progressão das filas para baixo-para-cima mantendo a tela no topo.
 - [x] Validar a interação de assentos, zoom e pan em desktop e mobile após a inversão.
+
+## Composição final do mapa de assentos
+
+- [x] Posicionar `AVENGERS: DOOMSDAY` no topo e a indicação `TELA` na base do mapa.
+- [x] Reposicionar os assentos acessíveis e acompanhantes nas fileiras inferiores.
+- [x] Validar o novo arranjo em desktop e mobile.
