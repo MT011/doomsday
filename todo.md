@@ -420,3 +420,8 @@
 - [x] Configurar o Meta Pixel `3311339612363930` no frontend sem dados pessoais identificáveis.
 - [x] Registrar eventos do funil: PageView, ViewContent, InitiateCheckout e Purchase após pagamento confirmado.
 - [x] Cobrir o rastreamento com testes automatizados e validar o carregamento do Pixel no site.
+
+## Simplificação solicitada do Meta Pixel
+
+- [x] Remover os eventos adicionais do funil e manter somente o código-base PageView no head do site.
+- [x] Compilar e publicar a configuração simplificada para teste manual do proprietário.

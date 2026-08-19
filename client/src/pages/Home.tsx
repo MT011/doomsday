@@ -39,7 +39,6 @@ import { toast } from "sonner";
 import { cinemaCatalog } from "@/data/cinemas";
 import { getCheckoutScreen, getPreviousScreen, getScreenAfterPixStatus, getSeatsScreen } from "@/lib/flow-navigation";
 import { hasCompleteLocation } from "@/lib/location-selection";
-import { getTicketEventParameters, trackMetaPixel } from "@/lib/meta-pixel";
 import { canConfirmPixCheckout, isCheckoutPurchaseReady } from "@/lib/pix-confirmation";
 import { scrollToPurchaseFlow } from "@/lib/scroll";
 import { getAccessibleRearRowIndex, getBottomUpSeatRows } from "@/lib/seat-map-orientation";
@@ -272,7 +271,6 @@ export default function Home() {
   const mapDragOriginRef = useRef({ clientX: 0, clientY: 0, panX: 0, panY: 0 });
   const mapGestureRef = useRef<MapGestureIntent>("pending");
   const edgeSwipeStartRef = useRef<{ x: number; y: number; pointerType: string } | null>(null);
-  const trackedPurchaseRef = useRef<string | null>(null);
   const heroVideoRef = useRef<HTMLVideoElement | null>(null);
 
   const citiesForState = useMemo(() => {
@@ -346,16 +344,6 @@ export default function Home() {
   useEffect(() => {
     if (screen !== "seats") setIsDragging(false);
   }, [screen]);
-
-  useEffect(() => {
-    trackMetaPixel("ViewContent", getTicketEventParameters({ value: WHOLE_PRICE, quantity: 1 }));
-  }, []);
-
-  useEffect(() => {
-    if (screen !== "confirmation" || !order || trackedPurchaseRef.current === order.code) return;
-    trackMetaPixel("Purchase", getTicketEventParameters({ value: order.total, quantity: order.seats.length, sessionId: order.session.id }));
-    trackedPurchaseRef.current = order.code;
-  }, [order, screen]);
 
   useEffect(() => {
     const viewport = mapRef.current;
@@ -491,7 +479,6 @@ export default function Home() {
     }
     setSelectedSessionId(session.id);
     setSeatSelections([]);
-    trackMetaPixel("AddToCart", getTicketEventParameters({ value: plannedTotal, quantity: ticketQuantity, sessionId: session.id }));
     setScreen(getSeatsScreen());
     window.setTimeout(() => document.getElementById("purchase-flow")?.scrollIntoView({ behavior: "smooth" }), 20);
   };
@@ -526,7 +513,6 @@ export default function Home() {
       {
         onSuccess: (createdPayment) => {
           setPixPayment(createdPayment as PixPayment);
-          trackMetaPixel("AddPaymentInfo", getTicketEventParameters({ value: total, quantity: seatSelections.length, sessionId: selectedSession.id }));
           toast.success("Código PIX gerado. Conclua o pagamento para garantir seus assentos.");
         },
         onError: (error) => toast.error(error.message || "Não foi possível gerar a cobrança PIX."),
@@ -769,7 +755,7 @@ export default function Home() {
                 </div>
                 <div className="seat-note"><Info size={16} /><span>Os assentos são bloqueados temporariamente durante o checkout. A disponibilidade real depende da integração com o operador de cinemas.</span></div>
               </div>
-              <aside className="flow-side"><OrderSummary cinema={selectedCinema} session={selectedSession} seats={seatSelections} plannedTicketTypes={plannedTicketTypes} total={total} plannedTotal={plannedTotal} onRemove={(id) => setSeatSelections((current) => current.filter((seat) => seat.id !== id))} onContinue={() => { if (seatSelections.length !== ticketQuantity) { toast.error(ticketQuantity ? `Selecione os ${ticketQuantity} assentos solicitados para continuar.` : "Informe a quantidade de ingressos antes de continuar."); return; } trackMetaPixel("InitiateCheckout", getTicketEventParameters({ value: total, quantity: seatSelections.length, sessionId: selectedSession.id })); setScreen(getCheckoutScreen()); window.setTimeout(scrollToPurchaseFlow, 20); }} /></aside>
+              <aside className="flow-side"><OrderSummary cinema={selectedCinema} session={selectedSession} seats={seatSelections} plannedTicketTypes={plannedTicketTypes} total={total} plannedTotal={plannedTotal} onRemove={(id) => setSeatSelections((current) => current.filter((seat) => seat.id !== id))} onContinue={() => { if (seatSelections.length !== ticketQuantity) { toast.error(ticketQuantity ? `Selecione os ${ticketQuantity} assentos solicitados para continuar.` : "Informe a quantidade de ingressos antes de continuar."); return; } setScreen(getCheckoutScreen()); window.setTimeout(scrollToPurchaseFlow, 20); }} /></aside>
             </div>
           ) : null}
 
