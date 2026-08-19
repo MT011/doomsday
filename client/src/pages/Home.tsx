@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { FormEvent, PointerEvent } from "react";
+import type { FormEvent, PointerEvent as ReactPointerEvent } from "react";
 import { QRCodeCanvas } from "qrcode.react";
 import {
   ArrowLeft,
@@ -42,6 +42,7 @@ import { hasCompleteLocation } from "@/lib/location-selection";
 import { canConfirmPixCheckout, isCheckoutPurchaseReady } from "@/lib/pix-confirmation";
 import { scrollToPurchaseFlow } from "@/lib/scroll";
 import { getAccessibleRearRowIndex, getBottomUpSeatRows } from "@/lib/seat-map-orientation";
+import { clampSeatMapPan, getMapGestureIntent, shouldGoBackWithEdgeSwipe, type MapGestureIntent } from "@/lib/mobile-gestures";
 import { trpc } from "@/lib/trpc";
 import { filmConfig } from "@shared/film-config";
 import { formatCpfInput, formatPhoneInput } from "@shared/input-masks";
@@ -259,7 +260,6 @@ export default function Home() {
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
-  const [dragOrigin, setDragOrigin] = useState({ x: 0, y: 0 });
   const [buyer, setBuyer] = useState({ name: "", email: "", document: "", phone: "" });
   const [payment] = useState<"pix">("pix");
   const createPixPayment = trpc.presale.createPixPayment.useMutation();
@@ -267,6 +267,10 @@ export default function Home() {
   const [order, setOrder] = useState<Order | null>(null);
   const [pixPayment, setPixPayment] = useState<PixPayment | null>(null);
   const mapRef = useRef<HTMLDivElement | null>(null);
+  const seatMapRef = useRef<HTMLDivElement | null>(null);
+  const mapDragOriginRef = useRef({ clientX: 0, clientY: 0, panX: 0, panY: 0 });
+  const mapGestureRef = useRef<MapGestureIntent>("pending");
+  const edgeSwipeStartRef = useRef<{ x: number; y: number; pointerType: string } | null>(null);
   const heroVideoRef = useRef<HTMLVideoElement | null>(null);
 
   const citiesForState = useMemo(() => {
@@ -340,6 +344,22 @@ export default function Home() {
   useEffect(() => {
     if (screen !== "seats") setIsDragging(false);
   }, [screen]);
+
+  useEffect(() => {
+    const viewport = mapRef.current;
+    const map = seatMapRef.current;
+    if (!viewport || !map) return;
+
+    setPan((current) => {
+      const constrained = clampSeatMapPan({
+        desiredPan: current,
+        mapSize: { width: map.offsetWidth, height: map.offsetHeight },
+        viewportSize: { width: viewport.clientWidth, height: viewport.clientHeight },
+        zoom,
+      });
+      return constrained.x === current.x && constrained.y === current.y ? current : constrained;
+    });
+  }, [zoom]);
 
   useEffect(() => {
     const checkoutReady = isCheckoutPurchaseReady({ hasBuyer: Boolean(buyer.name && buyer.email), selectedSeatCount: seatSelections.length, ticketQuantity, amount: total });
@@ -507,21 +527,51 @@ export default function Home() {
     }
   };
 
-  const handlePointerDown = (event: PointerEvent<HTMLDivElement>) => {
+  const constrainMapPan = (desiredPan: { x: number; y: number }) => {
+    const viewport = mapRef.current;
+    const map = seatMapRef.current;
+    if (!viewport || !map) return desiredPan;
+    return clampSeatMapPan({
+      desiredPan,
+      mapSize: { width: map.offsetWidth, height: map.offsetHeight },
+      viewportSize: { width: viewport.clientWidth, height: viewport.clientHeight },
+      zoom,
+    });
+  };
+
+  const handlePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
     if ((event.target as HTMLElement).closest('.seat-dot')) return;
+    mapDragOriginRef.current = { clientX: event.clientX, clientY: event.clientY, panX: pan.x, panY: pan.y };
+    mapGestureRef.current = event.pointerType === "touch" ? "pending" : "map";
+    if (event.pointerType !== "touch") {
+      setIsDragging(true);
+      event.currentTarget.setPointerCapture(event.pointerId);
+    }
+  };
+
+  const handlePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const origin = mapDragOriginRef.current;
+    const deltaX = event.clientX - origin.clientX;
+    const deltaY = event.clientY - origin.clientY;
+    const intent = mapGestureRef.current === "pending" ? getMapGestureIntent({ deltaX, deltaY, pointerType: event.pointerType }) : mapGestureRef.current;
+
+    if (intent === "pending") return;
+    if (intent === "scroll") {
+      mapGestureRef.current = "scroll";
+      setIsDragging(false);
+      return;
+    }
+
+    mapGestureRef.current = "map";
+    if (!event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.setPointerCapture(event.pointerId);
     setIsDragging(true);
-    setDragOrigin({ x: event.clientX - pan.x, y: event.clientY - pan.y });
-    event.currentTarget.setPointerCapture(event.pointerId);
+    setPan(constrainMapPan({ x: origin.panX + deltaX, y: origin.panY + deltaY }));
   };
 
-  const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
-    if (!isDragging) return;
-    setPan({ x: event.clientX - dragOrigin.x, y: event.clientY - dragOrigin.y });
-  };
-
-  const handlePointerUp = (event: PointerEvent<HTMLDivElement>) => {
+  const handlePointerUp = (event: ReactPointerEvent<HTMLDivElement>) => {
     setIsDragging(false);
-    event.currentTarget.releasePointerCapture(event.pointerId);
+    mapGestureRef.current = "pending";
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
   };
 
   const resetFlow = () => {
@@ -541,6 +591,31 @@ export default function Home() {
     if (previousScreen === "discover") resetFlow();
     else setScreen(previousScreen);
   };
+
+  useEffect(() => {
+    if (screen === "discover") return;
+
+    const handleEdgePointerDown = (event: PointerEvent) => {
+      if (event.pointerType !== "touch" || event.clientX > 24) return;
+      edgeSwipeStartRef.current = { x: event.clientX, y: event.clientY, pointerType: event.pointerType };
+    };
+    const handleEdgePointerUp = (event: PointerEvent) => {
+      const start = edgeSwipeStartRef.current;
+      edgeSwipeStartRef.current = null;
+      if (!start) return;
+      if (shouldGoBackWithEdgeSwipe({ startX: start.x, deltaX: event.clientX - start.x, deltaY: event.clientY - start.y, pointerType: start.pointerType, viewportWidth: window.innerWidth })) goBack();
+    };
+    const clearEdgeSwipe = () => { edgeSwipeStartRef.current = null; };
+
+    window.addEventListener("pointerdown", handleEdgePointerDown, { passive: true });
+    window.addEventListener("pointerup", handleEdgePointerUp, { passive: true });
+    window.addEventListener("pointercancel", clearEdgeSwipe, { passive: true });
+    return () => {
+      window.removeEventListener("pointerdown", handleEdgePointerDown);
+      window.removeEventListener("pointerup", handleEdgePointerUp);
+      window.removeEventListener("pointercancel", clearEdgeSwipe);
+    };
+  }, [screen]);
 
   return (
     <main className="presale-shell">
@@ -640,6 +715,7 @@ export default function Home() {
               <div>
                 <span className="eyebrow"><Ticket size={14} /> FLUXO DE PRÉ-VENDA</span>
                 <h1>{screen === "confirmation" ? "Seu ingresso está garantido." : "Reserve seu lugar no evento."}</h1>
+                <span className="edge-swipe-hint">No celular, deslize da borda esquerda para voltar uma etapa.</span>
               </div>
             </div>
             <StepIndicator current={screen} />
@@ -673,8 +749,8 @@ export default function Home() {
               <div className="flow-main">
                 <div className="panel seat-panel">
                   <div className="panel-heading"><div><span className="panel-index">03</span><h2>Escolha seus assentos</h2><p>{selectedCinema.name} · {selectedSession.room} · {selectedSession.dateLabel} às {selectedSession.time}</p></div><Grid3X3 size={22} /></div>
-                  <div className="map-toolbar"><div className="map-help"><Move size={16} /> Arraste para navegar <span>•</span> use os controles para aproximar</div><div className="zoom-controls"><button onClick={() => setZoom((value) => Math.max(0.75, Number((value - 0.1).toFixed(2))))} aria-label="Diminuir zoom"><Minus size={16} /></button><span>{Math.round(zoom * 100)}%</span><button onClick={() => setZoom((value) => Math.min(1.6, Number((value + 0.1).toFixed(2))))} aria-label="Aumentar zoom"><Plus size={16} /></button><button onClick={() => { setZoom(1); setPan({ x: 0, y: 0 }); }} aria-label="Redefinir mapa">Reset</button></div></div>
-                  <div className="seat-map-wrap" ref={mapRef}><div className="seat-map-canvas" onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerUp} onPointerCancel={handlePointerUp} style={{ cursor: isDragging ? "grabbing" : "grab" }}><div className="seat-map" style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` }}><div className="screen-label">AVENGERS: DOOMSDAY</div><div className="seat-rows">{rows.map((row) => <div className="seat-row" key={row}><span className="row-label">{row}</span><div className="seat-row-items">{seats.filter((seat) => seat.row === row).map((seat) => { const selected = seatSelections.some((selection) => selection.id === seat.id); const classes = `seat-dot ${seat.status === "occupied" ? "is-occupied" : ""} ${selected ? "is-selected" : ""} ${seat.isAccessible ? "is-accessible" : ""} ${seat.aisleBefore ? "has-aisle" : ""}`; return <button key={seat.id} className={classes} disabled={seat.status === "occupied"} onClick={(event) => { event.stopPropagation(); toggleSeat(seat); }} aria-label={`Fileira ${seat.row}, assento ${seat.number}, ${seat.status === "occupied" ? "ocupado" : selected ? "selecionado" : "disponível"}`}>{seat.isAccessible ? "♿" : seat.isCompanion ? "✦" : seat.number}</button>; })}</div><span className="row-label">{row}</span></div>)}</div><div className="screen-base"><span>TELA</span></div></div></div><div className="map-float-controls"><button onClick={() => setZoom((value) => Math.min(1.6, Number((value + 0.1).toFixed(2))))} aria-label="Aumentar zoom"><ZoomIn size={16} /></button><button onClick={() => setZoom((value) => Math.max(0.75, Number((value - 0.1).toFixed(2))))} aria-label="Diminuir zoom"><ZoomOut size={16} /></button></div></div>
+                  <div className="map-toolbar"><div className="map-help"><Move size={16} /> Arraste na horizontal para navegar <span>•</span> deslize para cima ou baixo para rolar a página</div><div className="zoom-controls"><button onClick={() => setZoom((value) => Math.max(0.75, Number((value - 0.1).toFixed(2))))} aria-label="Diminuir zoom"><Minus size={16} /></button><span>{Math.round(zoom * 100)}%</span><button onClick={() => setZoom((value) => Math.min(1.6, Number((value + 0.1).toFixed(2))))} aria-label="Aumentar zoom"><Plus size={16} /></button><button onClick={() => { setZoom(1); setPan({ x: 0, y: 0 }); }} aria-label="Redefinir mapa">Reset</button></div></div>
+                  <div className="seat-map-wrap" ref={mapRef}><div className={`seat-map-canvas ${isDragging ? "is-dragging" : ""}`} onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerUp} onPointerCancel={handlePointerUp} style={{ cursor: isDragging ? "grabbing" : "grab" }}><div ref={seatMapRef} className="seat-map" style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` }}><div className="screen-label">AVENGERS: DOOMSDAY</div><div className="seat-rows">{rows.map((row) => <div className="seat-row" key={row}><span className="row-label">{row}</span><div className="seat-row-items">{seats.filter((seat) => seat.row === row).map((seat) => { const selected = seatSelections.some((selection) => selection.id === seat.id); const classes = `seat-dot ${seat.status === "occupied" ? "is-occupied" : ""} ${selected ? "is-selected" : ""} ${seat.isAccessible ? "is-accessible" : ""} ${seat.aisleBefore ? "has-aisle" : ""}`; return <button key={seat.id} className={classes} disabled={seat.status === "occupied"} onClick={(event) => { event.stopPropagation(); toggleSeat(seat); }} aria-label={`Fileira ${seat.row}, assento ${seat.number}, ${seat.status === "occupied" ? "ocupado" : selected ? "selecionado" : "disponível"}`}>{seat.isAccessible ? "♿" : seat.isCompanion ? "✦" : seat.number}</button>; })}</div><span className="row-label">{row}</span></div>)}</div><div className="screen-base"><span>TELA</span></div></div></div><div className="map-float-controls"><button onClick={() => setZoom((value) => Math.min(1.6, Number((value + 0.1).toFixed(2))))} aria-label="Aumentar zoom"><ZoomIn size={16} /></button><button onClick={() => setZoom((value) => Math.max(0.75, Number((value - 0.1).toFixed(2))))} aria-label="Diminuir zoom"><ZoomOut size={16} /></button></div></div>
                   <div className="seat-legend"><span><i className="legend-dot available" /> Disponível</span><span><i className="legend-dot selected" /> Selecionado</span><span><i className="legend-dot occupied" /> Ocupado</span><span><i className="legend-dot accessible" /> Acessível</span></div>
                 </div>
                 <div className="seat-note"><Info size={16} /><span>Os assentos são bloqueados temporariamente durante o checkout. A disponibilidade real depende da integração com o operador de cinemas.</span></div>

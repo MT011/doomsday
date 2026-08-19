@@ -407,3 +407,10 @@
 - [x] Remover Estado, cidade e cinema pré-selecionados do início da pré-venda.
 - [x] Exibir instruções inativas nos campos dependentes até cada escolha anterior ser feita.
 - [x] Bloquear sessões e orientar a seleção completa antes de avançar ao ingresso.
+
+## Navegação móvel refinada do mapa de assentos
+
+- [x] Restringir o arrasto e o zoom ao painel do mapa, preservando a rolagem vertical da página até o pagamento.
+- [x] Limitar o deslocamento do mapa aos limites úteis da planta de assentos no mobile.
+- [x] Adicionar gesto de deslize iniciado na borda esquerda para retornar uma etapa, sem conflitar com a seleção de assentos e a rolagem.
+- [x] Cobrir os novos gestos com testes e validar visualmente em viewport móvel.
