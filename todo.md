@@ -348,6 +348,7 @@
 - [x] Fazer redeploy de Production após a ativação do PIX.
 - [x] Expor uma verificação sem cobrança para confirmar a ativação do PIX na produção.
 - [x] Cadastrar o webhook oficial da AmploPay para transações PIX pagas no domínio de produção.
+- [x] Confirmar a criação e a persistência de uma cobrança PIX pendente sem realizar pagamento.
 - [ ] Validar o recebimento do webhook e a confirmação de pedido em uma cobrança real autorizada.
 
 ## Sincronização de produção Vercel

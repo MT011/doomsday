@@ -24,6 +24,10 @@ Após a correção TLS do pool Postgres, a rota pública de status PIX foi consu
 
 Foi criado no painel AmploPay o webhook **Doomsday — PIX Produção**, configurado para o evento **Transação paga**, todos os produtos próprios e o endpoint `https://www.prevendadoomsday.com.br/api/amplopay/webhook`. O cadastro antigo apontando para o domínio Manus foi preservado temporariamente para manter o histórico da integração anterior. O endpoint oficial será exercitado na primeira cobrança PIX real autorizada; nenhum PIX foi criado nesta etapa.
 
+## Cobrança PIX criada sem pagamento
+
+O proprietário gerou um QR Code PIX no domínio oficial e decidiu não pagá-lo. Uma consulta somente leitura no Supabase confirmou que o pedido foi persistido com status `PENDING`, valor de `5128` centavos e sem `paidAt`. Isso comprova a criação da cobrança na AmploPay e a persistência no Supabase; a única etapa ainda não exercitada é o evento de pagamento aprovado no webhook.
+
 ## Referências
 
 [1] Vercel, [Postgres on Vercel](https://vercel.com/docs/postgres).
