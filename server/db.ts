@@ -20,7 +20,27 @@ export async function createAmploPayPixPayment(values: InsertAmploPayPixPayment)
   const db = await getDb();
   if (!db) throw new Error("O banco de dados não está disponível para criar a cobrança PIX.");
   try {
-    await db.insert(amplopayPixPayments).values(values);
+    const row = {
+      orderCode: values.orderCode,
+      identifier: values.identifier,
+      status: values.status,
+      amountCents: values.amountCents,
+      buyerName: values.buyerName,
+      buyerEmail: values.buyerEmail,
+      buyerDocument: values.buyerDocument,
+      cinema: JSON.stringify(values.cinema),
+      session: JSON.stringify(values.session),
+      seats: JSON.stringify(values.seats),
+      transactionId: values.transactionId ?? undefined,
+      pixCode: values.pixCode ?? undefined,
+      pixImageUrl: values.pixImageUrl ?? undefined,
+      webhookToken: values.webhookToken ?? undefined,
+      lastWebhookEvent: values.lastWebhookEvent ?? undefined,
+      webhookProcessedAt: values.webhookProcessedAt ?? undefined,
+      paidAt: values.paidAt ?? undefined,
+      providerPayload: values.providerPayload ? JSON.stringify(values.providerPayload) : undefined,
+    };
+    await db.insert(amplopayPixPayments).values(row as any);
   } catch (error: any) {
     console.error("[DB] Insert failed:", error?.message ?? error);
     throw new Error("Erro ao salvar cobrança PIX: " + (error?.message ?? "desconhecido"));
