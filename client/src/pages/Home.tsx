@@ -38,6 +38,7 @@ import {
 import { toast } from "sonner";
 import { cinemaCatalog } from "@/data/cinemas";
 import { getCheckoutScreen, getPreviousScreen, getScreenAfterPixStatus, getSeatsScreen } from "@/lib/flow-navigation";
+import { hasCompleteLocation } from "@/lib/location-selection";
 import { canConfirmPixCheckout, isCheckoutPurchaseReady } from "@/lib/pix-confirmation";
 import { scrollToPurchaseFlow } from "@/lib/scroll";
 import { getAccessibleRearRowIndex, getBottomUpSeatRows } from "@/lib/seat-map-orientation";
@@ -132,10 +133,7 @@ function getRequestedScreen(): Screen {
 }
 
 function getInitialLocation() {
-  if (typeof window === "undefined") return { uf: "SP", city: "São Paulo" };
-  const params = new URLSearchParams(window.location.search);
-  if (params.get("recovered") === "1") return { uf: "AC", city: "Rio Branco" };
-  return { uf: "SP", city: "São Paulo" };
+  return { uf: "", city: "" };
 }
 
 function formatDateLabel(date: Date) {
@@ -241,12 +239,6 @@ export default function Home() {
     cinemaCatalog.forEach((cinema) => unique.set(cinema.uf, { name: cinema.state, uf: cinema.uf }));
     return Array.from(unique.values()).sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
   }, []);
-  const cityOptions = useMemo(() => {
-    const unique = new Map<string, string>();
-    cinemaCatalog.filter((cinema) => cinema.uf === "SP").forEach((cinema) => unique.set(cinema.city, cinema.city));
-    return Array.from(unique.values()).sort((a, b) => a.localeCompare(b, "pt-BR"));
-  }, []);
-
   const [screen, setScreen] = useState<Screen>(() => getRequestedScreen());
   const [isHeroVideoVisible, setIsHeroVideoVisible] = useState(true);
   const [isHeroVideoReady, setIsHeroVideoReady] = useState(false);
@@ -292,6 +284,8 @@ export default function Home() {
     return Array.from(unique.values()).sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
   }, [noCinemaScenario, selectedState, selectedCity]);
 
+  const isLocationComplete = hasCompleteLocation(selectedState, selectedCity, selectedCinemaName) && !noCinemaScenario;
+
   const selectedCinema = useMemo<Cinema>(() => {
     if (noCinemaScenario) {
       return {
@@ -301,18 +295,28 @@ export default function Home() {
         uf: selectedState,
       };
     }
-    return (
-      cinemaCatalog.find((cinema) => cinema.uf === selectedState && cinema.city === selectedCity && cinema.name === selectedCinemaName) ??
-      cinemasForCity[0] ??
-      cinemaCatalog[0]
-    );
+    return cinemaCatalog.find((cinema) => cinema.uf === selectedState && cinema.city === selectedCity && cinema.name === selectedCinemaName) ?? {
+      name: "Selecione um cinema",
+      city: selectedCity,
+      state: stateOptions.find((state) => state.uf === selectedState)?.name ?? "",
+      uf: selectedState,
+    };
   }, [cinemasForCity, noCinemaScenario, selectedCinemaName, selectedCity, selectedState, stateOptions]);
 
   const presaleDates = useMemo(() => buildPresaleDates(), []);
-  const sessions = useMemo(() => buildSessions(selectedCinema, selectedDate), [selectedCinema, selectedDate]);
-  const selectedSession = sessions.find((session) => session.id === selectedSessionId) ?? sessions[0];
+  const sessions = useMemo(() => isLocationComplete ? buildSessions(selectedCinema, selectedDate) : [], [isLocationComplete, selectedCinema, selectedDate]);
+  const selectedSession = sessions.find((session) => session.id === selectedSessionId) ?? {
+    id: "",
+    date: selectedDate,
+    dateLabel: "",
+    time: "",
+    language: "",
+    format: "2D" as const,
+    room: "",
+    price: WHOLE_PRICE,
+  };
   const isSessionSelected = sessions.some((session) => session.id === selectedSessionId);
-  const seats = useMemo(() => buildSeats(selectedCinema.name, selectedSession.id), [selectedCinema.name, selectedSession.id]);
+  const seats = useMemo(() => isLocationComplete ? buildSeats(selectedCinema.name, selectedSession.id) : [], [isLocationComplete, selectedCinema.name, selectedSession.id]);
   const rows = useMemo(() => getBottomUpSeatRows(Array.from(new Set(seats.map((seat) => seat.row)))), [seats]);
   const plannedTicketTypes = useMemo<TicketType[]>(() => [
     ...Array.from({ length: ticketQuantities.inteira }, () => "inteira" as const),
@@ -324,16 +328,6 @@ export default function Home() {
   const pixStatusInput = useMemo(() => ({ orderCode: pixPayment?.orderCode ?? "PENDING" }), [pixPayment?.orderCode]);
   const pixPaymentStatus = trpc.presale.getPixPaymentStatus.useQuery(pixStatusInput, { enabled: Boolean(pixPayment), retry: false, refetchInterval: pixPayment ? 3000 : false });
   const effectivePixStatus = isLocalApprovedPixPreview ? "PAID" : pixPaymentStatus.data?.status;
-
-  useEffect(() => {
-    if (!selectedCinemaName || !cinemasForCity.some((cinema) => cinema.name === selectedCinemaName)) {
-      setSelectedCinemaName(cinemasForCity[0]?.name ?? "");
-    }
-  }, [cinemasForCity, selectedCinemaName]);
-
-  useEffect(() => {
-    if (!citiesForState.includes(selectedCity)) setSelectedCity(citiesForState[0] ?? "");
-  }, [citiesForState, selectedCity]);
 
   useEffect(() => {
     setSelectedSessionId("");
@@ -408,8 +402,7 @@ export default function Home() {
 
   const selectState = (uf: string) => {
     setSelectedState(uf);
-    const nextCity = cinemaCatalog.find((cinema) => cinema.uf === uf)?.city ?? "";
-    setSelectedCity(nextCity);
+    setSelectedCity("");
     setSelectedCinemaName("");
     setSelectedDate(filmConfig.releaseDate);
     setSelectedSessionId("");
@@ -456,6 +449,10 @@ export default function Home() {
   };
 
   const startSeats = (session: Session) => {
+    if (!isLocationComplete) {
+      toast.error("Escolha estado, cidade e cinema antes de consultar ingressos.");
+      return;
+    }
     if (!isSessionSelected || ticketQuantity === 0) {
       toast.error("Escolha uma sessão e informe a quantidade de ingressos antes de continuar.");
       return;
@@ -654,16 +651,17 @@ export default function Home() {
                 <div className="panel panel-location">
                   <div className="panel-heading"><div><span className="panel-index">01</span><h2>Escolha sua localização</h2><p>A disponibilidade varia por cinema e região.</p></div><Globe2 size={22} /></div>
                   <div className="select-grid">
-                    <label className="select-field"><span>Estado</span><select value={selectedState} onChange={(event) => selectState(event.target.value)}>{stateOptions.map((state) => <option key={state.uf} value={state.uf}>{state.name} ({state.uf})</option>)}</select></label>
-                    <label className="select-field"><span>Cidade</span><select value={selectedCity} onChange={(event) => selectCity(event.target.value)}>{citiesForState.map((city) => <option key={city} value={city}>{city}</option>)}</select></label>
-                    <label className="select-field select-field-wide"><span>Cinema</span><select value={noCinemaScenario ? "" : selectedCinema.name} disabled={noCinemaScenario} onChange={(event) => setSelectedCinemaName(event.target.value)}>{noCinemaScenario ? <option value="">Nenhum cinema disponível</option> : cinemasForCity.map((cinema) => <option key={cinema.name} value={cinema.name}>{cinema.name}</option>)}</select></label>
+                    <label className="select-field"><span>Estado</span><select value={selectedState} onChange={(event) => selectState(event.target.value)}><option value="" disabled>Escolha seu estado</option>{stateOptions.map((state) => <option key={state.uf} value={state.uf}>{state.name} ({state.uf})</option>)}</select></label>
+                    <label className="select-field"><span>Cidade</span><select value={selectedCity} disabled={!selectedState} onChange={(event) => selectCity(event.target.value)}><option value="" disabled>{selectedState ? "Escolha sua cidade" : "Escolha primeiro um estado"}</option>{citiesForState.map((city) => <option key={city} value={city}>{city}</option>)}</select></label>
+                    <label className="select-field select-field-wide"><span>Cinema</span><select value={selectedCinemaName} disabled={!selectedCity || noCinemaScenario} onChange={(event) => setSelectedCinemaName(event.target.value)}><option value="" disabled>{noCinemaScenario ? "Nenhum cinema disponível" : selectedCity ? "Escolha seu cinema" : "Escolha primeiro uma cidade"}</option>{cinemasForCity.map((cinema) => <option key={cinema.name} value={cinema.name}>{cinema.name}</option>)}</select></label>
                   </div>{noCinemaScenario ? <div className="demo-validation-hint location-empty-hint"><Info size={16} /> Nenhum cinema encontrado para esta combinação. Altere estado ou cidade para tentar novamente.</div> : null}
                 </div>
                 <div className="panel session-panel">
-                  <div className="panel-heading"><div><span className="panel-index">02</span><h2>Escolha uma sessão</h2><p>{selectedCinema.name} · {selectedCity}, {selectedState}</p></div><CalendarDays size={22} /></div>
-                  <div className="date-strip" aria-label="Datas disponíveis para pré-venda">{presaleDates.map((date) => <button type="button" className={`date-chip ${selectedDate === date.value ? "is-active" : ""}`} key={date.value} onClick={() => selectSessionDate(date.value)}><strong>{date.label}</strong><span>{date.weekday}</span></button>)}</div>
-                  <div className="session-list">{isEmptyPreview || noCinemaScenario ? <div className="summary-empty session-empty"><Info size={20} /><span>{noCinemaScenario ? "Nenhuma sessão disponível porque não há cinema selecionado." : "Nenhuma sessão disponível para este cinema na data selecionada."}</span></div> : sessions.map((session) => { const isSelected = selectedSessionId === session.id; return <div className={`session-choice ${isSelected ? "is-expanded" : ""}`} key={session.id}><button type="button" className={`session-card ${isSelected ? "is-highlighted" : ""}`} onClick={() => selectSession(session.id)}><span className="session-time"><Clock3 size={16} /><strong>{session.time}</strong><small>{session.room}</small></span><span className="session-details"><strong>{session.language}</strong><span>{session.format} · Tela premium</span></span><span className="session-price">{currency(session.price)}<small>por inteira</small></span><span className="session-arrow"><ArrowRight size={18} /></span></button>{isSelected ? <TicketConfigurator quantities={ticketQuantities} session={session} total={plannedTotal} onChange={updateTicketQuantity} /> : null}</div>; })}</div>
-                  <button className="button button-primary wide-button" disabled={isEmptyPreview || noCinemaScenario || !isSessionSelected || ticketQuantity === 0} onClick={() => startSeats(selectedSession)}>Escolher {ticketQuantity ? `${ticketQuantity} assento${ticketQuantity > 1 ? "s" : ""}` : "assentos"} <ArrowRight size={17} /></button>
+                  <div className="panel-heading"><div><span className="panel-index">02</span><h2>Escolha uma sessão</h2><p>{isLocationComplete ? `${selectedCinema.name} · ${selectedCity}, ${selectedState}` : "Conclua estado, cidade e cinema para ver as sessões."}</p></div><CalendarDays size={22} /></div>
+                  {!isLocationComplete ? <div className="location-required-hint"><Info size={16} /> Selecione seu estado, cidade e cinema acima para liberar horários e ingressos.</div> : null}
+                  <div className="date-strip" aria-label="Datas disponíveis para pré-venda">{presaleDates.map((date) => <button type="button" disabled={!isLocationComplete} className={`date-chip ${isLocationComplete && selectedDate === date.value ? "is-active" : ""}`} key={date.value} onClick={() => selectSessionDate(date.value)}><strong>{date.label}</strong><span>{date.weekday}</span></button>)}</div>
+                  <div className="session-list">{!isLocationComplete || isEmptyPreview || noCinemaScenario ? <div className="summary-empty session-empty"><Info size={20} /><span>{!isLocationComplete ? "Escolha uma localização completa para consultar as sessões disponíveis." : noCinemaScenario ? "Nenhuma sessão disponível porque não há cinema selecionado." : "Nenhuma sessão disponível para este cinema na data selecionada."}</span></div> : sessions.map((session) => { const isSelected = selectedSessionId === session.id; return <div className={`session-choice ${isSelected ? "is-expanded" : ""}`} key={session.id}><button type="button" className={`session-card ${isSelected ? "is-highlighted" : ""}`} onClick={() => selectSession(session.id)}><span className="session-time"><Clock3 size={16} /><strong>{session.time}</strong><small>{session.room}</small></span><span className="session-details"><strong>{session.language}</strong><span>{session.format} · Tela premium</span></span><span className="session-price">{currency(session.price)}<small>por inteira</small></span><span className="session-arrow"><ArrowRight size={18} /></span></button>{isSelected ? <TicketConfigurator quantities={ticketQuantities} session={session} total={plannedTotal} onChange={updateTicketQuantity} /> : null}</div>; })}</div>
+                  <button className="button button-primary wide-button" disabled={!isLocationComplete || isEmptyPreview || noCinemaScenario || !isSessionSelected || ticketQuantity === 0} onClick={() => startSeats(selectedSession)}>{!isLocationComplete ? "Escolha sua localização primeiro" : `Escolher ${ticketQuantity ? `${ticketQuantity} assento${ticketQuantity > 1 ? "s" : ""}` : "assentos"}`} <ArrowRight size={17} /></button>
                 </div>
               </div>
               <aside className="flow-side"><OrderSummary cinema={selectedCinema} session={selectedSession} seats={seatSelections} plannedTicketTypes={plannedTicketTypes} total={total} plannedTotal={plannedTotal} onRemove={(id) => setSeatSelections((current) => current.filter((seat) => seat.id !== id))} /></aside>

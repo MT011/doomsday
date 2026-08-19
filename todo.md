@@ -401,3 +401,9 @@
 - [x] Posicionar `AVENGERS: DOOMSDAY` no topo e a indicação `TELA` na base do mapa.
 - [x] Reposicionar os assentos acessíveis e acompanhantes nas fileiras inferiores.
 - [x] Validar o novo arranjo em desktop e mobile.
+
+## Seleção obrigatória de localização
+
+- [x] Remover Estado, cidade e cinema pré-selecionados do início da pré-venda.
+- [x] Exibir instruções inativas nos campos dependentes até cada escolha anterior ser feita.
+- [x] Bloquear sessões e orientar a seleção completa antes de avançar ao ingresso.
