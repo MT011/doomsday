@@ -1,57 +1,36 @@
 import { describe, expect, it } from "vitest";
-import { formatTiDbInitializationError, getTiDbConnectionOptions, needsTiDbApplicationDatabase, PIX_PAYMENTS_CREATE_SQL } from "./db";
+import { formatPostgresInitializationError, getSupabaseDatabaseUrl, PIX_PAYMENTS_CREATE_SQL, PIX_PAYMENTS_TRANSACTION_ID_UNIQUE_SQL } from "./db";
 
-describe("schema de persistência PIX", () => {
-  it("cria a tabela de modo idempotente com as chaves necessárias", () => {
-    expect(PIX_PAYMENTS_CREATE_SQL).toContain("CREATE TABLE IF NOT EXISTS");
-    expect(PIX_PAYMENTS_CREATE_SQL).toContain("`amplopayPixPayments`");
-    expect(PIX_PAYMENTS_CREATE_SQL).toContain("`orderCode`");
-    expect(PIX_PAYMENTS_CREATE_SQL).toContain("`transactionId`");
-    expect(PIX_PAYMENTS_CREATE_SQL).toContain("`webhookToken`");
+describe("schema de persistência PIX no Supabase", () => {
+  it("cria a tabela Postgres de modo idempotente com as chaves necessárias", () => {
+    expect(PIX_PAYMENTS_CREATE_SQL).toContain('CREATE TABLE IF NOT EXISTS "amplopayPixPayments"');
+    expect(PIX_PAYMENTS_CREATE_SQL).toContain('"orderCode"');
+    expect(PIX_PAYMENTS_CREATE_SQL).toContain('"transactionId"');
+    expect(PIX_PAYMENTS_CREATE_SQL).toContain('"webhookToken"');
+    expect(PIX_PAYMENTS_CREATE_SQL).toContain("JSON NOT NULL");
+    expect(PIX_PAYMENTS_TRANSACTION_ID_UNIQUE_SQL).toContain("CREATE UNIQUE INDEX IF NOT EXISTS");
+    expect(PIX_PAYMENTS_TRANSACTION_ID_UNIQUE_SQL).toContain("amplopayPixPayments_transactionId_unique");
     expect(PIX_PAYMENTS_CREATE_SQL).not.toMatch(/INSERT\s+INTO/i);
   });
-});
 
-describe("conexão TiDB", () => {
-  it("monta uma conexão TLS a partir de campos separados", () => {
-    const options = getTiDbConnectionOptions({
-      TIDB_HOST: "gateway01.sa-east-1.prod.aws.tidbcloud.com",
-      TIDB_PORT: "4000",
-      TIDB_USER: "usuario.root",
-      TIDB_PASSWORD: "segredo-nao-real",
-      TIDB_DATABASE: "sys",
-    });
-
-    expect(options).toMatchObject({
-      host: "gateway01.sa-east-1.prod.aws.tidbcloud.com",
-      port: 4000,
-      database: "sys",
-      ssl: { minVersion: "TLSv1.2", rejectUnauthorized: true },
-    });
+  it("prioriza a URL Postgres provisionada pelo Supabase", () => {
+    expect(getSupabaseDatabaseUrl({
+      POSTGRES_URL: "postgresql://postgres:secret@pooler.supabase.com:6543/postgres",
+      DATABASE_URL: "mysql://ignored",
+    })).toBe("postgresql://postgres:secret@pooler.supabase.com:6543/postgres");
   });
 
-  it("não cria conexão parcial sem senha", () => {
-    expect(getTiDbConnectionOptions({ TIDB_HOST: "gateway.example", TIDB_USER: "usuario" })).toBeUndefined();
+  it("recusa uma URL MySQL quando não há conexão Postgres do Supabase", () => {
+    expect(() => getSupabaseDatabaseUrl({ DATABASE_URL: "mysql://old.example.com/sys" })).toThrow("PostgreSQL");
   });
 
-  it("troca um schema de sistema por banco exclusivo da aplicação", () => {
-    expect(needsTiDbApplicationDatabase("sys")).toBe(true);
-    expect(needsTiDbApplicationDatabase("mysql")).toBe(true);
-    expect(needsTiDbApplicationDatabase("doomsday_presale")).toBe(false);
-  });
-
-  it("expõe a causa TiDB sem manter uma URL com senha", () => {
-    const message = formatTiDbInitializationError({
-      cause: {
-        code: "ER_DBACCESS_DENIED_ERROR",
-        errno: 1044,
-        sqlMessage: "Access denied; mysql://user:password@host:4000/sys",
-      },
+  it("sanitiza URL e senha em falhas do Postgres", () => {
+    const message = formatPostgresInitializationError({
+      cause: { code: "28P01", message: "password failed at postgresql://postgres:secret@db.example/postgres" },
     });
 
-    expect(message).toContain("ER_DBACCESS_DENIED_ERROR");
-    expect(message).toContain("1044");
-    expect(message).toContain("mysql://[oculto]");
-    expect(message).not.toContain("user:password@host");
+    expect(message).toContain("28P01");
+    expect(message).toContain("postgresql://[oculto]");
+    expect(message).not.toContain("postgres:secret@db.example");
   });
 });

@@ -12,6 +12,12 @@ O checkout PIX atual usa `drizzle-orm/mysql2`, `mysql2` e tabelas Drizzle em dia
 
 Manter o TiDB já conectado é o caminho de menor risco e menor trabalho. A divergência atual do domínio personalizado da Vercel é independente do banco TiDB. Antes de uma migração, é necessário resolver o vínculo da implantação que atende `www.prevendadoomsday.com.br`.
 
+## Supabase provisionado
+
+O projeto Supabase `supabase-lime-notebook` está conectado ao projeto Vercel `doomsday`, aparece como disponível no plano gratuito e disponibiliza as variáveis `POSTGRES_URL`, `POSTGRES_URL_NON_POOLING` e demais variáveis de integração em Production e Preview. Nenhuma credencial, token ou URL de conexão foi registrada neste arquivo.
+
+Uma consulta somente leitura confirmou que a tabela pública `amplopayPixPayments` já existe com 21 colunas, incluindo identificador, status, valor, dados do comprador, sessão, assentos, QR Code e campos de webhook. A etapa seguinte é somente conferir chaves e ausência de cobranças antes de alinhá-la ao schema Postgres do backend; nenhuma tabela foi excluída nem cobrança criada.
+
 ## Referências
 
 [1] Vercel, [Postgres on Vercel](https://vercel.com/docs/postgres).

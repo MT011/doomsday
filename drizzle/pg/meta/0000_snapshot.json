@@ -1,0 +1,262 @@
+{
+  "id": "c1d92e4a-c0d4-469d-8162-f6358c2f5a08",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.amplopayPixPayments": {
+      "name": "amplopayPixPayments",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "orderCode": {
+          "name": "orderCode",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "identifier": {
+          "name": "identifier",
+          "type": "varchar(96)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "transactionId": {
+          "name": "transactionId",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(16)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'PENDING'"
+        },
+        "amountCents": {
+          "name": "amountCents",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "buyerName": {
+          "name": "buyerName",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "buyerEmail": {
+          "name": "buyerEmail",
+          "type": "varchar(320)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "buyerDocument": {
+          "name": "buyerDocument",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cinema": {
+          "name": "cinema",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "session": {
+          "name": "session",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "seats": {
+          "name": "seats",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "pixCode": {
+          "name": "pixCode",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pixImageUrl": {
+          "name": "pixImageUrl",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "webhookToken": {
+          "name": "webhookToken",
+          "type": "varchar(512)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lastWebhookEvent": {
+          "name": "lastWebhookEvent",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "webhookProcessedAt": {
+          "name": "webhookProcessedAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "paidAt": {
+          "name": "paidAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "providerPayload": {
+          "name": "providerPayload",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "amplopayPixPayments_orderCode_unique": {
+          "name": "amplopayPixPayments_orderCode_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "orderCode"
+          ]
+        },
+        "amplopayPixPayments_identifier_unique": {
+          "name": "amplopayPixPayments_identifier_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "identifier"
+          ]
+        },
+        "amplopayPixPayments_transactionId_unique": {
+          "name": "amplopayPixPayments_transactionId_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "transactionId"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.users": {
+      "name": "users",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "openId": {
+          "name": "openId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(320)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "loginMethod": {
+          "name": "loginMethod",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "role": {
+          "name": "role",
+          "type": "varchar(16)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'user'"
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "lastSignedIn": {
+          "name": "lastSignedIn",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "users_openId_unique": {
+          "name": "users_openId_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "openId"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

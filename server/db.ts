@@ -1,29 +1,50 @@
 import { eq, sql } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/mysql2";
-import type { PoolOptions } from "mysql2";
+import { drizzle } from "drizzle-orm/node-postgres";
+import { Pool } from "pg";
 import { amplopayPixPayments, InsertAmploPayPixPayment, InsertUser, users } from "../drizzle/schema.js";
-import { ENV } from './_core/env.js';
+import { ENV } from "./_core/env.js";
 
-let _db: ReturnType<typeof drizzle> | null = null;
+type EnvironmentValues = Record<string, string | undefined>;
+type DatabaseErrorLike = { message?: unknown; code?: unknown; cause?: unknown };
+type PostgresDatabase = ReturnType<typeof drizzle>;
+
+let _db: PostgresDatabase | null = null;
+let _pool: Pool | null = null;
 let _pixPaymentsTableReady: Promise<void> | null = null;
 let _databaseInitializationError: Error | null = null;
 
-type EnvironmentValues = Record<string, string | undefined>;
-export const TIDB_APPLICATION_DATABASE = "doomsday_presale";
+const PIX_PAYMENT_STATUSES = ["PENDING", "PAID", "FAILED", "REJECTED", "CANCELED", "REFUNDED", "CHARGED_BACK"];
 
-const TIDB_SYSTEM_DATABASES = new Set(["information_schema", "mysql", "performance_schema", "sys"]);
+export const PIX_PAYMENTS_CREATE_SQL = `
+  CREATE TABLE IF NOT EXISTS "amplopayPixPayments" (
+    "id" SERIAL PRIMARY KEY,
+    "orderCode" VARCHAR(64) NOT NULL UNIQUE,
+    "identifier" VARCHAR(96) NOT NULL UNIQUE,
+    "transactionId" VARCHAR(128) UNIQUE,
+    "status" VARCHAR(16) NOT NULL DEFAULT 'PENDING' CHECK ("status" IN (${PIX_PAYMENT_STATUSES.map(status => `'${status}'`).join(", ")})),
+    "amountCents" INTEGER NOT NULL,
+    "buyerName" VARCHAR(255) NOT NULL,
+    "buyerEmail" VARCHAR(320) NOT NULL,
+    "buyerDocument" VARCHAR(64) NOT NULL,
+    "cinema" JSON NOT NULL,
+    "session" JSON NOT NULL,
+    "seats" JSON NOT NULL,
+    "pixCode" TEXT,
+    "pixImageUrl" TEXT,
+    "webhookToken" VARCHAR(512),
+    "lastWebhookEvent" VARCHAR(64),
+    "webhookProcessedAt" TIMESTAMPTZ,
+    "paidAt" TIMESTAMPTZ,
+    "providerPayload" JSON,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )
+`;
 
-export function needsTiDbApplicationDatabase(database: string | undefined) {
-  return !database || TIDB_SYSTEM_DATABASES.has(database.trim().toLowerCase());
-}
-
-type DatabaseErrorLike = {
-  message?: unknown;
-  code?: unknown;
-  errno?: unknown;
-  sqlMessage?: unknown;
-  cause?: unknown;
-};
+export const PIX_PAYMENTS_TRANSACTION_ID_UNIQUE_SQL = `
+  CREATE UNIQUE INDEX IF NOT EXISTS "amplopayPixPayments_transactionId_unique"
+  ON public."amplopayPixPayments" ("transactionId")
+`;
 
 function asDatabaseError(value: unknown): DatabaseErrorLike {
   return typeof value === "object" && value !== null ? value as DatabaseErrorLike : {};
@@ -32,109 +53,53 @@ function asDatabaseError(value: unknown): DatabaseErrorLike {
 function sanitizeDatabaseErrorDetail(value: unknown) {
   if (typeof value !== "string") return undefined;
   return value
-    .replace(/mysql:\/\/[^\s]+/gi, "mysql://[oculto]")
+    .replace(/postgres(?:ql)?:\/\/[^\s]+/gi, "postgresql://[oculto]")
     .replace(/password\s*[:=]\s*[^\s,;]+/gi, "password=[oculto]")
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, 480);
 }
 
-export function formatTiDbInitializationError(error: unknown) {
+export function formatPostgresInitializationError(error: unknown) {
   const outer = asDatabaseError(error);
   const cause = asDatabaseError(outer.cause);
-  const code = typeof cause.code === "string" || typeof outer.code === "string"
-    ? String(cause.code ?? outer.code)
-    : undefined;
-  const errno = typeof cause.errno === "number" || typeof outer.errno === "number"
-    ? String(cause.errno ?? outer.errno)
-    : undefined;
-  const detail = sanitizeDatabaseErrorDetail(cause.sqlMessage)
-    ?? sanitizeDatabaseErrorDetail(cause.message)
-    ?? sanitizeDatabaseErrorDetail(outer.sqlMessage)
-    ?? sanitizeDatabaseErrorDetail(outer.message);
-  const qualifiers = [code && `código ${code}`, errno && `erro ${errno}`].filter(Boolean).join(", ");
-  return `Não foi possível preparar o banco PIX do TiDB${qualifiers ? ` (${qualifiers})` : ""}${detail ? `: ${detail}` : "."}`;
+  const code = typeof cause.code === "string" || typeof outer.code === "string" ? String(cause.code ?? outer.code) : undefined;
+  const detail = sanitizeDatabaseErrorDetail(cause.message) ?? sanitizeDatabaseErrorDetail(outer.message);
+  return `Não foi possível preparar o banco PIX do Supabase${code ? ` (código ${code})` : ""}${detail ? `: ${detail}` : "."}`;
 }
 
-export function getTiDbConnectionOptions(env: EnvironmentValues = process.env): PoolOptions | undefined {
-  const host = env.TIDB_HOST?.trim();
-  const user = env.TIDB_USER?.trim();
-  const password = env.TIDB_PASSWORD;
-  if (!host || !user || !password) return undefined;
-
-  const parsedPort = Number(env.TIDB_PORT ?? "4000");
-  if (!Number.isInteger(parsedPort) || parsedPort < 1 || parsedPort > 65535) {
-    throw new Error("A porta configurada para o TiDB é inválida.");
+export function getSupabaseDatabaseUrl(env: EnvironmentValues = process.env) {
+  const connectionString = env.POSTGRES_URL?.trim() || env.DATABASE_URL?.trim();
+  if (!connectionString) return undefined;
+  if (!/^postgres(?:ql)?:\/\//i.test(connectionString)) {
+    throw new Error("A conexão do Supabase precisa usar uma URL PostgreSQL segura.");
   }
-
-  return {
-    host,
-    port: parsedPort,
-    user,
-    password,
-    database: env.TIDB_DATABASE?.trim() || "sys",
-    ssl: { minVersion: "TLSv1.2", rejectUnauthorized: true },
-  };
+  return connectionString;
 }
 
-export const PIX_PAYMENTS_CREATE_SQL = `
-  CREATE TABLE IF NOT EXISTS \`amplopayPixPayments\` (
-    \`id\` INT NOT NULL AUTO_INCREMENT,
-    \`orderCode\` VARCHAR(64) NOT NULL,
-    \`identifier\` VARCHAR(96) NOT NULL,
-    \`transactionId\` VARCHAR(128) NULL,
-    \`status\` ENUM('PENDING', 'PAID', 'FAILED', 'REJECTED', 'CANCELED', 'REFUNDED', 'CHARGED_BACK') NOT NULL DEFAULT 'PENDING',
-    \`amountCents\` INT NOT NULL,
-    \`buyerName\` VARCHAR(255) NOT NULL,
-    \`buyerEmail\` VARCHAR(320) NOT NULL,
-    \`buyerDocument\` VARCHAR(64) NOT NULL,
-    \`cinema\` JSON NOT NULL,
-    \`session\` JSON NOT NULL,
-    \`seats\` JSON NOT NULL,
-    \`pixCode\` TEXT NULL,
-    \`pixImageUrl\` TEXT NULL,
-    \`webhookToken\` VARCHAR(512) NULL,
-    \`lastWebhookEvent\` VARCHAR(64) NULL,
-    \`webhookProcessedAt\` TIMESTAMP NULL,
-    \`paidAt\` TIMESTAMP NULL,
-    \`providerPayload\` JSON NULL,
-    \`createdAt\` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    \`updatedAt\` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (\`id\`),
-    UNIQUE KEY \`amplopayPixPayments_orderCode_unique\` (\`orderCode\`),
-    UNIQUE KEY \`amplopayPixPayments_identifier_unique\` (\`identifier\`),
-    UNIQUE KEY \`amplopayPixPayments_transactionId_unique\` (\`transactionId\`)
-  )
-`;
-
-async function ensurePixPaymentsTable(db: ReturnType<typeof drizzle>) {
+async function ensurePixPaymentsTable(db: PostgresDatabase) {
   if (!_pixPaymentsTableReady) {
-    _pixPaymentsTableReady = db.execute(sql.raw(PIX_PAYMENTS_CREATE_SQL)).then(() => undefined).catch(error => {
+    _pixPaymentsTableReady = db.execute(sql.raw(PIX_PAYMENTS_CREATE_SQL))
+      .then(() => db.execute(sql.raw(PIX_PAYMENTS_TRANSACTION_ID_UNIQUE_SQL)))
+      .then(() => undefined)
+      .catch(error => {
       _pixPaymentsTableReady = null;
-      throw new Error(formatTiDbInitializationError(error));
+      throw new Error(formatPostgresInitializationError(error));
     });
   }
   await _pixPaymentsTableReady;
 }
 
-// Lazily create the drizzle instance so local tooling can run without a DB.
 export async function getDb() {
   if (!_db) {
     try {
-      const tiDbOptions = getTiDbConnectionOptions();
-      if (tiDbOptions) {
-        if (needsTiDbApplicationDatabase(tiDbOptions.database)) {
-          const bootstrapDb = drizzle({ connection: tiDbOptions });
-          await bootstrapDb.execute(sql.raw(`CREATE DATABASE IF NOT EXISTS \`${TIDB_APPLICATION_DATABASE}\``));
-          _db = drizzle({ connection: { ...tiDbOptions, database: TIDB_APPLICATION_DATABASE } });
-        } else {
-          _db = drizzle({ connection: tiDbOptions });
-        }
-      } else if (process.env.DATABASE_URL) {
-        _db = drizzle(process.env.DATABASE_URL);
+      const connectionString = getSupabaseDatabaseUrl();
+      if (connectionString) {
+        _pool = new Pool({ connectionString, max: 1, ssl: { rejectUnauthorized: false } });
+        _db = drizzle({ client: _pool });
       }
     } catch (error) {
-      _databaseInitializationError = new Error(formatTiDbInitializationError(error));
+      _databaseInitializationError = new Error(formatPostgresInitializationError(error));
       console.warn("[Database] Failed to initialize:", _databaseInitializationError.message);
       _db = null;
     }
@@ -143,74 +108,35 @@ export async function getDb() {
 }
 
 export async function upsertUser(user: InsertUser): Promise<void> {
-  if (!user.openId) {
-    throw new Error("User openId is required for upsert");
-  }
+  if (!user.openId) throw new Error("User openId is required for upsert");
 
   const db = await getDb();
-  if (!db) {
-    console.warn("[Database] Cannot upsert user: database not available");
-    return;
+  if (!db) return;
+
+  const values: InsertUser = { openId: user.openId };
+  const updateSet: Record<string, unknown> = { updatedAt: new Date() };
+  const textFields = ["name", "email", "loginMethod"] as const;
+
+  for (const field of textFields) {
+    if (user[field] !== undefined) {
+      values[field] = user[field] ?? null;
+      updateSet[field] = user[field] ?? null;
+    }
   }
 
-  try {
-    const values: InsertUser = {
-      openId: user.openId,
-    };
-    const updateSet: Record<string, unknown> = {};
+  values.role = user.role ?? (user.openId === ENV.ownerOpenId ? "admin" : "user");
+  updateSet.role = values.role;
+  values.lastSignedIn = user.lastSignedIn ?? new Date();
+  updateSet.lastSignedIn = values.lastSignedIn;
 
-    const textFields = ["name", "email", "loginMethod"] as const;
-    type TextField = (typeof textFields)[number];
-
-    const assignNullable = (field: TextField) => {
-      const value = user[field];
-      if (value === undefined) return;
-      const normalized = value ?? null;
-      values[field] = normalized;
-      updateSet[field] = normalized;
-    };
-
-    textFields.forEach(assignNullable);
-
-    if (user.lastSignedIn !== undefined) {
-      values.lastSignedIn = user.lastSignedIn;
-      updateSet.lastSignedIn = user.lastSignedIn;
-    }
-    if (user.role !== undefined) {
-      values.role = user.role;
-      updateSet.role = user.role;
-    } else if (user.openId === ENV.ownerOpenId) {
-      values.role = 'admin';
-      updateSet.role = 'admin';
-    }
-
-    if (!values.lastSignedIn) {
-      values.lastSignedIn = new Date();
-    }
-
-    if (Object.keys(updateSet).length === 0) {
-      updateSet.lastSignedIn = new Date();
-    }
-
-    await db.insert(users).values(values).onDuplicateKeyUpdate({
-      set: updateSet,
-    });
-  } catch (error) {
-    console.error("[Database] Failed to upsert user:", error);
-    throw error;
-  }
+  await db.insert(users).values(values).onConflictDoUpdate({ target: users.openId, set: updateSet });
 }
 
 export async function getUserByOpenId(openId: string) {
   const db = await getDb();
-  if (!db) {
-    console.warn("[Database] Cannot get user: database not available");
-    return undefined;
-  }
-
+  if (!db) return undefined;
   const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
-
-  return result.length > 0 ? result[0] : undefined;
+  return result[0];
 }
 
 export async function createAmploPayPixPayment(values: InsertAmploPayPixPayment) {
@@ -247,6 +173,6 @@ export async function updateAmploPayPixPayment(orderCode: string, values: Partia
   const db = await getDb();
   if (!db) throw _databaseInitializationError ?? new Error("O banco de dados não está disponível para atualizar a cobrança PIX.");
   await ensurePixPaymentsTable(db);
-  await db.update(amplopayPixPayments).set(values).where(eq(amplopayPixPayments.orderCode, orderCode));
+  await db.update(amplopayPixPayments).set({ ...values, updatedAt: new Date() }).where(eq(amplopayPixPayments.orderCode, orderCode));
   return getAmploPayPixPaymentByOrderCode(orderCode);
 }

@@ -344,24 +344,42 @@
 
 ## Ativação final do PIX AmploPay
 
-- [ ] Cadastrar `AMPLOPAY_PIX_ENABLED=true` no ambiente Production da Vercel.
-- [ ] Fazer redeploy de Production após a ativação do PIX.
+- [x] Cadastrar `AMPLOPAY_PIX_ENABLED=true` no ambiente Production da Vercel.
+- [x] Fazer redeploy de Production após a ativação do PIX.
 - [x] Expor uma verificação sem cobrança para confirmar a ativação do PIX na produção.
 - [ ] Confirmar o webhook oficial da AmploPay e validar uma cobrança real autorizada.
 
 ## Sincronização de produção Vercel
 
-- [ ] Verificar se o commit atual do GitHub é o mesmo da implantação Production da Vercel.
-- [ ] Corrigir a sincronização da implantação sem solicitar novos redeploys ao usuário antes do diagnóstico.
+- [x] Verificar se o commit atual do GitHub é o mesmo da implantação Production da Vercel.
+- [x] Corrigir a sincronização da implantação promovendo a versão validada ao domínio oficial.
 
 ## Correção definitiva do vínculo Vercel
 
-- [ ] Mapear a implantação Vercel que recebeu o commit atual e a implantação que atende o domínio oficial.
-- [ ] Vincular o domínio oficial à implantação de Production do projeto correto.
-- [ ] Confirmar a rota de prontidão PIX no domínio oficial sem criar cobrança.
+- [x] Mapear a implantação Vercel que recebeu o commit atual e a implantação que atende o domínio oficial.
+- [x] Vincular o domínio oficial à implantação de Production do projeto correto.
+- [x] Confirmar que o domínio oficial responde à API da versão promovida; a verificação PIX será refeita após a migração Supabase.
 
 ## Avaliação de banco de dados na Vercel
 
 - [x] Verificar a oferta de banco atual da Vercel e os limites relevantes.
 - [x] Comparar o custo e a compatibilidade de uma migração para a arquitetura PIX MySQL/TiDB atual.
-- [ ] Aguardar a decisão do usuário antes de alterar a infraestrutura de dados.
+- [x] Confirmar a decisão do usuário de migrar a infraestrutura de dados para Supabase.
+
+## Migração para Supabase Postgres
+
+- [x] Confirmar o projeto Supabase integrado e a disponibilidade da conexão Postgres segura.
+- [x] Migrar o schema e o acesso à tabela PIX de MySQL/TiDB para Postgres.
+- [x] Confirmar as variáveis Supabase em Production na Vercel sem expor segredos.
+- [ ] Validar consulta PIX somente leitura no Supabase antes de qualquer cobrança real.
+
+## Acesso assistido aos painéis
+
+- [x] Obter sessão de navegador autorizada para Vercel e Supabase sem receber credenciais por chat.
+- [x] Conferir o projeto, domínio e integração Supabase diretamente nos painéis autorizados.
+
+## Integridade da branch de produção
+
+- [x] Identificar que a branch `main` do GitHub foi substituída por um commit divergente e incompleto.
+- [x] Obter confirmação explícita antes de substituir a branch `main` pela versão validada localmente.
+- [x] Restaurar a versão validada do checkout PIX e promover a implantação de Production.
