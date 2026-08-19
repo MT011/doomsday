@@ -42,7 +42,7 @@ export async function createAmploPayPixPayment(values: InsertAmploPayPixPayment)
     };
     await db.insert(amplopayPixPayments).values(row as any);
   } catch (error: any) {
-    console.error("[DB] Insert failed:", error?.message ?? error);
+    console.error("[DB] Insert failed:", JSON.stringify(error, Object.getOwnPropertyNames(error)));
     throw new Error("Erro ao salvar cobrança PIX: " + (error?.message ?? "desconhecido"));
   }
   return getAmploPayPixPaymentByOrderCode(values.orderCode);
