@@ -425,3 +425,8 @@
 
 - [x] Remover os eventos adicionais do funil e manter somente o código-base PageView no head do site.
 - [x] Compilar e publicar a configuração simplificada para teste manual do proprietário.
+
+## Verificação de domínio da Meta
+
+- [x] Inserir a meta tag de verificação `facebook-domain-verification` no head do domínio oficial.
+- [x] Compilar e publicar a atualização para confirmação no Business Manager.

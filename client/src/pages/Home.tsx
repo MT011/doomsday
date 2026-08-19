@@ -755,7 +755,27 @@ export default function Home() {
                 </div>
                 <div className="seat-note"><Info size={16} /><span>Os assentos são bloqueados temporariamente durante o checkout. A disponibilidade real depende da integração com o operador de cinemas.</span></div>
               </div>
-              <aside className="flow-side"><OrderSummary cinema={selectedCinema} session={selectedSession} seats={seatSelections} plannedTicketTypes={plannedTicketTypes} total={total} plannedTotal={plannedTotal} onRemove={(id) => setSeatSelections((current) => current.filter((seat) => seat.id !== id))} onContinue={() => { if (seatSelections.length !== ticketQuantity) { toast.error(ticketQuantity ? `Selecione os ${ticketQuantity} assentos solicitados para continuar.` : "Informe a quantidade de ingressos antes de continuar."); return; } setScreen(getCheckoutScreen()); window.setTimeout(scrollToPurchaseFlow, 20); }} /></aside>
+              <aside className="flow-side">
+                <OrderSummary
+                  cinema={selectedCinema}
+                  session={selectedSession}
+                  seats={seatSelections}
+                  plannedTicketTypes={plannedTicketTypes}
+                  total={total}
+                  plannedTotal={plannedTotal}
+                  onRemove={(id) => {
+                    setSeatSelections((current) => current.filter((seat) => seat.id !== id));
+                  }}
+                  onContinue={() => {
+                    if (seatSelections.length !== ticketQuantity) {
+                      toast.error(ticketQuantity ? `Selecione os ${ticketQuantity} assentos solicitados para continuar.` : "Informe a quantidade de ingressos antes de continuar.");
+                      return;
+                    }
+                    setScreen(getCheckoutScreen());
+                    window.setTimeout(scrollToPurchaseFlow, 20);
+                  }}
+                />
+              </aside>
             </div>
           ) : null}
 
