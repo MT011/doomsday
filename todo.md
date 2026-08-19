@@ -256,7 +256,7 @@
 - [x] Confirmar que `https://www.prevendadoomsday.com.br` está publicado em HTTPS e acessível.
 - [x] Publicar a função Express atualizada na Vercel para disponibilizar `/api/amplopay/webhook`, atualmente retornando HTTP 404.
 - [x] Preparar a atualização de `AMPLOPAY_CALLBACK_ORIGIN` e cadastrar o webhook para o domínio oficial.
-- [ ] Obter confirmação explícita antes de ativar PIX real ou iniciar cobrança de teste.
+- [x] Obter confirmação explícita antes de ativar PIX real ou iniciar cobrança de teste.
 - [ ] Validar o recebimento do webhook e a confirmação de pedido no domínio oficial.
 
 ## Origem oficial publicada pelo repositório
