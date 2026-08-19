@@ -77,6 +77,14 @@ export function getSupabaseDatabaseUrl(env: EnvironmentValues = process.env) {
   return connectionString;
 }
 
+export function getSupabasePoolConnectionString(connectionString: string) {
+  const url = new URL(connectionString);
+  for (const key of ["sslmode", "ssl", "sslrootcert", "sslcert", "sslkey"]) {
+    url.searchParams.delete(key);
+  }
+  return url.toString();
+}
+
 async function ensurePixPaymentsTable(db: PostgresDatabase) {
   if (!_pixPaymentsTableReady) {
     _pixPaymentsTableReady = db.execute(sql.raw(PIX_PAYMENTS_CREATE_SQL))
@@ -95,7 +103,11 @@ export async function getDb() {
     try {
       const connectionString = getSupabaseDatabaseUrl();
       if (connectionString) {
-        _pool = new Pool({ connectionString, max: 1, ssl: { rejectUnauthorized: false } });
+        _pool = new Pool({
+          connectionString: getSupabasePoolConnectionString(connectionString),
+          max: 1,
+          ssl: { rejectUnauthorized: false },
+        });
         _db = drizzle({ client: _pool });
       }
     } catch (error) {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatPostgresInitializationError, getSupabaseDatabaseUrl, PIX_PAYMENTS_CREATE_SQL, PIX_PAYMENTS_TRANSACTION_ID_UNIQUE_SQL } from "./db";
+import { formatPostgresInitializationError, getSupabaseDatabaseUrl, getSupabasePoolConnectionString, PIX_PAYMENTS_CREATE_SQL, PIX_PAYMENTS_TRANSACTION_ID_UNIQUE_SQL } from "./db";
 
 describe("schema de persistência PIX no Supabase", () => {
   it("cria a tabela Postgres de modo idempotente com as chaves necessárias", () => {
@@ -22,6 +22,15 @@ describe("schema de persistência PIX no Supabase", () => {
 
   it("recusa uma URL MySQL quando não há conexão Postgres do Supabase", () => {
     expect(() => getSupabaseDatabaseUrl({ DATABASE_URL: "mysql://old.example.com/sys" })).toThrow("PostgreSQL");
+  });
+
+  it("preserva o TLS do pool removendo parâmetros conflitantes da URL", () => {
+    const connectionString = getSupabasePoolConnectionString(
+      "postgresql://postgres:secret@pooler.supabase.com:6543/postgres?sslmode=require&pgbouncer=true",
+    );
+
+    expect(connectionString).not.toContain("sslmode");
+    expect(connectionString).toContain("pgbouncer=true");
   });
 
   it("sanitiza URL e senha em falhas do Postgres", () => {
