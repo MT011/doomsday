@@ -43,6 +43,7 @@ import { canConfirmPixCheckout, isCheckoutPurchaseReady } from "@/lib/pix-confir
 import { scrollToPurchaseFlow } from "@/lib/scroll";
 import { getAccessibleRearRowIndex, getBottomUpSeatRows } from "@/lib/seat-map-orientation";
 import { clampSeatMapPan, getMapGestureIntent, shouldGoBackWithEdgeSwipe, type MapGestureIntent } from "@/lib/mobile-gestures";
+import { trackMetaPurchase } from "@/lib/meta-pixel";
 import { trpc } from "@/lib/trpc";
 import { filmConfig } from "@shared/film-config";
 import { formatCpfInput, formatPhoneInput } from "@shared/input-masks";
@@ -369,6 +370,9 @@ export default function Home() {
 
   useEffect(() => {
     if (!pixPayment || !canConfirmPixCheckout({ screen, status: effectivePixStatus, hasPayment: true, hasOrder: Boolean(order), hasBuyer: Boolean(buyer.name && buyer.email), selectedSeatCount: seatSelections.length, ticketQuantity, amount: pixPayment.amount })) return;
+    if (!isLocalApprovedPixPreview) {
+      trackMetaPurchase({ orderCode: pixPayment.orderCode, value: pixPayment.amount, itemCount: ticketQuantity });
+    }
     setOrder({
       code: pixPayment.orderCode,
       createdAt: new Date().toISOString(),
@@ -381,7 +385,7 @@ export default function Home() {
     });
     setScreen("confirmation");
     window.setTimeout(() => document.getElementById("purchase-flow")?.scrollIntoView({ behavior: "smooth" }), 20);
-  }, [buyer, effectivePixStatus, order, pixPayment, screen, seatSelections, selectedCinema, selectedSession]);
+  }, [buyer, effectivePixStatus, isLocalApprovedPixPreview, order, pixPayment, screen, seatSelections, selectedCinema, selectedSession, ticketQuantity]);
 
   useEffect(() => {
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;

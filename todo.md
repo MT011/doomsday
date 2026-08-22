@@ -430,3 +430,9 @@
 
 - [x] Inserir a meta tag de verificação `facebook-domain-verification` no head do domínio oficial.
 - [x] Compilar e publicar a atualização para confirmação no Business Manager.
+
+## Conversões de compra no Meta Pixel
+
+- [x] Disparar o evento padrão `Purchase` somente após a confirmação real do pagamento PIX.
+- [x] Enviar somente valor, moeda e identificador comercial do pedido, sem CPF, telefone ou dados PIX.
+- [x] Cobrir a conversão com testes, publicar e orientar a validação no Gerenciador de Eventos.
