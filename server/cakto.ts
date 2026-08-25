@@ -147,7 +147,20 @@ async function caktoRequest(path: string, init: RequestInit = {}) {
     },
   });
   const payload = await response.json().catch(() => ({})) as ProviderResponse;
-  if (!response.ok) throw new Error(safeCaktoValidationMessage(payload));
+  if (!response.ok) {
+    const validationFields = Object.fromEntries(
+      Object.entries(payload)
+        .filter(([key]) => /^[a-zA-Z][a-zA-Z0-9_.-]{0,63}$/.test(key))
+        .filter(([key]) => !/secret|token|credential|authorization/i.test(key))
+        .slice(0, 8),
+    );
+    console.error("[Cakto] request failed", {
+      path,
+      status: response.status,
+      validationFields,
+    });
+    throw new Error(safeCaktoValidationMessage(payload));
+  }
   return payload;
 }
 
