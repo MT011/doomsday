@@ -177,7 +177,6 @@ export async function createCaktoPixCharge(input: {
   amountCents: number;
   buyer: CaktoBuyer;
   fingerprint: string;
-  antifraudProfilingAttemptReference: string;
   metadata: Record<string, string>;
   pixExpiresIn?: number;
 }): Promise<CaktoPixCharge> {
@@ -199,7 +198,6 @@ export async function createCaktoPixCharge(input: {
       },
       items: [{ offerId: input.offerId, quantity: 1, offerType: "main" }],
       pixExpiresIn: input.pixExpiresIn ?? 3600,
-      antifraudProfilingAttemptReference: input.antifraudProfilingAttemptReference,
       metadata: input.metadata,
     }),
   });

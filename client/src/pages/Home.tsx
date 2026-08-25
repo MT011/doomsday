@@ -47,7 +47,7 @@ import { trackMetaPurchase } from "@/lib/meta-pixel";
 import { trpc } from "@/lib/trpc";
 import { filmConfig } from "@shared/film-config";
 import { formatCpfInput, formatPhoneInput } from "@shared/input-masks";
-import { cleanupCaktoAntifraudProfile, collectCaktoAntifraudReference, getCaktoSessionFingerprint, startCaktoAntifraudProfile } from "@/lib/cakto-sdk";
+import { cleanupCaktoAntifraudProfile, getCaktoSessionFingerprint, startCaktoAntifraudProfile } from "@/lib/cakto-sdk";
 
 type Screen = "discover" | "sessions" | "seats" | "checkout" | "confirmation";
 type TicketType = "inteira" | "meia";
@@ -521,18 +521,10 @@ export default function Home() {
       toast.error(ticketQuantity ? `Preencha seus dados e selecione os ${ticketQuantity} assentos solicitados.` : "Selecione sua sessão e a quantidade de ingressos.");
       return;
     }
-    let caktoProfile: Awaited<ReturnType<typeof collectCaktoAntifraudReference>>;
-    try {
-      caktoProfile = await collectCaktoAntifraudReference();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Não foi possível validar o pagamento.");
-      return;
-    }
     createPixPayment.mutate(
       {
         buyer,
-        fingerprint: caktoProfile?.fingerprint ?? getCaktoSessionFingerprint(),
-        antifraudProfilingAttemptReference: caktoProfile?.antifraudProfilingAttemptReference,
+        fingerprint: getCaktoSessionFingerprint(),
         cinema: selectedCinema,
         session: selectedSession,
         seats: seatSelections.map(({ id, row, number, ticketType }) => ({ id, row, number, ticketType })),
