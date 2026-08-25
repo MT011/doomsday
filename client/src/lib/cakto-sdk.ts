@@ -2,6 +2,7 @@ const FINGERPRINT_STORAGE_KEY = "doomsday-cakto-session-fingerprint";
 const CAKTO_SDK_URL = "https://cakto-sdk.pages.dev/cakto-sdk.min.js";
 let sdkInstance: CaktoSdkInstance | null = null;
 let sdkLoadPromise: Promise<CaktoSdkInstance | null> | null = null;
+let sdkInitPromise: Promise<void> | null = null;
 
 export function getCaktoSdk() {
   if (typeof window === "undefined" || !window.Cakto || !import.meta.env.VITE_CAKTO_SDK_CLIENT_ID) return null;
@@ -54,9 +55,20 @@ async function waitForCaktoSdk(timeoutMs = 5000) {
   return loadCaktoSdk(timeoutMs);
 }
 
+async function ensureCaktoAntifraudInitialized(sdk: CaktoSdkInstance) {
+  if (!sdkInitPromise) {
+    sdkInitPromise = sdk.initAntifraud().catch((error) => {
+      sdkInitPromise = null;
+      throw error;
+    });
+  }
+  await sdkInitPromise;
+}
+
 export async function collectCaktoAntifraudReference() {
   const sdk = await waitForCaktoSdk();
   if (!sdk) return undefined;
+  await ensureCaktoAntifraudInitialized(sdk);
   await sdk.completeAntifraudProfile();
   const reference = sdk.getAntifraudReference();
   if (!reference) throw new Error("Não foi possível concluir a análise antifraude. Atualize a página e tente novamente.");
@@ -66,10 +78,12 @@ export async function collectCaktoAntifraudReference() {
 export async function startCaktoAntifraudProfile() {
   const sdk = await waitForCaktoSdk();
   if (!sdk) return false;
-  await sdk.initAntifraud();
+  await ensureCaktoAntifraudInitialized(sdk);
   return true;
 }
 
 export function cleanupCaktoAntifraudProfile() {
   sdkInstance?.cleanupAntifraud();
+  sdkInitPromise = null;
+  sdkInstance = null;
 }
