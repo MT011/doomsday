@@ -1,5 +1,7 @@
 const FINGERPRINT_STORAGE_KEY = "doomsday-cakto-session-fingerprint";
+const CAKTO_SDK_URL = "https://cakto-sdk.pages.dev/cakto-sdk.min.js";
 let sdkInstance: CaktoSdkInstance | null = null;
+let sdkLoadPromise: Promise<CaktoSdkInstance | null> | null = null;
 
 export function getCaktoSdk() {
   if (typeof window === "undefined" || !window.Cakto || !import.meta.env.VITE_CAKTO_SDK_CLIENT_ID) return null;
@@ -7,6 +9,36 @@ export function getCaktoSdk() {
     sdkInstance = new window.Cakto.CaktoSDK({ client_id: import.meta.env.VITE_CAKTO_SDK_CLIENT_ID });
   }
   return sdkInstance;
+}
+
+function loadCaktoSdk(timeoutMs = 5000) {
+  const immediate = getCaktoSdk();
+  if (immediate || !import.meta.env.VITE_CAKTO_SDK_CLIENT_ID || typeof window === "undefined") {
+    return Promise.resolve(immediate);
+  }
+  if (sdkLoadPromise) return sdkLoadPromise;
+
+  sdkLoadPromise = new Promise<CaktoSdkInstance | null>((resolve) => {
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timeout);
+      resolve(getCaktoSdk());
+    };
+    const timeout = window.setTimeout(finish, timeoutMs);
+    const existingScript = document.querySelector<HTMLScriptElement>(`script[src="${CAKTO_SDK_URL}"]`);
+    const script = existingScript ?? document.createElement("script");
+    script.addEventListener("load", finish, { once: true });
+    script.addEventListener("error", finish, { once: true });
+    if (!existingScript) {
+      script.src = CAKTO_SDK_URL;
+      script.async = true;
+      document.head.appendChild(script);
+    }
+  });
+
+  return sdkLoadPromise;
 }
 
 export function getCaktoSessionFingerprint() {
@@ -19,18 +51,7 @@ export function getCaktoSessionFingerprint() {
 }
 
 async function waitForCaktoSdk(timeoutMs = 5000) {
-  const immediate = getCaktoSdk();
-  if (immediate || !import.meta.env.VITE_CAKTO_SDK_CLIENT_ID) return immediate;
-  return new Promise<CaktoSdkInstance | null>((resolve) => {
-    const startedAt = Date.now();
-    const timer = window.setInterval(() => {
-      const sdk = getCaktoSdk();
-      if (sdk || Date.now() - startedAt >= timeoutMs) {
-        window.clearInterval(timer);
-        resolve(sdk);
-      }
-    }, 50);
-  });
+  return loadCaktoSdk(timeoutMs);
 }
 
 export async function collectCaktoAntifraudReference() {
