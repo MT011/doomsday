@@ -1,7 +1,7 @@
 import { eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
-import { amplopayPixPayments, InsertAmploPayPixPayment, InsertUser, users } from "../drizzle/schema.js";
+import { amplopayPixPayments, caktoOffers, InsertAmploPayPixPayment, InsertCaktoOffer, InsertUser, users } from "../drizzle/schema.js";
 import { ENV } from "./_core/env.js";
 
 type EnvironmentValues = Record<string, string | undefined>;
@@ -11,6 +11,7 @@ type PostgresDatabase = ReturnType<typeof drizzle>;
 let _db: PostgresDatabase | null = null;
 let _pool: Pool | null = null;
 let _pixPaymentsTableReady: Promise<void> | null = null;
+let _caktoOffersTableReady: Promise<void> | null = null;
 let _databaseInitializationError: Error | null = null;
 
 const PIX_PAYMENT_STATUSES = ["PENDING", "PAID", "FAILED", "REJECTED", "CANCELED", "REFUNDED", "CHARGED_BACK"];
@@ -44,6 +45,18 @@ export const PIX_PAYMENTS_CREATE_SQL = `
 export const PIX_PAYMENTS_TRANSACTION_ID_UNIQUE_SQL = `
   CREATE UNIQUE INDEX IF NOT EXISTS "amplopayPixPayments_transactionId_unique"
   ON public."amplopayPixPayments" ("transactionId")
+`;
+
+export const CAKTO_OFFERS_CREATE_SQL = `
+  CREATE TABLE IF NOT EXISTS "caktoOffers" (
+    "id" SERIAL PRIMARY KEY,
+    "amountCents" INTEGER NOT NULL UNIQUE,
+    "offerId" VARCHAR(128) NOT NULL UNIQUE,
+    "status" VARCHAR(16) NOT NULL DEFAULT 'ACTIVE',
+    "providerPayload" JSON,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )
 `;
 
 function asDatabaseError(value: unknown): DatabaseErrorLike {
@@ -83,6 +96,18 @@ export function getSupabasePoolConnectionString(connectionString: string) {
     url.searchParams.delete(key);
   }
   return url.toString();
+}
+
+async function ensureCaktoOffersTable(db: PostgresDatabase) {
+  if (!_caktoOffersTableReady) {
+    _caktoOffersTableReady = db.execute(sql.raw(CAKTO_OFFERS_CREATE_SQL))
+      .then(() => undefined)
+      .catch(error => {
+        _caktoOffersTableReady = null;
+        throw new Error(formatPostgresInitializationError(error));
+      });
+  }
+  await _caktoOffersTableReady;
 }
 
 async function ensurePixPaymentsTable(db: PostgresDatabase) {
@@ -187,4 +212,23 @@ export async function updateAmploPayPixPayment(orderCode: string, values: Partia
   await ensurePixPaymentsTable(db);
   await db.update(amplopayPixPayments).set({ ...values, updatedAt: new Date() }).where(eq(amplopayPixPayments.orderCode, orderCode));
   return getAmploPayPixPaymentByOrderCode(orderCode);
+}
+
+export async function getCaktoOfferByAmount(amountCents: number) {
+  const db = await getDb();
+  if (!db) {
+    if (_databaseInitializationError) throw _databaseInitializationError;
+    return undefined;
+  }
+  await ensureCaktoOffersTable(db);
+  const result = await db.select().from(caktoOffers).where(eq(caktoOffers.amountCents, amountCents)).limit(1);
+  return result[0];
+}
+
+export async function createCaktoOfferRecord(values: InsertCaktoOffer) {
+  const db = await getDb();
+  if (!db) throw _databaseInitializationError ?? new Error("O banco de dados não está disponível para registrar a oferta Cakto.");
+  await ensureCaktoOffersTable(db);
+  await db.insert(caktoOffers).values(values).onConflictDoNothing({ target: caktoOffers.amountCents });
+  return getCaktoOfferByAmount(values.amountCents);
 }

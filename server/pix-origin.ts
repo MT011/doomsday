@@ -1,6 +1,6 @@
 export const OFFICIAL_PIX_CALLBACK_ORIGIN = "https://www.prevendadoomsday.com.br";
 
-export function resolvePublicOrigin(configuredOrigin = process.env.AMPLOPAY_CALLBACK_ORIGIN) {
+export function resolvePublicOrigin(configuredOrigin = process.env.PIX_CALLBACK_ORIGIN ?? process.env.CAKTO_CALLBACK_ORIGIN ?? process.env.AMPLOPAY_CALLBACK_ORIGIN) {
   return configuredOrigin || OFFICIAL_PIX_CALLBACK_ORIGIN;
 }
 

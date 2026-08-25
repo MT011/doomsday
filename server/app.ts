@@ -1,5 +1,6 @@
 import express from "express";
 import { createExpressMiddleware, type CreateExpressContextOptions } from "@trpc/server/adapters/express";
+import { registerCaktoWebhook } from "./cakto-webhook.js";
 import { registerAmploPayWebhook } from "./amplopay-webhook.js";
 import { publicApiRouter, type PublicApiContext } from "./public-api-router.js";
 
@@ -16,6 +17,7 @@ export function createApp() {
 
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
+  registerCaktoWebhook(app);
   registerAmploPayWebhook(app);
   app.use(
     "/api/trpc",

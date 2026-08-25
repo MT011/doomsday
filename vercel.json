@@ -9,6 +9,9 @@
     },
     "api/amplopay/webhook.ts": {
       "maxDuration": 30
+    },
+    "api/cakto/webhook.ts": {
+      "maxDuration": 30
     }
   }
 }

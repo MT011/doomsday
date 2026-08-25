@@ -41,3 +41,16 @@ export const amplopayPixPayments = pgTable("amplopayPixPayments", {
 
 export type AmploPayPixPayment = typeof amplopayPixPayments.$inferSelect;
 export type InsertAmploPayPixPayment = typeof amplopayPixPayments.$inferInsert;
+
+export const caktoOffers = pgTable("caktoOffers", {
+  id: serial("id").primaryKey(),
+  amountCents: integer("amountCents").notNull().unique(),
+  offerId: varchar("offerId", { length: 128 }).notNull().unique(),
+  status: varchar("status", { length: 16 }).notNull().default("ACTIVE"),
+  providerPayload: json("providerPayload"),
+  createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export type CaktoOffer = typeof caktoOffers.$inferSelect;
+export type InsertCaktoOffer = typeof caktoOffers.$inferInsert;
