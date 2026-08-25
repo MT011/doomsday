@@ -47,6 +47,7 @@ import { trackMetaPurchase } from "@/lib/meta-pixel";
 import { trpc } from "@/lib/trpc";
 import { filmConfig } from "@shared/film-config";
 import { formatCpfInput, formatPhoneInput } from "@shared/input-masks";
+import { cleanupCaktoAntifraudProfile, collectCaktoAntifraudReference, getCaktoSessionFingerprint, startCaktoAntifraudProfile } from "@/lib/cakto-sdk";
 
 type Screen = "discover" | "sessions" | "seats" | "checkout" | "confirmation";
 type TicketType = "inteira" | "meia";
@@ -273,6 +274,19 @@ export default function Home() {
   const mapGestureRef = useRef<MapGestureIntent>("pending");
   const edgeSwipeStartRef = useRef<{ x: number; y: number; pointerType: string } | null>(null);
   const heroVideoRef = useRef<HTMLVideoElement | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    startCaktoAntifraudProfile().catch((error) => {
+      if (active && import.meta.env.VITE_CAKTO_SDK_CLIENT_ID) {
+        toast.error(error instanceof Error ? error.message : "Não foi possível iniciar a análise antifraude.");
+      }
+    });
+    return () => {
+      active = false;
+      cleanupCaktoAntifraudProfile();
+    };
+  }, []);
 
   const citiesForState = useMemo(() => {
     const unique = new Map<string, string>();
@@ -501,15 +515,24 @@ export default function Home() {
     });
   };
 
-  const submitOrder = (event: FormEvent<HTMLFormElement>) => {
+  const submitOrder = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!buyer.name || !buyer.email || !buyer.document || !buyer.phone || seatSelections.length !== ticketQuantity) {
       toast.error(ticketQuantity ? `Preencha seus dados e selecione os ${ticketQuantity} assentos solicitados.` : "Selecione sua sessão e a quantidade de ingressos.");
       return;
     }
+    let caktoProfile: Awaited<ReturnType<typeof collectCaktoAntifraudReference>>;
+    try {
+      caktoProfile = await collectCaktoAntifraudReference();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Não foi possível validar o pagamento.");
+      return;
+    }
     createPixPayment.mutate(
       {
         buyer,
+        fingerprint: caktoProfile?.fingerprint ?? getCaktoSessionFingerprint(),
+        antifraudProfilingAttemptReference: caktoProfile?.antifraudProfilingAttemptReference,
         cinema: selectedCinema,
         session: selectedSession,
         seats: seatSelections.map(({ id, row, number, ticketType }) => ({ id, row, number, ticketType })),
@@ -527,7 +550,7 @@ export default function Home() {
   const verifyPixPayment = async () => {
     const result = await pixPaymentStatus.refetch();
     if (result.data?.status !== "PAID") {
-      toast.message("Pagamento ainda pendente. Assim que a AmploPay confirmar, seus assentos serão liberados.");
+      toast.message("Pagamento ainda pendente. Assim que o gateway confirmar, seus assentos serão liberados.");
     }
   };
 
@@ -789,9 +812,9 @@ export default function Home() {
                 <form className="panel checkout-panel" onSubmit={submitOrder}>
                   <div className="panel-heading"><div><span className="panel-index">04</span><h2>Finalize sua compra</h2><p>Preencha seus dados para receber o ingresso digital.</p></div><WalletCards size={22} /></div>
                   <div className="checkout-section"><div className="subheading"><UserRound size={17} /><div><strong>Dados do comprador</strong><span>Usados para identificação e envio do ingresso.</span></div></div><div className="form-grid"><Field label="Nome completo" value={buyer.name} onChange={(value) => setBuyer((current) => ({ ...current, name: value }))} placeholder="Digite seu nome" autoComplete="name" /><Field label="E-mail" type="email" value={buyer.email} onChange={(value) => setBuyer((current) => ({ ...current, email: value }))} placeholder="voce@email.com" inputMode="email" autoComplete="email" /><Field label="CPF" value={buyer.document} onChange={(value) => setBuyer((current) => ({ ...current, document: formatCpfInput(value) }))} placeholder="000.000.000-00" inputMode="numeric" autoComplete="off" /><Field label="Celular com DDD" value={buyer.phone} onChange={(value) => setBuyer((current) => ({ ...current, phone: formatPhoneInput(value) }))} placeholder="(11) 99999-9999" inputMode="tel" autoComplete="tel" /></div></div>
-                  <div className="checkout-section"><div className="subheading"><WalletCards size={17} /><div><strong>Forma de pagamento</strong><span>PIX via AmploPay — confirmação automática e segura.</span></div></div><div className="payment-options"><div className="payment-option is-selected"><span className="payment-icon pix-icon">◆</span><span><strong>Pix</strong><small>QR Code e código copia e cola</small></span><Check size={17} /></div></div></div>
+                  <div className="checkout-section"><div className="subheading"><WalletCards size={17} /><div><strong>Forma de pagamento</strong><span>PIX — confirmação automática e segura.</span></div></div><div className="payment-options"><div className="payment-option is-selected"><span className="payment-icon pix-icon">◆</span><span><strong>Pix</strong><small>QR Code e código copia e cola</small></span><Check size={17} /></div></div></div>
                   {pixPayment ? <div className="pix-payment-panel"><div className="pix-payment-heading"><div><span className="panel-index">PAGAMENTO PIX</span><h3>Aguardando confirmação</h3><p>Use o QR Code ou copie o código para pagar no aplicativo do seu banco.</p></div><span>{currency(pixPayment.amount)}</span></div><div className="pix-payment-content">{pixPayment.pixImageUrl ? <img src={pixPayment.pixImageUrl} alt="QR Code para pagamento PIX" className="pix-payment-qr" /> : <QRCodeCanvas value={pixPayment.pixCode} size={150} bgColor="#f4f0e6" fgColor="#10141b" includeMargin />}<div className="pix-payment-code"><span>CÓDIGO COPIA E COLA</span><code>{pixPayment.pixCode}</code><button type="button" className="button button-secondary" onClick={() => { navigator.clipboard.writeText(pixPayment.pixCode).then(() => toast.success("Código PIX copiado."), () => toast.error("Não foi possível copiar o código PIX.")); }}><Copy size={16} /> Copiar código</button></div></div><div className="pix-payment-actions"><span><span className="pulse-dot" /> {pixPaymentStatus.data?.status === "PAID" ? "Pagamento confirmado" : "Aguardando pagamento"}</span><button type="button" className="text-button" onClick={verifyPixPayment} disabled={pixPaymentStatus.isFetching}><RefreshCw size={15} /> {pixPaymentStatus.isFetching ? "Verificando..." : "Já paguei"}</button></div></div> : null}
-                  <div className="demo-warning"><Info size={17} /><span>O valor e os dados da cobrança são calculados no servidor. A confirmação acontece por notificação segura da AmploPay.</span></div>{isEmptyPreview ? <div className="demo-validation-hint"><Info size={16} /> Validação QA: o botão de geração PIX deve rejeitar dados incompletos e assentos ausentes.</div> : null}
+                  <div className="demo-warning"><Info size={17} /><span>O valor e os dados da cobrança são calculados no servidor. O total acima corresponde aos ingressos; se houver taxa de serviço, a Cakto a mostrará separadamente antes da confirmação do pagamento. A confirmação acontece por notificação segura do gateway.</span></div>{isEmptyPreview ? <div className="demo-validation-hint"><Info size={16} /> Validação QA: o botão de geração PIX deve rejeitar dados incompletos e assentos ausentes.</div> : null}
                   <button className="button button-primary wide-button" type="submit" disabled={createPixPayment.isPending || Boolean(pixPayment)}>{createPixPayment.isPending ? "Gerando PIX..." : pixPayment ? "PIX gerado" : "Gerar código PIX"} {!createPixPayment.isPending && !pixPayment ? <ArrowRight size={17} /> : null}</button>
                 </form>
               </div>
@@ -800,7 +823,7 @@ export default function Home() {
           ) : null}
 
           {screen === "confirmation" && order ? (
-            <div className="confirmation-layout"><div className="confirmation-card"><div className="confirmation-icon"><Check size={30} /></div><span className="eyebrow">PAGAMENTO PIX CONFIRMADO</span><h2>Seu lugar está reservado.</h2><p>O pagamento foi confirmado. Enviaremos os dados do pedido para <strong>{order.buyer.email}</strong>.</p><div className="order-code"><span>CÓDIGO DO PEDIDO</span><strong>{order.code}</strong></div><div className="ticket-card"><div className="ticket-main"><span className="ticket-label">AVENGERS: DOOMSDAY</span><h3>{order.cinema.name}</h3><p>{order.cinema.city}, {order.cinema.uf} · {order.session.room}</p><div className="ticket-meta"><span><CalendarDays size={14} /> {order.session.dateLabel}</span><span><Clock3 size={14} /> {order.session.time}</span><span><Film size={14} /> {order.session.format}</span></div><div className="ticket-seats"><span>ASSENTOS</span><strong>{order.seats.map((seat) => `${seat.row}${seat.number}`).join(" · ")}</strong></div></div><div className="ticket-qr"><QRCodeCanvas value={`https://presale.doomsday.example/ticket/${order.code}`} size={132} bgColor="#f4f0e6" fgColor="#10141b" includeMargin /><span>APRESENTE NA ENTRADA</span></div></div>{isEmailErrorPreview ? <div className="demo-validation-hint"><Info size={16} /> QA: falha de envio simulada. O usuário recebe erro e pode tentar novamente.</div> : null}<div className="confirmation-actions"><button className="button button-primary" onClick={() => window.print()}><Download size={17} /> Baixar ingresso</button><button className="button button-secondary" disabled={sendDemoEmail.isPending} onClick={() => { if (isEmailErrorPreview) { toast.error("Não foi possível enviar a confirmação. Tente novamente."); return; } sendDemoEmail.mutate({ orderCode: order.code, email: order.buyer.email }, { onSuccess: (result) => toast.success(`Confirmação enviada para ${result.to} · ${result.messageId}`), onError: (error) => toast.error(error.message) }); }}><Mail size={17} /> {sendDemoEmail.isPending ? "Enviando..." : "Enviar por e-mail"}</button></div><button className="text-button" onClick={resetFlow}>Comprar outro ingresso <ArrowRight size={15} /></button></div><div className="confirmation-side"><div className="side-stat"><span>STATUS</span><strong><span className="pulse-dot" /> PAGAMENTO APROVADO</strong></div><div className="side-stat"><span>FORMA DE PAGAMENTO</span><strong>Pix</strong></div><div className="side-stat"><span>TOTAL</span><strong className="accent-value">{currency(order.total)}</strong></div><div className="scan-card"><ScanLine size={25} /><strong>Uma experiência digna da tela grande.</strong><span>A confirmação depende da notificação segura de pagamento.</span></div></div></div>
+            <div className="confirmation-layout"><div className="confirmation-card"><div className="confirmation-icon"><Check size={30} /></div><span className="eyebrow">PAGAMENTO PIX CONFIRMADO</span><h2>Seu lugar está reservado.</h2><p>O pagamento foi confirmado. Enviaremos os dados do pedido para <strong>{order.buyer.email}</strong>.</p><div className="order-code"><span>CÓDIGO DO PEDIDO</span><strong>{order.code}</strong></div><div className="ticket-card"><div className="ticket-main"><span className="ticket-label">AVENGERS: DOOMSDAY</span><h3>{order.cinema.name}</h3><p>{order.cinema.city}, {order.cinema.uf} · {order.session.room}</p><div className="ticket-meta"><span><CalendarDays size={14} /> {order.session.dateLabel}</span><span><Clock3 size={14} /> {order.session.time}</span><span><Film size={14} /> {order.session.format}</span></div><div className="ticket-seats"><span>ASSENTOS</span><strong>{order.seats.map((seat) => `${seat.row}${seat.number}`).join(" · ")}</strong></div></div><div className="ticket-qr"><QRCodeCanvas value={`https://presale.doomsday.example/ticket/${order.code}`} size={132} bgColor="#f4f0e6" fgColor="#10141b" includeMargin /><span>APRESENTE NA ENTRADA</span></div></div>{isEmailErrorPreview ? <div className="demo-validation-hint"><Info size={16} /> QA: falha de envio simulada. O usuário recebe erro e pode tentar novamente.</div> : null}<div className="confirmation-actions"><button className="button button-primary" onClick={() => window.print()}><Download size={17} /> Baixar ingresso</button><button className="button button-secondary" disabled={sendDemoEmail.isPending} onClick={() => { if (isEmailErrorPreview) { toast.error("Não foi possível enviar a confirmação. Tente novamente."); return; } sendDemoEmail.mutate({ orderCode: order.code, email: order.buyer.email }, { onSuccess: (result) => toast.success(`Confirmação enviada para ${result.to} · ${result.messageId}`), onError: (error) => toast.error(error.message) }); }}><Mail size={17} /> {sendDemoEmail.isPending ? "Enviando..." : "Enviar por e-mail"}</button></div><button className="text-button" onClick={resetFlow}>Comprar outro ingresso <ArrowRight size={15} /></button></div><div className="confirmation-side"><div className="side-stat"><span>STATUS</span><strong><span className="pulse-dot" /> PAGAMENTO APROVADO</strong></div><div className="side-stat"><span>FORMA DE PAGAMENTO</span><strong>Pix</strong></div><div className="side-stat"><span>TOTAL</span><strong className="accent-value">{currency(order.total)}</strong></div><div className="scan-card"><ScanLine size={25} /><strong>Uma experiência digna da tela grande.</strong><span>A confirmação depende da notificação segura do gateway.</span></div></div></div>
           ) : null}
         </section>
       ) : null}
