@@ -75,8 +75,9 @@ describe("Cakto PIX adapter", () => {
     expect(getCaktoWebhookOrderCode(payload)).toBe("DD-PIX-GROUPED");
   });
 
-  it("does not expose credential fields in provider errors", () => {
+  it("preserves safe provider validation details without exposing credentials", () => {
     expect(safeCaktoValidationMessage({ detail: "client_secret inválido" })).toContain("recusou");
-    expect(safeCaktoValidationMessage({ amount: ["inválido"] })).toContain("amount");
+    expect(safeCaktoValidationMessage({ paymentMethod: ["Método não suportado"] })).toContain("paymentMethod: Método não suportado");
+    expect(safeCaktoValidationMessage({ amount: ["inválido"] })).toContain("amount: inválido");
   });
 });

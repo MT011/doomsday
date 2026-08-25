@@ -58,17 +58,31 @@ function getCaktoCredentials() {
   return { clientId, clientSecret };
 }
 
+function safeProviderText(value: unknown) {
+  if (typeof value === "string") return value.trim().slice(0, 180);
+  if (Array.isArray(value)) {
+    const messages = value.filter((item): item is string => typeof item === "string").map((item) => item.trim()).filter(Boolean);
+    return messages.length ? messages.join(" ").slice(0, 180) : undefined;
+  }
+  return undefined;
+}
+
 export function safeCaktoValidationMessage(payload: ProviderResponse) {
-  const detail = readString(payload.detail);
-  if (detail && !/secret|token|credential|authorization/i.test(detail)) return detail.slice(0, 240);
-  const fields = Object.keys(payload)
-    .filter((field) => /^[a-zA-Z][a-zA-Z0-9_.-]{0,63}$/.test(field))
-    .filter((field) => field !== "detail")
-    .filter((field) => !/secret|token|credential|authorization/i.test(field))
+  const detail = safeProviderText(payload.detail);
+  if (detail && !/secret|token|credential|authorization/i.test(detail)) return detail;
+  const fields = Object.entries(payload)
+    .filter(([field]) => /^[a-zA-Z][a-zA-Z0-9_.-]{0,63}$/.test(field))
+    .filter(([field]) => field !== "detail")
+    .filter(([field]) => !/secret|token|credential|authorization/i.test(field))
     .slice(0, 5);
-  return fields.length
-    ? `Dados da cobrança Cakto inválidos nos campos: ${fields.join(", ")}.`
-    : "A Cakto recusou a cobrança. Verifique os dados do comprador e tente novamente.";
+  if (!fields.length) return "A Cakto recusou a cobrança. Verifique os dados do comprador e tente novamente.";
+  const explanations = fields
+    .map(([field, value]) => {
+      const text = safeProviderText(value);
+      return text ? `${field}: ${text}` : field;
+    })
+    .join("; ");
+  return `Cakto recusou a cobrança — ${explanations}.`.slice(0, 480);
 }
 
 export function normalizeCaktoStatus(status: unknown, event?: unknown): CaktoPaymentStatus {
