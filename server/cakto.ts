@@ -187,7 +187,7 @@ export async function createCaktoPixCharge(input: {
       "X-Idempotency-Key": input.idempotencyKey,
     },
     body: JSON.stringify({
-      paymentMethod: "PIX",
+      paymentMethod: "pix",
       customer: {
         name: input.buyer.name,
         email: input.buyer.email,
