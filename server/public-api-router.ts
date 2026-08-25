@@ -59,7 +59,6 @@ const orderSchema = z.object({
 
 const pixOrderSchema = orderSchema.omit({ payment: true }).extend({
   fingerprint: z.string().trim().min(1).max(255).optional(),
-  antifraudProfilingAttemptReference: z.string().trim().min(1).max(255).optional(),
 });
 const WHOLE_TICKET_PRICE = 51.28;
 const HALF_TICKET_PRICE = 25.64;
@@ -134,8 +133,8 @@ export const publicApiRouter = router({
                 throw new Error("O PIX Cakto está configurado, mas aguarda a ativação após o cadastro do webhook.");
               }
               if (!process.env.CAKTO_PRODUCT_ID?.trim()) throw new Error("O produto Cakto não está configurado no servidor.");
-              if (!input.fingerprint || !input.antifraudProfilingAttemptReference) {
-                throw new Error("A análise antifraude da Cakto precisa ser concluída antes de gerar o PIX.");
+              if (!input.fingerprint) {
+                throw new Error("O identificador da sessão do comprador é necessário para gerar o PIX.");
               }
               let offer = await getCaktoOfferByAmount(amountCents);
               if (!offer) {
@@ -155,7 +154,6 @@ export const publicApiRouter = router({
                 amountCents,
                 buyer: input.buyer,
                 fingerprint: input.fingerprint,
-                antifraudProfilingAttemptReference: input.antifraudProfilingAttemptReference,
                 metadata,
                 pixExpiresIn: 3600,
               });
