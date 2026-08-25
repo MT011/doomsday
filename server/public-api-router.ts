@@ -2,15 +2,26 @@ import { randomUUID } from "node:crypto";
 import { initTRPC } from "@trpc/server";
 import superjson from "superjson";
 import { z } from "zod";
+import { buildCaktoWebhookUrl, createCaktoOffer, createCaktoPixCharge } from "./cakto.js";
 import { buildWebhookUrl, createAmploPayIdentifier, createAmploPayPixCharge, formatBrazilCpf, formatBrazilPhone } from "./amplopay.js";
-import { createAmploPayPixPayment, getAmploPayPixPaymentByOrderCode, updateAmploPayPixPayment } from "./db.js";
+import { createCaktoOfferRecord, createAmploPayPixPayment, getCaktoOfferByAmount, getAmploPayPixPaymentByOrderCode, updateAmploPayPixPayment } from "./db.js";
 import { getPublicOrigin } from "./pix-origin.js";
 import { createDemoOrder, sendDemoConfirmationEmail } from "./presale.js";
 
 export type PublicApiContext = {
   req: any;
   res: any;
-  user: null;
+  user: {
+    id: number;
+    openId: string;
+    name: string | null;
+    email: string | null;
+    loginMethod: string | null;
+    role: string;
+    createdAt: Date;
+    updatedAt: Date;
+    lastSignedIn: Date;
+  } | null;
 };
 
 const t = initTRPC.context<PublicApiContext>().create({ transformer: superjson });
@@ -46,13 +57,29 @@ const orderSchema = z.object({
   seats: z.array(seatSchema).min(1).max(8),
 });
 
-const pixOrderSchema = orderSchema.omit({ payment: true });
+const pixOrderSchema = orderSchema.omit({ payment: true }).extend({
+  fingerprint: z.string().trim().min(1).max(255).optional(),
+  antifraudProfilingAttemptReference: z.string().trim().min(1).max(255).optional(),
+});
 const WHOLE_TICKET_PRICE = 51.28;
 const HALF_TICKET_PRICE = 25.64;
 
 type PixReadinessEnvironment = Record<string, string | undefined>;
 
+type PixProvider = "amplopay" | "cakto";
+
+export function getPixProvider(env: PixReadinessEnvironment = process.env): PixProvider {
+  return env.PIX_PROVIDER?.trim().toLowerCase() === "cakto" ? "cakto" : "amplopay";
+}
+
 export function getPixReadiness(env: PixReadinessEnvironment = process.env) {
+  if (getPixProvider(env) === "cakto") {
+    return {
+      pixEnabled: env.CAKTO_PIX_ENABLED === "true",
+      credentialsConfigured: Boolean(env.CAKTO_API_CLIENT_ID?.trim() && env.CAKTO_API_CLIENT_SECRET?.trim() && env.CAKTO_PRODUCT_ID?.trim()),
+      callbackOriginConfigured: Boolean((env.PIX_CALLBACK_ORIGIN ?? env.CAKTO_CALLBACK_ORIGIN ?? env.AMPLOPAY_CALLBACK_ORIGIN)?.trim()),
+    };
+  }
   return {
     pixEnabled: env.AMPLOPAY_PIX_ENABLED === "true",
     credentialsConfigured: Boolean(env.AMPLOPAY_PUBLIC_KEY?.trim() && env.AMPLOPAY_SECRET_KEY?.trim()),
@@ -66,7 +93,7 @@ function calculateOrderAmount(seats: Array<{ ticketType: "inteira" | "meia" }>) 
 
 export const publicApiRouter = router({
   auth: router({
-    me: publicProcedure.query(() => null),
+    me: publicProcedure.query(({ ctx }) => ctx.user),
     logout: publicProcedure.mutation(() => ({ success: true } as const)),
   }),
   presale: router({
@@ -76,10 +103,13 @@ export const publicApiRouter = router({
       .input(z.object({ orderCode: z.string().min(1), email: z.string().email() }))
       .mutation(({ input }) => sendDemoConfirmationEmail(input)),
     createPixPayment: publicProcedure.input(pixOrderSchema).mutation(async ({ input, ctx }) => {
+      const provider = getPixProvider();
       const amount = calculateOrderAmount(input.seats);
+      const amountCents = Math.round(amount * 100);
       const orderCode = `DD-PIX-${randomUUID().replace(/-/g, "").slice(0, 10).toUpperCase()}`;
       const identifier = createAmploPayIdentifier(orderCode);
-      const callbackUrl = buildWebhookUrl(getPublicOrigin(ctx.req));
+      const publicOrigin = getPublicOrigin(ctx.req);
+      const callbackUrl = provider === "cakto" ? buildCaktoWebhookUrl(publicOrigin) : buildWebhookUrl(publicOrigin);
       const dueDate = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
       const buyer = { ...input.buyer, document: formatBrazilCpf(input.buyer.document), phone: formatBrazilPhone(input.buyer.phone) };
 
@@ -87,7 +117,7 @@ export const publicApiRouter = router({
         orderCode,
         identifier,
         status: "PENDING",
-        amountCents: Math.round(amount * 100),
+        amountCents,
         buyerName: buyer.name,
         buyerEmail: buyer.email,
         buyerDocument: buyer.document,
@@ -97,26 +127,59 @@ export const publicApiRouter = router({
       });
 
       try {
-        const charge = await createAmploPayPixCharge({
-          identifier,
-          amount,
-          buyer,
-          products: input.seats.map(seat => ({
-            id: `${input.session.id}-${seat.id}`,
-            name: `Avengers: Doomsday — ${seat.ticketType === "meia" ? "Meia-entrada" : "Inteira"} — Assento ${seat.row}${seat.number}`,
-            quantity: 1,
-            price: seat.ticketType === "meia" ? HALF_TICKET_PRICE : WHOLE_TICKET_PRICE,
-          })),
-          dueDate,
-          callbackUrl,
-          metadata: { orderCode, cinema: input.cinema.name, sessionId: input.session.id },
-        });
+        const metadata = { orderCode, cinema: input.cinema.name, sessionId: input.session.id };
+        const charge = provider === "cakto"
+          ? await (async () => {
+              if (!process.env.CAKTO_PIX_ENABLED || process.env.CAKTO_PIX_ENABLED !== "true") {
+                throw new Error("O PIX Cakto está configurado, mas aguarda a ativação após o cadastro do webhook.");
+              }
+              if (!process.env.CAKTO_PRODUCT_ID?.trim()) throw new Error("O produto Cakto não está configurado no servidor.");
+              if (!input.fingerprint || !input.antifraudProfilingAttemptReference) {
+                throw new Error("A análise antifraude da Cakto precisa ser concluída antes de gerar o PIX.");
+              }
+              let offer = await getCaktoOfferByAmount(amountCents);
+              if (!offer) {
+                const createdOffer = await createCaktoOffer({ productId: process.env.CAKTO_PRODUCT_ID, amountCents });
+                offer = await createCaktoOfferRecord({
+                  amountCents,
+                  offerId: createdOffer.id,
+                  status: "ACTIVE",
+                  providerPayload: createdOffer.providerPayload,
+                });
+              }
+              if (!offer) throw new Error("Não foi possível registrar a oferta dinâmica Cakto.");
+              return createCaktoPixCharge({
+                orderCode,
+                idempotencyKey: identifier,
+                offerId: offer.offerId,
+                amountCents,
+                buyer: input.buyer,
+                fingerprint: input.fingerprint,
+                antifraudProfilingAttemptReference: input.antifraudProfilingAttemptReference,
+                metadata,
+                pixExpiresIn: 3600,
+              });
+            })()
+          : await createAmploPayPixCharge({
+              identifier,
+              amount,
+              buyer,
+              products: input.seats.map(seat => ({
+                id: `${input.session.id}-${seat.id}`,
+                name: `Avengers: Doomsday — ${seat.ticketType === "meia" ? "Meia-entrada" : "Inteira"} — Assento ${seat.row}${seat.number}`,
+                quantity: 1,
+                price: seat.ticketType === "meia" ? HALF_TICKET_PRICE : WHOLE_TICKET_PRICE,
+              })),
+              dueDate,
+              callbackUrl,
+              metadata,
+            });
         await updateAmploPayPixPayment(orderCode, {
           transactionId: charge.transactionId,
           status: charge.status,
           pixCode: charge.pixCode,
           pixImageUrl: charge.pixImageUrl,
-          webhookToken: charge.webhookToken,
+          ...(provider === "amplopay" && "webhookToken" in charge && typeof charge.webhookToken === "string" ? { webhookToken: charge.webhookToken } : {}),
           providerPayload: charge.providerPayload,
         });
         return { orderCode, status: charge.status, amount, pixCode: charge.pixCode, pixImageUrl: charge.pixImageUrl };
@@ -132,3 +195,5 @@ export const publicApiRouter = router({
     }),
   }),
 });
+
+export type AppRouter = typeof publicApiRouter;
