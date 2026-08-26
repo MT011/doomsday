@@ -3,6 +3,7 @@ import { initTRPC } from "@trpc/server";
 import superjson from "superjson";
 import { z } from "zod";
 import { buildCaktoWebhookUrl, createCaktoOffer, createCaktoPixCharge } from "./cakto.js";
+import { buildVeoPagWebhookUrl, createVeoPagPixCharge } from "./veopag.js";
 import { buildWebhookUrl, createAmploPayIdentifier, createAmploPayPixCharge, formatBrazilCpf, formatBrazilPhone } from "./amplopay.js";
 import { createCaktoOfferRecord, createAmploPayPixPayment, getCaktoOfferByAmount, getAmploPayPixPaymentByOrderCode, updateAmploPayPixPayment } from "./db.js";
 import { getPublicOrigin } from "./pix-origin.js";
@@ -65,10 +66,11 @@ const HALF_TICKET_PRICE = 25.64;
 
 type PixReadinessEnvironment = Record<string, string | undefined>;
 
-type PixProvider = "amplopay" | "cakto";
+type PixProvider = "amplopay" | "cakto" | "veopag";
 
 export function getPixProvider(env: PixReadinessEnvironment = process.env): PixProvider {
-  return env.PIX_PROVIDER?.trim().toLowerCase() === "cakto" ? "cakto" : "amplopay";
+  const provider = env.PIX_PROVIDER?.trim().toLowerCase();
+  return provider === "cakto" || provider === "veopag" ? provider : "amplopay";
 }
 
 export function getPixReadiness(env: PixReadinessEnvironment = process.env) {
@@ -77,6 +79,13 @@ export function getPixReadiness(env: PixReadinessEnvironment = process.env) {
       pixEnabled: env.CAKTO_PIX_ENABLED === "true",
       credentialsConfigured: Boolean(env.CAKTO_API_CLIENT_ID?.trim() && env.CAKTO_API_CLIENT_SECRET?.trim() && env.CAKTO_PRODUCT_ID?.trim()),
       callbackOriginConfigured: Boolean((env.PIX_CALLBACK_ORIGIN ?? env.CAKTO_CALLBACK_ORIGIN ?? env.AMPLOPAY_CALLBACK_ORIGIN)?.trim()),
+    };
+  }
+  if (getPixProvider(env) === "veopag") {
+    return {
+      pixEnabled: env.VEOPAG_PIX_ENABLED === "true",
+      credentialsConfigured: Boolean(env.VEOPAG_CLIENT_ID?.trim() && env.VEOPAG_CLIENT_SECRET?.trim()),
+      callbackOriginConfigured: Boolean((env.PIX_CALLBACK_ORIGIN ?? env.VEOPAG_CALLBACK_ORIGIN ?? env.AMPLOPAY_CALLBACK_ORIGIN)?.trim()),
     };
   }
   return {
@@ -108,7 +117,7 @@ export const publicApiRouter = router({
       const orderCode = `DD-PIX-${randomUUID().replace(/-/g, "").slice(0, 10).toUpperCase()}`;
       const identifier = createAmploPayIdentifier(orderCode);
       const publicOrigin = getPublicOrigin(ctx.req);
-      const callbackUrl = provider === "cakto" ? buildCaktoWebhookUrl(publicOrigin) : buildWebhookUrl(publicOrigin);
+      const callbackUrl = provider === "cakto" ? buildCaktoWebhookUrl(publicOrigin) : provider === "veopag" ? buildVeoPagWebhookUrl(publicOrigin) : buildWebhookUrl(publicOrigin);
       const dueDate = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
       const buyer = { ...input.buyer, document: formatBrazilCpf(input.buyer.document), phone: formatBrazilPhone(input.buyer.phone) };
 
@@ -158,7 +167,15 @@ export const publicApiRouter = router({
                 pixExpiresIn: 3600,
               });
             })()
-          : await createAmploPayPixCharge({
+          : provider === "veopag"
+            ? await createVeoPagPixCharge({
+                amount,
+                externalId: identifier,
+                callbackUrl,
+                buyer: input.buyer,
+                metadata,
+              })
+            : await createAmploPayPixCharge({
               identifier,
               amount,
               buyer,
