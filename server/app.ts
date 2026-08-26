@@ -2,6 +2,7 @@ import express from "express";
 import { createExpressMiddleware, type CreateExpressContextOptions } from "@trpc/server/adapters/express";
 import { registerCaktoWebhook } from "./cakto-webhook.js";
 import { registerAmploPayWebhook } from "./amplopay-webhook.js";
+import { registerVeoPagWebhook } from "./veopag-webhook.js";
 import { publicApiRouter, type PublicApiContext } from "./public-api-router.js";
 
 function createPublicContext({ req, res }: CreateExpressContextOptions): PublicApiContext {
@@ -15,10 +16,16 @@ function createPublicContext({ req, res }: CreateExpressContextOptions): PublicA
 export function createApp() {
   const app = express();
 
-  app.use(express.json({ limit: "50mb" }));
+  app.use(express.json({
+    limit: "50mb",
+    verify: (req: any, _res: any, buffer: Buffer) => {
+      req.rawBody = buffer.toString("utf8");
+    },
+  }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
   registerCaktoWebhook(app);
   registerAmploPayWebhook(app);
+  registerVeoPagWebhook(app);
   app.use(
     "/api/trpc",
     createExpressMiddleware({
