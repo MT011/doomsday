@@ -170,7 +170,7 @@ export const publicApiRouter = router({
           : provider === "veopag"
             ? await createVeoPagPixCharge({
                 amount,
-                externalId: identifier,
+                externalId: orderCode,
                 callbackUrl,
                 buyer: input.buyer,
                 metadata,

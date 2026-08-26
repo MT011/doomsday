@@ -14,6 +14,14 @@ export function registerVeoPagWebhook(app: any) {
     }
 
     const payload = (req.body ?? {}) as ProviderResponse;
+    if (payload.type !== undefined && String(payload.type).toLowerCase() !== "deposit") {
+      res.status(400).json({ error: "Evento VeoPag não é um depósito." });
+      return;
+    }
+    if (payload.currency !== undefined && String(payload.currency).toUpperCase() !== "BRL") {
+      res.status(400).json({ error: "Apenas depósitos PIX em BRL são aceitos." });
+      return;
+    }
     const transactionId = getVeoPagWebhookTransactionId(payload);
     const orderCode = getVeoPagWebhookOrderCode(payload);
     const payment = transactionId
