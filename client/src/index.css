@@ -400,6 +400,11 @@ em { color: #4f9e63; font-style: normal; }
 .payment-icon { display: grid; place-items: center; width: 30px; height: 30px; color: #4f9e63; border: 1px solid rgba(65,143,82,.35); }
 .pix-icon { font-size: 14px; }
 .demo-warning { margin: 0 31px 4px; }
+.pix-security-note { align-items: center; }
+.pix-security-note > div { display: flex; flex-direction: column; gap: 4px; }
+.pix-security-note strong { color: #e6ede6; font-size: 12px; }
+.pix-security-note span { color: #94a39d; }
+.pix-security-badge { width: 38px; height: 38px; flex: 0 0 38px; object-fit: cover; border: 1px solid rgba(224,179,102,.28); }
 .pix-payment-panel { margin: 4px 31px 20px; border: 1px solid rgba(91,177,110,.34); background: linear-gradient(135deg, rgba(38,87,57,.23), rgba(14,26,32,.9)); }
 .pix-payment-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 20px; border-bottom: 1px solid rgba(202,216,209,.12); }
 .pix-payment-heading .panel-index { margin-bottom: 5px; color: #7dc791; }
@@ -531,6 +536,7 @@ em { color: #4f9e63; font-style: normal; }
   .step-item { font-size: 8px; gap: 5px; }
   .panel-heading { padding-inline: 20px; }
   .select-grid, .form-grid, .payment-options { grid-template-columns: 1fr; padding-inline: 20px; }
+  .pix-security-note { margin-inline: 20px; }
   .select-grid { padding-bottom: 23px; }
   .session-list, .date-strip, .map-toolbar, .seat-legend { padding-inline: 20px; }
   .location-required-hint { padding-inline: 20px; }
