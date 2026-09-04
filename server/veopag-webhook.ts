@@ -1,4 +1,5 @@
 import { getAmploPayPixPaymentByOrderCode, getAmploPayPixPaymentByTransactionId, updateAmploPayPixPayment } from "./db.js";
+import { sendMetaPurchase } from "./meta-conversions-api.js";
 import { getVeoPagWebhookAmount, getVeoPagWebhookOrderCode, getVeoPagWebhookStatus, getVeoPagWebhookTransactionId, isVeoPagSignatureValid } from "./veopag.js";
 
 type ProviderResponse = Record<string, unknown>;
@@ -47,13 +48,32 @@ export function registerVeoPagWebhook(app: any) {
       return;
     }
 
+    const paidAt = status === "PAID" && !alreadyPaid ? new Date() : undefined;
     await updateAmploPayPixPayment(payment.orderCode, {
       status,
       lastWebhookEvent: typeof payload.status === "string" ? payload.status : "unknown",
       webhookProcessedAt: new Date(),
-      ...(status === "PAID" && !alreadyPaid ? { paidAt: new Date() } : {}),
+      ...(paidAt ? { paidAt } : {}),
       providerPayload: payload,
     });
+
+    if (paidAt) {
+      const itemCount = Array.isArray(payment.seats) ? payment.seats.length : 1;
+      try {
+        await sendMetaPurchase({
+          orderCode: payment.orderCode,
+          amountCents: payment.amountCents,
+          itemCount,
+          buyerEmail: payment.buyerEmail,
+          buyerName: payment.buyerName,
+          paidAt,
+        });
+      } catch (error) {
+        // O rastreamento não pode provocar reprocessamento de um pagamento confirmado.
+        console.warn("[Meta CAPI] Falha ao enviar Purchase server-side", error instanceof Error ? error.message : "erro desconhecido");
+      }
+    }
+
     res.status(200).json({ received: true, idempotent: alreadyPaid && status === "PAID" });
   });
 }
