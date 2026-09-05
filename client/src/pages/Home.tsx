@@ -44,6 +44,7 @@ import { scrollToPurchaseFlow } from "@/lib/scroll";
 import { getAccessibleRearRowIndex, getBottomUpSeatRows } from "@/lib/seat-map-orientation";
 import { clampSeatMapPan, getMapGestureIntent, shouldGoBackWithEdgeSwipe, type MapGestureIntent } from "@/lib/mobile-gestures";
 import { trackMetaPurchase } from "@/lib/meta-pixel";
+import { getSessionSchedule } from "@/lib/session-schedule";
 import { trpc } from "@/lib/trpc";
 import { filmConfig } from "@shared/film-config";
 import { formatCpfInput, formatPhoneInput } from "@shared/input-masks";
@@ -146,12 +147,7 @@ function formatDateLabel(date: Date) {
 function buildSessions(cinema: Cinema, date: string): Session[] {
   const seed = hashString(cinema.name);
   const sessionDate = new Date(`${date}T00:00:00Z`);
-  const sessions = [
-    { time: "13:20", language: "Dublado", format: "2D" as const },
-    { time: "15:30", language: "Legendado", format: "3D" as const },
-    { time: "18:10", language: "Legendado", format: "2D" as const },
-    { time: "21:25", language: "Dublado", format: "2D" as const },
-  ];
+  const sessions = getSessionSchedule(date, filmConfig.releaseDate);
   return sessions.map((session, index) => ({
     id: `${slug(cinema.name)}-${date}-${session.time.replace(":", "")}`,
     date,
