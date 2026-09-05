@@ -113,7 +113,34 @@ const DIVIDER_ART_URL = "/assets/doomsday-divider-art.webp";
 const WHOLE_PRICE = 51.28;
 const HALF_PRICE = 25.64;
 const MAX_TICKETS_PER_ORDER = 8;
+const SESSION_RESERVATION_DURATION_SECONDS = 15 * 60;
+const SESSION_RESERVATION_STORAGE_KEY = "doomsday.checkout.session-start";
 const EMPTY_TICKET_QUANTITIES: TicketQuantities = { inteira: 0, meia: 0 };
+
+function readSessionReservationStart() {
+  if (typeof window === "undefined") return null;
+  const stored = window.sessionStorage.getItem(SESSION_RESERVATION_STORAGE_KEY);
+  const parsed = stored ? Number(stored) : NaN;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
+function createSessionReservationStart() {
+  const existing = readSessionReservationStart();
+  if (existing) return existing;
+  const startedAt = Date.now();
+  if (typeof window !== "undefined") window.sessionStorage.setItem(SESSION_RESERVATION_STORAGE_KEY, String(startedAt));
+  return startedAt;
+}
+
+function clearSessionReservationStart() {
+  if (typeof window !== "undefined") window.sessionStorage.removeItem(SESSION_RESERVATION_STORAGE_KEY);
+}
+
+function formatSessionCountdown(totalSeconds: number) {
+  const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, "0");
+  const seconds = (totalSeconds % 60).toString().padStart(2, "0");
+  return `${minutes}:${seconds}`;
+}
 
 const currency = (value: number) =>
   value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -239,6 +266,11 @@ export default function Home() {
     return Array.from(unique.values()).sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
   }, []);
   const [screen, setScreen] = useState<Screen>(() => getRequestedScreen());
+  const [sessionReservationStartedAt, setSessionReservationStartedAt] = useState<number | null>(() => {
+    if (getRequestedScreen() === "discover") return null;
+    return readSessionReservationStart() ?? Date.now();
+  });
+  const [sessionReservationNow, setSessionReservationNow] = useState(() => Date.now());
   const [isHeroVideoVisible, setIsHeroVideoVisible] = useState(true);
   const [isHeroVideoReady, setIsHeroVideoReady] = useState(false);
   const [isHeroIntroPreview] = useState(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("intro") === "1");
@@ -343,6 +375,22 @@ export default function Home() {
   const pixStatusInput = useMemo(() => ({ orderCode: pixPayment?.orderCode ?? "PENDING" }), [pixPayment?.orderCode]);
   const pixPaymentStatus = trpc.presale.getPixPaymentStatus.useQuery(pixStatusInput, { enabled: Boolean(pixPayment), retry: false, refetchInterval: pixPayment ? 3000 : false });
   const effectivePixStatus = isLocalApprovedPixPreview ? "PAID" : pixPaymentStatus.data?.status;
+  const sessionReservationSeconds = sessionReservationStartedAt
+    ? Math.max(0, SESSION_RESERVATION_DURATION_SECONDS - Math.floor((sessionReservationNow - sessionReservationStartedAt) / 1000))
+    : SESSION_RESERVATION_DURATION_SECONDS;
+
+  useEffect(() => {
+    if (screen === "discover" || screen === "confirmation") return;
+    const startedAt = sessionReservationStartedAt ?? createSessionReservationStart();
+    if (!sessionReservationStartedAt) setSessionReservationStartedAt(startedAt);
+    if (typeof window !== "undefined") window.sessionStorage.setItem(SESSION_RESERVATION_STORAGE_KEY, String(startedAt));
+  }, [screen, sessionReservationStartedAt]);
+
+  useEffect(() => {
+    if (!sessionReservationStartedAt || screen === "discover" || screen === "confirmation") return;
+    const interval = window.setInterval(() => setSessionReservationNow(Date.now()), 1000);
+    return () => window.clearInterval(interval);
+  }, [screen, sessionReservationStartedAt]);
 
   useEffect(() => {
     setSelectedSessionId("");
@@ -453,6 +501,9 @@ export default function Home() {
   };
 
   const startSessions = () => {
+    const startedAt = createSessionReservationStart();
+    setSessionReservationStartedAt(startedAt);
+    setSessionReservationNow(Date.now());
     setScreen("sessions");
     window.setTimeout(() => document.getElementById("purchase-flow")?.scrollIntoView({ behavior: "smooth" }), 20);
   };
@@ -590,6 +641,9 @@ export default function Home() {
   };
 
   const resetFlow = () => {
+    clearSessionReservationStart();
+    setSessionReservationStartedAt(null);
+    setSessionReservationNow(Date.now());
     setScreen("discover");
     setOrder(null);
     setPixPayment(null);
@@ -637,10 +691,15 @@ export default function Home() {
       <header className="site-header site-header-minimal">
         <nav className="header-nav" aria-label="Navegação principal">
           <button onClick={() => document.getElementById("about")?.scrollIntoView({ behavior: "smooth" })}>O filme</button>
-          <button onClick={() => document.getElementById("purchase-flow")?.scrollIntoView({ behavior: "smooth" })}>Comprar ingressos</button>
+          <button onClick={startSessions}>Comprar ingressos</button>
           <span className="header-status"><span className="pulse-dot" /> PRÉ-VENDA AO VIVO</span>
         </nav>
       </header>
+
+      {screen === "discover" ? <div className="availability-banner" role="status">
+        <div className="availability-banner-copy"><span className="availability-banner-icon"><Clock3 size={16} /></span><div><strong>Pré-venda especial disponível por tempo limitado</strong><span>Sessões e disponibilidade podem variar conforme a demanda.</span></div></div>
+        <button type="button" onClick={startSessions}>Escolher ingressos <ArrowRight size={15} /></button>
+      </div> : null}
 
       {screen === "discover" ? (
         <>
@@ -733,7 +792,7 @@ export default function Home() {
                 <span className="edge-swipe-hint">No celular, deslize da borda esquerda para voltar uma etapa.</span>
               </div>
             </div>
-            <StepIndicator current={screen} />
+            <div className="flow-heading-status"><StepIndicator current={screen} />{screen !== "confirmation" ? <div className={`session-countdown ${sessionReservationSeconds === 0 ? "is-ended" : ""}`} role="timer" aria-live="polite"><Clock3 size={15} /><span><strong>{sessionReservationSeconds === 0 ? "Sessão expirada" : "Conclua sua seleção em"}</strong><b>{formatSessionCountdown(sessionReservationSeconds)}</b></span></div> : null}</div>
           </div>
 
           {screen === "sessions" ? (
