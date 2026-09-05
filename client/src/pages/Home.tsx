@@ -696,15 +696,12 @@ export default function Home() {
         </nav>
       </header>
 
-      {screen === "discover" ? <div className="availability-banner" role="status">
-        <div className="availability-banner-copy"><span className="availability-banner-icon"><Clock3 size={16} /></span><div><strong>Pré-venda especial disponível por tempo limitado</strong><span>Sessões e disponibilidade podem variar conforme a demanda.</span></div></div>
-        <button type="button" onClick={startSessions}>Escolher ingressos <ArrowRight size={15} /></button>
-      </div> : null}
+      {screen === "discover" ? <div className="availability-banner" role="status">Pré-venda especial disponível por tempo limitado</div> : null}
 
       {screen === "discover" ? (
         <>
           <section className="hero-section">
-            <div className={`hero-art ${isHeroVideoVisible && !isHeroVideoReady ? "is-hidden" : ""}`} style={{ backgroundImage: `url(${HERO_URL})` }} />
+            <div className={`hero-art ${isHeroVideoVisible && isHeroVideoReady ? "is-hidden" : ""}`} style={{ backgroundImage: `url(${HERO_URL})` }} />
             <div className={`hero-transition ${isHeroVideoVisible ? "" : "is-hidden"} ${isHeroVideoReady ? "is-ready" : ""}`} aria-hidden={!isHeroVideoVisible}>
               <video ref={heroVideoRef} src={HERO_TRANSITION_URL} autoPlay muted playsInline preload="auto" loop={isHeroIntroPreview} onPlaying={() => setIsHeroVideoReady(true)} onEnded={() => setIsHeroVideoVisible(false)} onError={() => setIsHeroVideoVisible(false)} />
             </div>
