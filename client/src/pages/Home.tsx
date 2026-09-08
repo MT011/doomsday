@@ -274,6 +274,7 @@ export default function Home() {
   const [sessionReservationNow, setSessionReservationNow] = useState(() => Date.now());
   const [isHeroVideoVisible, setIsHeroVideoVisible] = useState(true);
   const [isHeroVideoReady, setIsHeroVideoReady] = useState(false);
+  const [isHeroVideoAutoplayBlocked, setIsHeroVideoAutoplayBlocked] = useState(false);
   const [isHeroIntroPreview] = useState(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("intro") === "1");
   const [isDemoPreview] = useState(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).has("screen"));
   const [isLocalApprovedPixPreview] = useState(() => import.meta.env.DEV && typeof window !== "undefined" && new URLSearchParams(window.location.search).get("pixApproved") === "1");
@@ -456,7 +457,10 @@ export default function Home() {
     const video = heroVideoRef.current;
     if (video) {
       video.playbackRate = 1;
-      video.play().catch(() => setIsHeroVideoVisible(false));
+      video.play().catch(() => {
+        setIsHeroVideoAutoplayBlocked(true);
+        setIsHeroVideoReady(true);
+      });
     }
   }, [isHeroIntroPreview]);
 
@@ -704,8 +708,13 @@ export default function Home() {
           <section className="hero-section">
             <div className={`hero-art ${isHeroVideoVisible && isHeroVideoReady ? "is-hidden" : ""}`} style={{ backgroundImage: `url(${HERO_URL})` }} />
             <div className={`hero-transition ${isHeroVideoVisible ? "" : "is-hidden"} ${isHeroVideoReady ? "is-ready" : ""}`} aria-hidden={!isHeroVideoVisible}>
-              <video ref={heroVideoRef} src={HERO_TRANSITION_URL} poster={HERO_URL} autoPlay muted playsInline preload="auto" loop={isHeroIntroPreview} onPlaying={() => setIsHeroVideoReady(true)} onEnded={() => setIsHeroVideoVisible(false)} onError={() => setIsHeroVideoVisible(false)} />
+              <video ref={heroVideoRef} src={HERO_TRANSITION_URL} poster={HERO_URL} autoPlay muted playsInline preload="auto" loop={isHeroIntroPreview} onPlaying={() => { setIsHeroVideoReady(true); setIsHeroVideoAutoplayBlocked(false); }} onEnded={() => setIsHeroVideoVisible(false)} onError={() => setIsHeroVideoVisible(false)} />
             </div>
+            {isHeroVideoAutoplayBlocked && (
+              <button className="hero-video-play" type="button" onClick={() => heroVideoRef.current?.play().then(() => setIsHeroVideoAutoplayBlocked(false)).catch(() => undefined)}>
+                Assistir abertura
+              </button>
+            )}
             <div className="hero-overlay" />
             <div className="presale-flag" aria-label="Pré-venda aberta">
               <span>PRÉ-VENDA</span>
