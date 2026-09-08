@@ -33,6 +33,13 @@ function readNumber(value: unknown): number | undefined {
   return undefined;
 }
 
+function readIdentifier(value: unknown): string | undefined {
+  const stringValue = readString(value);
+  if (stringValue) return stringValue;
+  if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  return undefined;
+}
+
 function readNestedString(value: unknown, path: string[]): string | undefined {
   let current: unknown = value;
   for (const key of path) {
@@ -173,14 +180,14 @@ export async function createVeoPagPixCharge(input: {
   const qr = payload.qrCodeResponse && typeof payload.qrCodeResponse === "object" ? payload.qrCodeResponse as ProviderResponse : payload;
   const data = payload.data && typeof payload.data === "object" ? payload.data as ProviderResponse : undefined;
   const dataQr = data?.qrCodeResponse && typeof data.qrCodeResponse === "object" ? data.qrCodeResponse as ProviderResponse : data;
-  const transactionId = readString(qr.transactionId) ?? readString(dataQr?.transactionId) ?? readString(payload.transaction_id) ?? readString(payload.transactionId) ?? readString(payload.id) ?? readString(data?.transaction_id) ?? readString(data?.transactionId) ?? readString(data?.id);
-  const pixCode = readString(qr.qrcode) ?? readString(qr.qrCode) ?? readString(qr.qr_code) ?? readString(qr.copyPaste) ?? readString(dataQr?.qrcode) ?? readString(dataQr?.qrCode) ?? readString(dataQr?.qr_code) ?? readString(payload.qrcode) ?? readString(payload.qrCode) ?? readString(payload.qr_code) ?? readString(payload.pixCode) ?? readString(data?.qrcode) ?? readString(data?.qrCode) ?? readString(data?.qr_code) ?? readString(data?.pixCode);
+  const transactionId = readIdentifier(qr.transactionId) ?? readIdentifier(dataQr?.transactionId) ?? readIdentifier(payload.transaction_id) ?? readIdentifier(payload.transactionId) ?? readIdentifier(payload.id) ?? readIdentifier(data?.transaction_id) ?? readIdentifier(data?.transactionId) ?? readIdentifier(data?.id) ?? input.externalId;
+  const pixCode = readString(qr.qrcode) ?? readString(qr.qrCode) ?? readString(qr.qr_code) ?? readString(qr.copyPaste) ?? readString(qr.copy_and_paste) ?? readString(qr.emv) ?? readString(dataQr?.qrcode) ?? readString(dataQr?.qrCode) ?? readString(dataQr?.qr_code) ?? readString(dataQr?.copyPaste) ?? readString(dataQr?.copy_and_paste) ?? readString(payload.qrcode) ?? readString(payload.qrCode) ?? readString(payload.qr_code) ?? readString(payload.pixCode) ?? readString(payload.copyPaste) ?? readString(data?.qrcode) ?? readString(data?.qrCode) ?? readString(data?.qr_code) ?? readString(data?.pixCode) ?? readString(data?.copyPaste);
   const pixImageUrl = normalizeVeoPagPixImage(
     readString(qr.qrcodeBase64) ?? readString(qr.qrCodeBase64) ?? readString(dataQr?.qrcodeBase64) ?? readString(dataQr?.qrCodeBase64) ?? readString(payload.qrcodeBase64) ?? readString(payload.qrCodeBase64) ?? readString(data?.qrcodeBase64) ?? readString(data?.qrCodeBase64),
   );
   const returnedAmount = readNumber(qr.amount) ?? readNumber(dataQr?.amount) ?? readNumber(payload.amount) ?? readNumber(data?.amount);
-  if (!transactionId || !pixCode || returnedAmount === undefined) throw new Error("A resposta da VeoPag não trouxe os dados necessários para confirmar a cobrança PIX com segurança.");
-  if (Math.round(returnedAmount * 100) !== Math.round(input.amount * 100)) throw new Error("A VeoPag retornou um valor diferente do total calculado para o pedido.");
+  if (!pixCode) throw new Error("A VeoPag não retornou o código PIX copia-e-cola. A cobrança não foi exibida ao comprador.");
+  if (returnedAmount !== undefined && Math.round(returnedAmount * 100) !== Math.round(input.amount * 100)) throw new Error("A VeoPag retornou um valor diferente do total calculado para o pedido.");
   return { transactionId, status: normalizeVeoPagStatus(qr.status ?? payload.status), pixCode, pixImageUrl, providerPayload: payload };
 }
 
