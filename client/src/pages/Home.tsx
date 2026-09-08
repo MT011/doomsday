@@ -48,6 +48,7 @@ import { getSessionSchedule } from "@/lib/session-schedule";
 import { trpc } from "@/lib/trpc";
 import { filmConfig } from "@shared/film-config";
 import { formatCpfInput, formatPhoneInput } from "@shared/input-masks";
+import { HALF_TICKET_PRICE, WHOLE_TICKET_PRICE } from "@shared/pricing";
 import { cleanupCaktoAntifraudProfile, getCaktoSessionFingerprint, startCaktoAntifraudProfile } from "@/lib/cakto-sdk";
 
 type Screen = "discover" | "sessions" | "seats" | "checkout" | "confirmation";
@@ -110,8 +111,8 @@ const LOGO_URL = "/assets/avengers-doomsday-logo.webp";
 const HERO_TRANSITION_URL = "/assets/doomsday-opening-transition.mp4";
 const EVENT_ART_URL = "/assets/doomsday-event-art.webp";
 const DIVIDER_ART_URL = "/assets/doomsday-divider-art.webp";
-const WHOLE_PRICE = 51.28;
-const HALF_PRICE = 25.64;
+const WHOLE_PRICE = WHOLE_TICKET_PRICE;
+const HALF_PRICE = HALF_TICKET_PRICE;
 const MAX_TICKETS_PER_ORDER = 8;
 const SESSION_RESERVATION_DURATION_SECONDS = 15 * 60;
 const SESSION_RESERVATION_STORAGE_KEY = "doomsday.checkout.session-start";

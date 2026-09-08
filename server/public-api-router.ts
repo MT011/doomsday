@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { initTRPC } from "@trpc/server";
 import superjson from "superjson";
 import { z } from "zod";
+import { HALF_TICKET_PRICE, WHOLE_TICKET_PRICE } from "@shared/pricing";
 import { buildCaktoWebhookUrl, createCaktoOffer, createCaktoPixCharge } from "./cakto.js";
 import { buildVeoPagWebhookUrl, createVeoPagPixCharge } from "./veopag.js";
 import { buildWebhookUrl, createAmploPayIdentifier, createAmploPayPixCharge, formatBrazilCpf, formatBrazilPhone } from "./amplopay.js";
@@ -61,9 +62,6 @@ const orderSchema = z.object({
 const pixOrderSchema = orderSchema.omit({ payment: true }).extend({
   fingerprint: z.string().trim().min(1).max(255).optional(),
 });
-const WHOLE_TICKET_PRICE = 51.28;
-const HALF_TICKET_PRICE = 25.64;
-
 type PixReadinessEnvironment = Record<string, string | undefined>;
 
 type PixProvider = "amplopay" | "cakto" | "veopag";

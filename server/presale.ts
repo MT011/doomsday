@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { HALF_TICKET_PRICE, WHOLE_TICKET_PRICE } from "@shared/pricing";
 
 export type DemoTicketType = "inteira" | "meia";
 
@@ -17,10 +18,10 @@ export type DemoOrderInput = {
   seats: DemoSeat[];
 };
 
-export const halfPrice = 25.64;
+export const halfPrice = HALF_TICKET_PRICE;
 
-export function calculateDemoOrderTotal(sessionPrice: number, seats: DemoSeat[]) {
-  return Number(seats.reduce((total, seat) => total + (seat.ticketType === "meia" ? halfPrice : sessionPrice), 0).toFixed(2));
+export function calculateDemoOrderTotal(_sessionPrice: number, seats: DemoSeat[]) {
+  return Number(seats.reduce((total, seat) => total + (seat.ticketType === "meia" ? HALF_TICKET_PRICE : WHOLE_TICKET_PRICE), 0).toFixed(2));
 }
 
 export function validateDemoSeats(seats: DemoSeat[]) {

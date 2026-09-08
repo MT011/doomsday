@@ -11,7 +11,7 @@ describe("Meta Conversions API", () => {
   it("cria Purchase com event_id igual ao Pixel e sem dados sensíveis crus", () => {
     const event = getMetaPurchaseEvent({
       orderCode: "DD-AB12CD",
-      amountCents: 10256,
+      amountCents: 7440,
       itemCount: 2,
       buyerEmail: "cliente@example.com",
       buyerName: "Cliente Teste",
@@ -21,7 +21,7 @@ describe("Meta Conversions API", () => {
     expect(event.event_name).toBe("Purchase");
     expect(event.event_id).toBe("purchase_DD-AB12CD");
     expect(event.action_source).toBe("website");
-    expect(event.custom_data).toMatchObject({ currency: "BRL", value: 102.56, num_items: 2 });
+    expect(event.custom_data).toMatchObject({ currency: "BRL", value: 74.4, num_items: 2 });
     expect(JSON.stringify(event)).not.toContain("cliente@example.com");
     expect(JSON.stringify(event)).not.toContain("Cliente Teste");
   });

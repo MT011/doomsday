@@ -66,7 +66,7 @@ describe("Cakto PIX adapter", () => {
       data: [
         {
           id: "cakto-grouped-payment-id",
-          baseAmount: 76.92,
+          baseAmount: 55.8,
           metadata: { orderCode: "DD-PIX-GROUPED" },
         },
       ],

@@ -4,6 +4,7 @@ import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
+import { HALF_TICKET_PRICE, WHOLE_TICKET_PRICE } from "@shared/pricing";
 import { createDemoOrder, sendDemoConfirmationEmail } from "./presale";
 import { buildWebhookUrl, createAmploPayIdentifier, createAmploPayPixCharge, formatBrazilCpf, formatBrazilPhone } from "./amplopay";
 import { createAmploPayPixPayment, getAmploPayPixPaymentByOrderCode, updateAmploPayPixPayment } from "./db";
@@ -40,8 +41,6 @@ const demoOrderSchema = z.object({
 });
 
 const pixOrderSchema = demoOrderSchema.omit({ payment: true });
-const WHOLE_TICKET_PRICE = 51.28;
-const HALF_TICKET_PRICE = 25.64;
 function calculateOrderAmount(seats: Array<{ ticketType: "inteira" | "meia" }>) {
   return Number(seats.reduce((total, seat) => total + (seat.ticketType === "meia" ? HALF_TICKET_PRICE : WHOLE_TICKET_PRICE), 0).toFixed(2));
 }

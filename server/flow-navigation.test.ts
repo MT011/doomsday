@@ -23,14 +23,14 @@ describe("transições do funil de compra", () => {
   });
 
   it("só considera o checkout pronto quando há comprador, todos os assentos e valor positivo", () => {
-    expect(isCheckoutPurchaseReady({ hasBuyer: true, selectedSeatCount: 2, ticketQuantity: 2, amount: 102.56 })).toBe(true);
-    expect(isCheckoutPurchaseReady({ hasBuyer: false, selectedSeatCount: 2, ticketQuantity: 2, amount: 102.56 })).toBe(false);
-    expect(isCheckoutPurchaseReady({ hasBuyer: true, selectedSeatCount: 1, ticketQuantity: 2, amount: 102.56 })).toBe(false);
+    expect(isCheckoutPurchaseReady({ hasBuyer: true, selectedSeatCount: 2, ticketQuantity: 2, amount: 74.4 })).toBe(true);
+    expect(isCheckoutPurchaseReady({ hasBuyer: false, selectedSeatCount: 2, ticketQuantity: 2, amount: 74.4 })).toBe(false);
+    expect(isCheckoutPurchaseReady({ hasBuyer: true, selectedSeatCount: 1, ticketQuantity: 2, amount: 74.4 })).toBe(false);
     expect(isCheckoutPurchaseReady({ hasBuyer: true, selectedSeatCount: 2, ticketQuantity: 2, amount: 0 })).toBe(false);
   });
 
   it("confirma PIX somente com pedido completo e bloqueia o retorno em loop após criar o pedido", () => {
-    const completeCheckout = { screen: "checkout" as const, status: "PAID", hasPayment: true, hasBuyer: true, selectedSeatCount: 2, ticketQuantity: 2, amount: 102.56 };
+    const completeCheckout = { screen: "checkout" as const, status: "PAID", hasPayment: true, hasBuyer: true, selectedSeatCount: 2, ticketQuantity: 2, amount: 74.4 };
     expect(canConfirmPixCheckout({ ...completeCheckout, hasOrder: false })).toBe(true);
     expect(canConfirmPixCheckout({ ...completeCheckout, hasOrder: true })).toBe(false);
   });
