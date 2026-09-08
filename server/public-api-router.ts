@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { initTRPC } from "@trpc/server";
 import superjson from "superjson";
 import { z } from "zod";
-import { HALF_TICKET_PRICE, WHOLE_TICKET_PRICE } from "@shared/pricing";
+import { HALF_TICKET_PRICE, WHOLE_TICKET_PRICE } from "../shared/pricing.js";
 import { buildCaktoWebhookUrl, createCaktoOffer, createCaktoPixCharge } from "./cakto.js";
 import { buildVeoPagWebhookUrl, createVeoPagPixCharge } from "./veopag.js";
 import { buildWebhookUrl, createAmploPayIdentifier, createAmploPayPixCharge, formatBrazilCpf, formatBrazilPhone } from "./amplopay.js";

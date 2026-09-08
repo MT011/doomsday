@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { HALF_TICKET_PRICE, WHOLE_TICKET_PRICE } from "@shared/pricing";
+import { HALF_TICKET_PRICE, WHOLE_TICKET_PRICE } from "../shared/pricing.js";
 
 export type DemoTicketType = "inteira" | "meia";
 

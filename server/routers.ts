@@ -4,7 +4,7 @@ import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
-import { HALF_TICKET_PRICE, WHOLE_TICKET_PRICE } from "@shared/pricing";
+import { HALF_TICKET_PRICE, WHOLE_TICKET_PRICE } from "../shared/pricing.js";
 import { createDemoOrder, sendDemoConfirmationEmail } from "./presale";
 import { buildWebhookUrl, createAmploPayIdentifier, createAmploPayPixCharge, formatBrazilCpf, formatBrazilPhone } from "./amplopay";
 import { createAmploPayPixPayment, getAmploPayPixPaymentByOrderCode, updateAmploPayPixPayment } from "./db";
