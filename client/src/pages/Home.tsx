@@ -704,7 +704,7 @@ export default function Home() {
           <section className="hero-section">
             <div className={`hero-art ${isHeroVideoVisible && isHeroVideoReady ? "is-hidden" : ""}`} style={{ backgroundImage: `url(${HERO_URL})` }} />
             <div className={`hero-transition ${isHeroVideoVisible ? "" : "is-hidden"} ${isHeroVideoReady ? "is-ready" : ""}`} aria-hidden={!isHeroVideoVisible}>
-              <video ref={heroVideoRef} src={HERO_TRANSITION_URL} autoPlay muted playsInline preload="auto" loop={isHeroIntroPreview} onPlaying={() => setIsHeroVideoReady(true)} onEnded={() => setIsHeroVideoVisible(false)} onError={() => setIsHeroVideoVisible(false)} />
+              <video ref={heroVideoRef} src={HERO_TRANSITION_URL} poster={HERO_URL} autoPlay muted playsInline preload="auto" loop={isHeroIntroPreview} onPlaying={() => setIsHeroVideoReady(true)} onEnded={() => setIsHeroVideoVisible(false)} onError={() => setIsHeroVideoVisible(false)} />
             </div>
             <div className="hero-overlay" />
             <div className="presale-flag" aria-label="Pré-venda aberta">
