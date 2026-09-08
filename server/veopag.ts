@@ -42,6 +42,16 @@ function readNestedString(value: unknown, path: string[]): string | undefined {
   return readString(current);
 }
 
+export function normalizeVeoPagPixImage(value: unknown) {
+  const raw = readString(value);
+  if (!raw) return null;
+  if (/^data:image\/[a-z0-9.+-]+;base64,/i.test(raw)) return raw;
+  if (/^(?:https?:\/\/|\/)/i.test(raw)) return raw;
+  const compact = raw.replace(/\s+/g, "");
+  if (compact.length > 100 && /^[A-Za-z0-9+/=]+$/.test(compact)) return `data:image/png;base64,${compact}`;
+  return null;
+}
+
 function getVeoPagCredentials() {
   const clientId = process.env.VEOPAG_CLIENT_ID;
   const clientSecret = process.env.VEOPAG_CLIENT_SECRET;
@@ -163,7 +173,9 @@ export async function createVeoPagPixCharge(input: {
   const qr = payload.qrCodeResponse && typeof payload.qrCodeResponse === "object" ? payload.qrCodeResponse as ProviderResponse : payload;
   const transactionId = readString(qr.transactionId) ?? readString(payload.transaction_id) ?? readString(payload.transactionId) ?? readString(payload.id);
   const pixCode = readString(qr.qrcode) ?? readString(qr.qrCode) ?? readString(payload.qrcode) ?? readString(payload.qrCode);
-  const pixImageUrl = readString(qr.qrcodeBase64) ?? readString(qr.qrCodeBase64) ?? null;
+  const pixImageUrl = normalizeVeoPagPixImage(
+    readString(qr.qrcodeBase64) ?? readString(qr.qrCodeBase64) ?? readString(payload.qrcodeBase64) ?? readString(payload.qrCodeBase64),
+  );
   const returnedAmount = readNumber(qr.amount) ?? readNumber(payload.amount);
   if (!transactionId || !pixCode || returnedAmount === undefined) throw new Error("A resposta da VeoPag não trouxe os dados necessários para confirmar a cobrança PIX com segurança.");
   if (Math.round(returnedAmount * 100) !== Math.round(input.amount * 100)) throw new Error("A VeoPag retornou um valor diferente do total calculado para o pedido.");
