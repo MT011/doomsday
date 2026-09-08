@@ -171,12 +171,14 @@ export async function createVeoPagPixCharge(input: {
   const payload = await response.json().catch(() => ({})) as ProviderResponse;
   if (!response.ok) throw new Error(safeVeoPagValidationMessage(payload));
   const qr = payload.qrCodeResponse && typeof payload.qrCodeResponse === "object" ? payload.qrCodeResponse as ProviderResponse : payload;
-  const transactionId = readString(qr.transactionId) ?? readString(payload.transaction_id) ?? readString(payload.transactionId) ?? readString(payload.id);
-  const pixCode = readString(qr.qrcode) ?? readString(qr.qrCode) ?? readString(payload.qrcode) ?? readString(payload.qrCode);
+  const data = payload.data && typeof payload.data === "object" ? payload.data as ProviderResponse : undefined;
+  const dataQr = data?.qrCodeResponse && typeof data.qrCodeResponse === "object" ? data.qrCodeResponse as ProviderResponse : data;
+  const transactionId = readString(qr.transactionId) ?? readString(dataQr?.transactionId) ?? readString(payload.transaction_id) ?? readString(payload.transactionId) ?? readString(payload.id) ?? readString(data?.transaction_id) ?? readString(data?.transactionId) ?? readString(data?.id);
+  const pixCode = readString(qr.qrcode) ?? readString(qr.qrCode) ?? readString(qr.qr_code) ?? readString(qr.copyPaste) ?? readString(dataQr?.qrcode) ?? readString(dataQr?.qrCode) ?? readString(dataQr?.qr_code) ?? readString(payload.qrcode) ?? readString(payload.qrCode) ?? readString(payload.qr_code) ?? readString(payload.pixCode) ?? readString(data?.qrcode) ?? readString(data?.qrCode) ?? readString(data?.qr_code) ?? readString(data?.pixCode);
   const pixImageUrl = normalizeVeoPagPixImage(
-    readString(qr.qrcodeBase64) ?? readString(qr.qrCodeBase64) ?? readString(payload.qrcodeBase64) ?? readString(payload.qrCodeBase64),
+    readString(qr.qrcodeBase64) ?? readString(qr.qrCodeBase64) ?? readString(dataQr?.qrcodeBase64) ?? readString(dataQr?.qrCodeBase64) ?? readString(payload.qrcodeBase64) ?? readString(payload.qrCodeBase64) ?? readString(data?.qrcodeBase64) ?? readString(data?.qrCodeBase64),
   );
-  const returnedAmount = readNumber(qr.amount) ?? readNumber(payload.amount);
+  const returnedAmount = readNumber(qr.amount) ?? readNumber(dataQr?.amount) ?? readNumber(payload.amount) ?? readNumber(data?.amount);
   if (!transactionId || !pixCode || returnedAmount === undefined) throw new Error("A resposta da VeoPag não trouxe os dados necessários para confirmar a cobrança PIX com segurança.");
   if (Math.round(returnedAmount * 100) !== Math.round(input.amount * 100)) throw new Error("A VeoPag retornou um valor diferente do total calculado para o pedido.");
   return { transactionId, status: normalizeVeoPagStatus(qr.status ?? payload.status), pixCode, pixImageUrl, providerPayload: payload };
