@@ -712,6 +712,7 @@ export default function Home() {
             <div className="presale-flag" aria-label="Pré-venda aberta">
               <span>PRÉ-VENDA</span>
               <strong>ABERTA</strong>
+              <small>Até 12.09.2026</small>
             </div>
             <div className="hero-content container">
               <div className="hero-copy">
