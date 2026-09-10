@@ -102,7 +102,7 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px s
 .presale-flag::after { right: 0; }
 .presale-flag span { color: #fff; font: 900 17px/.9 'Barlow Condensed', sans-serif; letter-spacing: .2em; }
 .presale-flag strong { display: block; margin-top: 4px; color: #fff; font: 900 46px/.78 'Barlow Condensed', sans-serif; letter-spacing: .045em; }
-.presale-flag small { display: block; margin-top: 8px; color: rgba(255,255,255,.84); font: 600 17px/1 'Barlow Condensed', sans-serif; letter-spacing: .08em; text-transform: none; }
+.presale-flag small { display: block; margin-top: 8px; color: #fff; font: 900 17px/1 'Barlow Condensed', sans-serif; letter-spacing: .1em; text-transform: none; }
 .eyebrow { display: inline-flex; align-items: center; gap: 8px; color: #4f9e63; font: 500 10px 'DM Mono', monospace; letter-spacing: .15em; text-transform: uppercase; }
 .movie-logo { display: block; width: min(510px, 100%); margin: 22px 0 26px; filter: drop-shadow(0 16px 25px rgba(0,0,0,.35)); }
 .hero-lede { max-width: 470px; margin: 0; color: #ccd3cd; font-size: 16px; line-height: 1.7; }
