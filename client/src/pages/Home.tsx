@@ -454,12 +454,24 @@ export default function Home() {
     }
 
     const video = heroVideoRef.current;
-    if (video) {
-      video.playbackRate = 1;
+    if (!video) return;
+
+    video.muted = true;
+    video.defaultMuted = true;
+    video.playbackRate = 1;
+    const tryAutoplay = () => {
       video.play().catch(() => {
         setIsHeroVideoReady(true);
       });
-    }
+    };
+
+    tryAutoplay();
+    video.addEventListener("canplay", tryAutoplay, { once: true });
+    const retryTimer = window.setTimeout(tryAutoplay, 250);
+    return () => {
+      video.removeEventListener("canplay", tryAutoplay);
+      window.clearTimeout(retryTimer);
+    };
   }, [isHeroIntroPreview]);
 
   useEffect(() => {
