@@ -465,14 +465,19 @@ export default function Home() {
       });
     };
 
+    video.load();
     tryAutoplay();
+    video.addEventListener("loadeddata", tryAutoplay, { once: true });
     video.addEventListener("canplay", tryAutoplay, { once: true });
-    const retryTimer = window.setTimeout(tryAutoplay, 250);
+    const retryFrame = window.requestAnimationFrame(tryAutoplay);
+    const retryTimer = window.setTimeout(tryAutoplay, 500);
     return () => {
+      video.removeEventListener("loadeddata", tryAutoplay);
       video.removeEventListener("canplay", tryAutoplay);
+      window.cancelAnimationFrame(retryFrame);
       window.clearTimeout(retryTimer);
     };
-  }, [isHeroIntroPreview]);
+  }, [isHeroIntroPreview, screen]);
 
   useEffect(() => {
     if (!isDemoPreview || isEmptyPreview || screen === "discover" || !seats.length) return;
