@@ -363,7 +363,7 @@ em { color: #4f9e63; font-style: normal; }
 .zoom-controls button:hover, .map-float-controls button:hover { color: #0c1713; border-color: #4f9e63; background: #4f9e63; }
 .zoom-controls button:last-child { margin-left: 5px; font-size: 8px; }
 .seat-map-wrap { position: relative; height: 540px; overflow: hidden; background: radial-gradient(circle at 50% 48%, rgba(51,89,78,.21), transparent 42%), #151f28; }
-.seat-map-canvas { position: absolute; inset: 0; overflow: hidden; touch-action: none; overscroll-behavior: contain; user-select: none; }
+.seat-map-canvas { position: absolute; inset: 0; overflow: hidden; touch-action: pan-y; overscroll-behavior-y: auto; user-select: none; }
 .seat-map { position: absolute; left: 50%; top: 105px; min-width: min(680px, 90%); translate: -50% 0; transform-origin: center; transition: transform .18s ease-out; }
 .seat-map-canvas.is-dragging .seat-map { transition: none; }
 .screen-label { position: absolute; top: -52px; left: 50%; width: 82%; height: 26px; transform: translateX(-50%); clip-path: polygon(3% 0, 97% 0, 100% 100%, 0 100%); display: flex; align-items: center; justify-content: center; color: #23302e; background: #e7e9df; font: 700 10px 'DM Mono', monospace; letter-spacing: .24em; }
@@ -578,14 +578,14 @@ em { color: #4f9e63; font-style: normal; }
   .pix-payment-actions { align-items: flex-start; flex-direction: column; padding: 14px 15px 16px; }
   .map-toolbar { align-items: flex-start; flex-direction: column; }
   .seat-map-wrap { height: 505px; }
-  .seat-map-canvas { touch-action: none; }
-  .seat-map { top: 76px; min-width: 610px; }
-  .seat-dot { width: 32px; height: 32px; font-size: 9px; }
+  .seat-map-canvas { touch-action: pan-y; }
+  .seat-map { top: 76px; width: 100%; min-width: 0; }
+  .seat-dot { width: clamp(16px, calc((100vw - 90px) / 16), 28px); height: clamp(16px, calc((100vw - 90px) / 16), 28px); font-size: clamp(6px, 1.7vw, 8px); }
   .map-float-controls { right: 14px; top: 14px; }
   .map-float-controls button { min-width: 38px; height: 38px; }
-  .seat-row-items { gap: 5px; }
-  .seat-row { gap: 6px; }
-  .seat-dot.has-aisle { margin-left: 13px; }
+  .seat-row-items { gap: 3px; justify-content: space-between; }
+  .seat-row { grid-template-columns: 16px minmax(0, 1fr) 16px; gap: 3px; }
+  .seat-dot.has-aisle { margin-left: 6px; }
   .confirmation-card { padding: 30px 22px; }
   .confirmation-card h2 { font-size: 44px; }
   .ticket-card { grid-template-columns: 1fr; }
