@@ -301,6 +301,9 @@ export default function Home() {
   const seatMapRef = useRef<HTMLDivElement | null>(null);
   const mapDragOriginRef = useRef({ clientX: 0, clientY: 0, panX: 0, panY: 0 });
   const mapGestureRef = useRef<MapGestureIntent>("pending");
+  const activeMapPointersRef = useRef(new Map<number, { clientX: number; clientY: number }>());
+  const pinchOriginRef = useRef<{ distance: number; zoom: number; pan: { x: number; y: number } } | null>(null);
+  const mapDragMovedRef = useRef(false);
   const edgeSwipeStartRef = useRef<{ x: number; y: number; pointerType: string } | null>(null);
   const heroVideoRef = useRef<HTMLVideoElement | null>(null);
 
@@ -613,7 +616,7 @@ export default function Home() {
     }
   };
 
-  const constrainMapPan = (desiredPan: { x: number; y: number }) => {
+  const constrainMapPan = (desiredPan: { x: number; y: number }, mapZoom = zoom) => {
     const viewport = mapRef.current;
     const map = seatMapRef.current;
     if (!viewport || !map) return desiredPan;
@@ -621,12 +624,30 @@ export default function Home() {
       desiredPan,
       mapSize: { width: map.offsetWidth, height: map.offsetHeight },
       viewportSize: { width: viewport.clientWidth, height: viewport.clientHeight },
-      zoom,
+      zoom: mapZoom,
     });
   };
 
   const handlePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if ((event.target as HTMLElement).closest('.seat-dot')) return;
+    const target = event.target as HTMLElement;
+    const activePointers = activeMapPointersRef.current;
+    if (activePointers.size === 0) mapDragMovedRef.current = false;
+    activePointers.set(event.pointerId, { clientX: event.clientX, clientY: event.clientY });
+    if (target.closest(".seat-dot") && activePointers.size === 1) return;
+
+    if (activePointers.size >= 2) {
+      const [first, second] = Array.from(activePointers.values());
+      pinchOriginRef.current = {
+        distance: Math.hypot(second.clientX - first.clientX, second.clientY - first.clientY),
+        zoom,
+        pan,
+      };
+      mapGestureRef.current = "map";
+      setIsDragging(true);
+      event.currentTarget.setPointerCapture(event.pointerId);
+      return;
+    }
+
     mapDragOriginRef.current = { clientX: event.clientX, clientY: event.clientY, panX: pan.x, panY: pan.y };
     mapGestureRef.current = event.pointerType === "touch" ? "pending" : "map";
     if (event.pointerType !== "touch") {
@@ -636,6 +657,20 @@ export default function Home() {
   };
 
   const handlePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const activePointers = activeMapPointersRef.current;
+    if (!activePointers.has(event.pointerId)) return;
+    activePointers.set(event.pointerId, { clientX: event.clientX, clientY: event.clientY });
+
+    if (activePointers.size >= 2 && pinchOriginRef.current) {
+      const [first, second] = Array.from(activePointers.values());
+      const distance = Math.max(1, Math.hypot(second.clientX - first.clientX, second.clientY - first.clientY));
+      const nextZoom = Math.min(1.6, Math.max(0.75, Number((pinchOriginRef.current.zoom * distance / pinchOriginRef.current.distance).toFixed(2))));
+      mapDragMovedRef.current = true;
+      setZoom(nextZoom);
+      setPan(constrainMapPan(pinchOriginRef.current.pan, nextZoom));
+      return;
+    }
+
     const origin = mapDragOriginRef.current;
     const deltaX = event.clientX - origin.clientX;
     const deltaY = event.clientY - origin.clientY;
@@ -649,12 +684,15 @@ export default function Home() {
     }
 
     mapGestureRef.current = "map";
+    mapDragMovedRef.current = true;
     if (!event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.setPointerCapture(event.pointerId);
     setIsDragging(true);
     setPan(constrainMapPan({ x: origin.panX + deltaX, y: origin.panY + deltaY }));
   };
 
   const handlePointerUp = (event: ReactPointerEvent<HTMLDivElement>) => {
+    activeMapPointersRef.current.delete(event.pointerId);
+    if (activeMapPointersRef.current.size < 2) pinchOriginRef.current = null;
     setIsDragging(false);
     mapGestureRef.current = "pending";
     if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
@@ -841,8 +879,8 @@ export default function Home() {
               <div className="flow-main">
                 <div className="panel seat-panel">
                   <div className="panel-heading"><div><span className="panel-index">03</span><h2>Escolha seus assentos</h2><p>{selectedCinema.name} · {selectedSession.room} · {selectedSession.dateLabel} às {selectedSession.time}</p></div><Grid3X3 size={22} /></div>
-                  <div className="map-toolbar"><div className="map-help"><Move size={16} /> Arraste na horizontal para navegar <span>•</span> deslize para cima ou baixo para rolar a página</div><div className="zoom-controls"><button onClick={() => setZoom((value) => Math.max(0.75, Number((value - 0.1).toFixed(2))))} aria-label="Diminuir zoom"><Minus size={16} /></button><span>{Math.round(zoom * 100)}%</span><button onClick={() => setZoom((value) => Math.min(1.6, Number((value + 0.1).toFixed(2))))} aria-label="Aumentar zoom"><Plus size={16} /></button><button onClick={() => { setZoom(1); setPan({ x: 0, y: 0 }); }} aria-label="Redefinir mapa">Reset</button></div></div>
-                  <div className="seat-map-wrap" ref={mapRef}><div className={`seat-map-canvas ${isDragging ? "is-dragging" : ""}`} onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerUp} onPointerCancel={handlePointerUp} style={{ cursor: isDragging ? "grabbing" : "grab" }}><div ref={seatMapRef} className="seat-map" style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` }}><div className="screen-label">AVENGERS: DOOMSDAY</div><div className="seat-rows">{rows.map((row) => <div className="seat-row" key={row}><span className="row-label">{row}</span><div className="seat-row-items">{seats.filter((seat) => seat.row === row).map((seat) => { const selected = seatSelections.some((selection) => selection.id === seat.id); const classes = `seat-dot ${seat.status === "occupied" ? "is-occupied" : ""} ${selected ? "is-selected" : ""} ${seat.isAccessible ? "is-accessible" : ""} ${seat.aisleBefore ? "has-aisle" : ""}`; return <button key={seat.id} className={classes} disabled={seat.status === "occupied"} onClick={(event) => { event.stopPropagation(); toggleSeat(seat); }} aria-label={`Fileira ${seat.row}, assento ${seat.number}, ${seat.status === "occupied" ? "ocupado" : selected ? "selecionado" : "disponível"}`}>{seat.isAccessible ? "♿" : seat.isCompanion ? "✦" : seat.number}</button>; })}</div><span className="row-label">{row}</span></div>)}</div><div className="screen-base"><span>TELA</span></div></div></div><div className="map-float-controls"><button onClick={() => setZoom((value) => Math.min(1.6, Number((value + 0.1).toFixed(2))))} aria-label="Aumentar zoom"><ZoomIn size={16} /></button><button onClick={() => setZoom((value) => Math.max(0.75, Number((value - 0.1).toFixed(2))))} aria-label="Diminuir zoom"><ZoomOut size={16} /></button></div></div>
+                  <div className="map-toolbar"><div className="map-help"><Move size={16} /> Arraste para navegar <span>•</span> use dois dedos para zoom</div><div className="zoom-controls"><button onClick={() => setZoom((value) => Math.max(0.75, Number((value - 0.1).toFixed(2))))} aria-label="Diminuir zoom"><Minus size={16} /></button><span>{Math.round(zoom * 100)}%</span><button onClick={() => setZoom((value) => Math.min(1.6, Number((value + 0.1).toFixed(2))))} aria-label="Aumentar zoom"><Plus size={16} /></button><button onClick={() => { setZoom(1); setPan({ x: 0, y: 0 }); }} aria-label="Redefinir mapa">Reset</button></div></div>
+                  <div className="seat-map-wrap" ref={mapRef}><div className={`seat-map-canvas ${isDragging ? "is-dragging" : ""}`} onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerUp} onPointerCancel={handlePointerUp} style={{ cursor: isDragging ? "grabbing" : "grab" }}><div ref={seatMapRef} className="seat-map" style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` }}><div className="screen-label">AVENGERS: DOOMSDAY</div><div className="seat-rows">{rows.map((row) => <div className="seat-row" key={row}><span className="row-label">{row}</span><div className="seat-row-items">{seats.filter((seat) => seat.row === row).map((seat) => { const selected = seatSelections.some((selection) => selection.id === seat.id); const classes = `seat-dot ${seat.status === "occupied" ? "is-occupied" : ""} ${selected ? "is-selected" : ""} ${seat.isAccessible ? "is-accessible" : ""} ${seat.aisleBefore ? "has-aisle" : ""}`; return <button key={seat.id} className={classes} disabled={seat.status === "occupied"} onClick={(event) => { event.stopPropagation(); if (mapDragMovedRef.current) { mapDragMovedRef.current = false; return; } toggleSeat(seat); }} aria-label={`Fileira ${seat.row}, assento ${seat.number}, ${seat.status === "occupied" ? "ocupado" : selected ? "selecionado" : "disponível"}`}>{seat.isAccessible ? "♿" : seat.isCompanion ? "✦" : seat.number}</button>; })}</div><span className="row-label">{row}</span></div>)}</div><div className="screen-base"><span>TELA</span></div></div></div><div className="map-float-controls"><button onClick={() => setZoom((value) => Math.min(1.6, Number((value + 0.1).toFixed(2))))} aria-label="Aumentar zoom"><ZoomIn size={16} /></button><button onClick={() => setZoom((value) => Math.max(0.75, Number((value - 0.1).toFixed(2))))} aria-label="Diminuir zoom"><ZoomOut size={16} /></button></div></div>
                   <div className="seat-legend"><span><i className="legend-dot available" /> Disponível</span><span><i className="legend-dot selected" /> Selecionado</span><span><i className="legend-dot occupied" /> Ocupado</span><span><i className="legend-dot accessible" /> Acessível</span></div>
                 </div>
                 <div className="seat-note"><Info size={16} /><span>Os assentos são bloqueados temporariamente durante o checkout. A disponibilidade real depende da integração com o operador de cinemas.</span></div>
