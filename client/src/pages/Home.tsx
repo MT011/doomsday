@@ -450,6 +450,7 @@ export default function Home() {
   }, [buyer, effectivePixStatus, isLocalApprovedPixPreview, order, pixPayment, screen, seatSelections, selectedCinema, selectedSession, ticketQuantity]);
 
   useEffect(() => {
+    if (screen !== "discover" || !isHeroVideoVisible) return;
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (reducedMotion) {
       setIsHeroVideoVisible(false);
@@ -463,24 +464,27 @@ export default function Home() {
     video.defaultMuted = true;
     video.playbackRate = 1;
     const tryAutoplay = () => {
-      video.play().catch(() => {
-        setIsHeroVideoReady(true);
-      });
+      if (document.visibilityState !== "visible" || !video.isConnected || !video.paused || video.ended) return;
+      // O poster permanece visível se o navegador bloquear autoplay (ex.: economia de energia).
+      video.play().catch(() => {});
     };
 
-    video.load();
     tryAutoplay();
     video.addEventListener("loadeddata", tryAutoplay, { once: true });
     video.addEventListener("canplay", tryAutoplay, { once: true });
+    document.addEventListener("visibilitychange", tryAutoplay);
+    window.addEventListener("pageshow", tryAutoplay);
     const retryFrame = window.requestAnimationFrame(tryAutoplay);
-    const retryTimer = window.setTimeout(tryAutoplay, 500);
+    const retryTimer = window.setTimeout(tryAutoplay, 1200);
     return () => {
       video.removeEventListener("loadeddata", tryAutoplay);
       video.removeEventListener("canplay", tryAutoplay);
+      document.removeEventListener("visibilitychange", tryAutoplay);
+      window.removeEventListener("pageshow", tryAutoplay);
       window.cancelAnimationFrame(retryFrame);
       window.clearTimeout(retryTimer);
     };
-  }, [isHeroIntroPreview, screen]);
+  }, [screen, isHeroVideoVisible]);
 
   useEffect(() => {
     if (!isDemoPreview || isEmptyPreview || screen === "discover" || !seats.length) return;
