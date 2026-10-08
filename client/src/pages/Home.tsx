@@ -204,23 +204,19 @@ function buildPresaleDates() {
 function buildSeats(cinemaName: string, sessionId: string): Seat[] {
   const seed = hashString(`${cinemaName}-${sessionId}`);
   const rows = cinemaName.toLowerCase().includes("imax") ? 12 : 10 + (seed % 2);
-  const columns = cinemaName.toLowerCase().includes("vip") ? 12 : 16;
-  const occupiedCount = 5 + (seed % 9);
-  const occupied = new Set<number>();
-  for (let index = 0; index < occupiedCount; index += 1) {
-    occupied.add((seed * (index + 3) + index * 17) % (rows * columns));
-  }
+  const columns = 16;
+  const occupied = new Set(["E-1", "E-2", "J-6", "J-7", "D-9", "D-10", "J-15", "J-16", "A-9"]);
 
   const seats: Seat[] = [];
   for (let rowIndex = 0; rowIndex < rows; rowIndex += 1) {
     const row = String.fromCharCode(65 + rowIndex);
     for (let number = 1; number <= columns; number += 1) {
-      const seatIndex = rowIndex * columns + number - 1;
+      const seatId = `${row}-${number}`;
       seats.push({
-        id: `${row}-${number}`,
+        id: seatId,
         row,
         number,
-        status: occupied.has(seatIndex) ? "occupied" : "available",
+        status: occupied.has(seatId) ? "occupied" : "available",
         isAccessible: rowIndex === getAccessibleRearRowIndex() && [2, columns - 1].includes(number),
         isCompanion: rowIndex === getAccessibleRearRowIndex() && [3, columns - 2].includes(number),
         aisleBefore: number === Math.floor(columns / 2) + 1,
