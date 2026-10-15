@@ -372,6 +372,22 @@ export default function Home() {
   const ticketQuantity = plannedTicketTypes.length;
   const plannedTotal = Number((ticketQuantities.inteira * selectedSession.price + ticketQuantities.meia * HALF_PRICE).toFixed(2));
   const total = seatSelections.reduce((sum, seat) => sum + (seat.ticketType === "meia" ? HALF_PRICE : selectedSession.price), 0);
+  const canContinueToSeats = isLocationComplete && !isEmptyPreview && !noCinemaScenario && isSessionSelected && ticketQuantity > 0;
+  const sessionActionHint = noCinemaScenario
+    ? "Altere a localização para encontrar sessões"
+    : !selectedState
+      ? "Escolha seu estado acima"
+      : !selectedCity
+        ? "Escolha sua cidade acima"
+        : !isLocationComplete
+          ? "Escolha seu cinema acima"
+          : isEmptyPreview
+            ? "Nenhuma sessão disponível nesta data"
+            : !isSessionSelected
+              ? "Escolha um horário acima"
+              : ticketQuantity === 0
+                ? "Selecione ao menos um ingresso"
+                : `${ticketQuantity} ingresso${ticketQuantity > 1 ? "s" : ""} · ${selectedSession.time}`;
   const pixStatusInput = useMemo(() => ({ orderCode: pixPayment?.orderCode ?? "PENDING" }), [pixPayment?.orderCode]);
   const pixPaymentStatus = trpc.presale.getPixPaymentStatus.useQuery(pixStatusInput, { enabled: Boolean(pixPayment), retry: false, refetchInterval: pixPayment ? 3000 : false });
   const effectivePixStatus = isLocalApprovedPixPreview ? "PAID" : pixPaymentStatus.data?.status;
@@ -835,7 +851,7 @@ export default function Home() {
       ) : null}
 
       {screen !== "discover" ? (
-        <section id="purchase-flow" className="purchase-stage container">
+        <section id="purchase-flow" className={`purchase-stage container${screen === "sessions" ? " sessions-stage" : ""}`}>
           <div className="flow-heading">
             <div className="flow-heading-copy">
               <button type="button" className="flow-back" onClick={goBack} aria-label="Voltar para a etapa anterior">
@@ -865,11 +881,48 @@ export default function Home() {
                   <div className="panel-heading"><div><span className="panel-index">02</span><h2>Escolha uma sessão</h2><p>{isLocationComplete ? `${selectedCinema.name} · ${selectedCity}, ${selectedState}` : "Conclua estado, cidade e cinema para ver as sessões."}</p></div><CalendarDays size={22} /></div>
                   {!isLocationComplete ? <div className="location-required-hint"><Info size={16} /> Selecione seu estado, cidade e cinema acima para liberar horários e ingressos.</div> : null}
                   <div className="date-strip" aria-label="Datas disponíveis para pré-venda">{presaleDates.map((date) => <button type="button" disabled={!isLocationComplete} className={`date-chip ${isLocationComplete && selectedDate === date.value ? "is-active" : ""}`} key={date.value} onClick={() => selectSessionDate(date.value)}><strong>{date.label}</strong><span>{date.weekday}</span></button>)}</div>
-                  <div className="session-list">{!isLocationComplete || isEmptyPreview || noCinemaScenario ? <div className="summary-empty session-empty"><Info size={20} /><span>{!isLocationComplete ? "Escolha uma localização completa para consultar as sessões disponíveis." : noCinemaScenario ? "Nenhuma sessão disponível porque não há cinema selecionado." : "Nenhuma sessão disponível para este cinema na data selecionada."}</span></div> : sessions.map((session) => { const isSelected = selectedSessionId === session.id; return <div className={`session-choice ${isSelected ? "is-expanded" : ""}`} key={session.id}><button type="button" className={`session-card ${isSelected ? "is-highlighted" : ""}`} onClick={() => selectSession(session.id)}><span className="session-time"><Clock3 size={16} /><strong>{session.time}</strong><small>{session.room}</small></span><span className="session-details"><strong>{session.language}</strong><span>{session.format} · Tela premium</span></span><span className="session-price">{currency(session.price)}<small>por inteira</small></span><span className="session-arrow"><ArrowRight size={18} /></span></button>{isSelected ? <TicketConfigurator quantities={ticketQuantities} session={session} total={plannedTotal} onChange={updateTicketQuantity} /> : null}</div>; })}</div>
-                  <button className="button button-primary wide-button" disabled={!isLocationComplete || isEmptyPreview || noCinemaScenario || !isSessionSelected || ticketQuantity === 0} onClick={() => startSeats(selectedSession)}>{!isLocationComplete ? "Escolha sua localização primeiro" : `Escolher ${ticketQuantity ? `${ticketQuantity} assento${ticketQuantity > 1 ? "s" : ""}` : "assentos"}`} <ArrowRight size={17} /></button>
+                  <div className="session-list">
+                    {!isLocationComplete || isEmptyPreview || noCinemaScenario ? (
+                      <div className="summary-empty session-empty"><Info size={20} /><span>{!isLocationComplete ? "Escolha uma localização completa para consultar as sessões disponíveis." : noCinemaScenario ? "Nenhuma sessão disponível porque não há cinema selecionado." : "Nenhuma sessão disponível para este cinema na data selecionada."}</span></div>
+                    ) : sessions.map((session) => {
+                      const isSelected = selectedSessionId === session.id;
+                      return (
+                        <div className={`session-choice ${isSelected ? "is-expanded" : ""}`} key={session.id}>
+                          <button type="button" className={`session-card ${isSelected ? "is-highlighted" : ""}`} aria-pressed={isSelected} onClick={() => selectSession(session.id)}>
+                            <span className="session-time"><Clock3 size={16} /><strong>{session.time}</strong><small>{session.room}</small></span>
+                            <span className="session-details">
+                              <strong>{session.language}</strong><span>{session.format} · Tela premium</span>
+                              {isSelected ? <span className="session-selected-label"><Check size={13} /> Horário selecionado</span> : null}
+                            </span>
+                            <span className="session-price">{currency(session.price)}<small>por inteira</small></span>
+                            <span className="session-arrow"><ArrowRight size={18} /></span>
+                          </button>
+                          {isSelected ? (
+                            <>
+                              <TicketConfigurator quantities={ticketQuantities} session={session} total={plannedTotal} onChange={updateTicketQuantity} />
+                              <div className="session-inline-action">
+                                <button type="button" className="button button-primary session-continue-button" disabled={!canContinueToSeats} onClick={() => startSeats(selectedSession)}>
+                                  Continuar para os assentos <ArrowRight size={17} />
+                                </button>
+                              </div>
+                            </>
+                          ) : null}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
               <aside className="flow-side"><OrderSummary cinema={selectedCinema} session={selectedSession} seats={seatSelections} plannedTicketTypes={plannedTicketTypes} total={total} plannedTotal={plannedTotal} onRemove={(id) => setSeatSelections((current) => current.filter((seat) => seat.id !== id))} /></aside>
+              <div className="session-mobile-action">
+                <div className="session-mobile-action-summary" role="status">
+                  <span id="session-mobile-action-hint">{sessionActionHint}</span>
+                  {canContinueToSeats ? <strong>{currency(plannedTotal)}</strong> : null}
+                </div>
+                <button type="button" className="button button-primary session-continue-button" disabled={!canContinueToSeats} aria-describedby="session-mobile-action-hint" onClick={() => startSeats(selectedSession)}>
+                  Continuar para os assentos <ArrowRight size={17} />
+                </button>
+              </div>
             </div>
           ) : null}
 
