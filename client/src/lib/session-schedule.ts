@@ -6,28 +6,28 @@ export type SessionSchedule = {
 
 const SESSION_SCHEDULES: SessionSchedule[][] = [
   [
-    { time: "11:30", language: "Dublado", format: "2D" },
+    { time: "10:00", language: "Dublado", format: "2D" },
     { time: "13:20", language: "Dublado", format: "2D" },
     { time: "15:30", language: "Dublado", format: "3D" },
     { time: "18:10", language: "Dublado", format: "2D" },
     { time: "21:25", language: "Dublado", format: "2D" },
   ],
   [
-    { time: "11:30", language: "Dublado", format: "2D" },
+    { time: "10:30", language: "Dublado", format: "2D" },
     { time: "13:40", language: "Dublado", format: "2D" },
     { time: "15:50", language: "Dublado", format: "3D" },
     { time: "18:30", language: "Dublado", format: "2D" },
     { time: "21:45", language: "Dublado", format: "2D" },
   ],
   [
-    { time: "11:30", language: "Dublado", format: "2D" },
+    { time: "11:00", language: "Dublado", format: "2D" },
     { time: "12:55", language: "Dublado", format: "2D" },
     { time: "15:20", language: "Dublado", format: "3D" },
     { time: "18:00", language: "Dublado", format: "2D" },
     { time: "21:10", language: "Dublado", format: "2D" },
   ],
   [
-    { time: "11:30", language: "Dublado", format: "2D" },
+    { time: "11:15", language: "Dublado", format: "2D" },
     { time: "13:20", language: "Dublado", format: "2D" },
     { time: "16:05", language: "Dublado", format: "3D" },
     { time: "18:45", language: "Dublado", format: "2D" },
@@ -41,7 +41,7 @@ const SESSION_SCHEDULES: SessionSchedule[][] = [
     { time: "21:35", language: "Dublado", format: "2D" },
   ],
   [
-    { time: "11:30", language: "Dublado", format: "2D" },
+    { time: "11:45", language: "Dublado", format: "2D" },
     { time: "13:10", language: "Dublado", format: "2D" },
     { time: "15:40", language: "Dublado", format: "3D" },
     { time: "18:20", language: "Dublado", format: "2D" },

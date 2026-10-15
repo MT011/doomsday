@@ -16,7 +16,9 @@ describe("horários da pré-venda", () => {
     expect(day19.map(({ time }) => time)).not.toEqual(day23.map(({ time }) => time));
   });
 
-  it("inclui 11:30 em todos os dias e preserva os quatro horários anteriores", () => {
+  it("varia o horário antecipado nos seis dias e preserva os quatro horários anteriores", () => {
+    const earlyTimes = ["10:00", "10:30", "11:00", "11:15", "11:30", "11:45"];
+    expect(new Set(earlyTimes).size).toBe(6);
     const originalTimes = [
       ["13:20", "15:30", "18:10", "21:25"],
       ["13:40", "15:50", "18:30", "21:45"],
@@ -28,7 +30,7 @@ describe("horários da pré-venda", () => {
     originalTimes.forEach((times, index) => {
       const schedule = getSessionSchedule(`2026-12-${18 + index}`, releaseDate);
       expect(schedule).toHaveLength(5);
-      expect(schedule[0]).toEqual({ time: "11:30", language: "Dublado", format: "2D" });
+      expect(schedule[0]).toEqual({ time: earlyTimes[index], language: "Dublado", format: "2D" });
       expect(schedule[0].time < "12:55").toBe(true);
       expect(schedule.slice(1).map(({ time }) => time)).toEqual(times);
       expect(schedule.every(({ language }) => language === "Dublado")).toBe(true);
