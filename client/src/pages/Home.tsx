@@ -183,7 +183,7 @@ function buildSessions(cinema: Cinema, date: string): Session[] {
     time: session.time,
     language: session.language,
     format: session.format,
-    room: `Sala ${(seed + index) % 5 + 1}`,
+    room: `Sala ${(seed + (index === 0 ? 4 : index - 1)) % 5 + 1}`,
     price: WHOLE_PRICE,
   }));
 }
@@ -372,6 +372,7 @@ export default function Home() {
   const ticketQuantity = plannedTicketTypes.length;
   const plannedTotal = Number((ticketQuantities.inteira * selectedSession.price + ticketQuantities.meia * HALF_PRICE).toFixed(2));
   const total = seatSelections.reduce((sum, seat) => sum + (seat.ticketType === "meia" ? HALF_PRICE : selectedSession.price), 0);
+  const canContinueToPayment = ticketQuantity > 0 && seatSelections.length === ticketQuantity;
   const canContinueToSeats = isLocationComplete && !isEmptyPreview && !noCinemaScenario && isSessionSelected && ticketQuantity > 0;
   const sessionActionHint = noCinemaScenario
     ? "Altere a localização para encontrar sessões"
@@ -585,6 +586,15 @@ export default function Home() {
     setSeatSelections([]);
     setScreen(getSeatsScreen());
     window.setTimeout(() => document.getElementById("purchase-flow")?.scrollIntoView({ behavior: "smooth" }), 20);
+  };
+
+  const goToPayment = () => {
+    if (!canContinueToPayment) {
+      toast.error(ticketQuantity ? `Selecione os ${ticketQuantity} assentos solicitados para continuar.` : "Informe a quantidade de ingressos antes de continuar.");
+      return;
+    }
+    setScreen(getCheckoutScreen());
+    window.setTimeout(scrollToPurchaseFlow, 20);
   };
 
   const toggleSeat = (seat: Seat) => {
@@ -851,7 +861,7 @@ export default function Home() {
       ) : null}
 
       {screen !== "discover" ? (
-        <section id="purchase-flow" className={`purchase-stage container${screen === "sessions" ? " sessions-stage" : ""}`}>
+        <section id="purchase-flow" className={`purchase-stage container${screen === "sessions" ? " sessions-stage" : screen === "seats" ? " seats-stage" : ""}`}>
           <div className="flow-heading">
             <div className="flow-heading-copy">
               <button type="button" className="flow-back" onClick={goBack} aria-label="Voltar para a etapa anterior">
@@ -948,16 +958,18 @@ export default function Home() {
                   onRemove={(id) => {
                     setSeatSelections((current) => current.filter((seat) => seat.id !== id));
                   }}
-                  onContinue={() => {
-                    if (seatSelections.length !== ticketQuantity) {
-                      toast.error(ticketQuantity ? `Selecione os ${ticketQuantity} assentos solicitados para continuar.` : "Informe a quantidade de ingressos antes de continuar.");
-                      return;
-                    }
-                    setScreen(getCheckoutScreen());
-                    window.setTimeout(scrollToPurchaseFlow, 20);
-                  }}
+                  onContinue={goToPayment}
                 />
               </aside>
+              <div className="session-mobile-action seat-mobile-action">
+                <div className="session-mobile-action-summary" role="status">
+                  <span id="seat-mobile-action-hint">{ticketQuantity ? `${seatSelections.length} de ${ticketQuantity} assento${ticketQuantity > 1 ? "s" : ""} selecionado${ticketQuantity > 1 ? "s" : ""}` : "Escolha seus ingressos na etapa anterior"}</span>
+                  {ticketQuantity > 0 ? <strong>{currency(canContinueToPayment ? total : plannedTotal)}</strong> : null}
+                </div>
+                <button type="button" className="button button-primary session-continue-button" disabled={!canContinueToPayment} aria-describedby="seat-mobile-action-hint" onClick={goToPayment}>
+                  Ir para pagamento <ArrowRight size={17} />
+                </button>
+              </div>
             </div>
           ) : null}
 
