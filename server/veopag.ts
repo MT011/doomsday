@@ -1,6 +1,6 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 
-export const VEOPAG_API_BASE_URL = "https://api.veopag.com";
+export const VEOPAG_API_BASE_URL = "https://api.veopag.co";
 
 export type VeoPagPaymentStatus = "PENDING" | "PAID" | "FAILED" | "REJECTED" | "CANCELED" | "REFUNDED" | "CHARGED_BACK";
 
